@@ -1,0 +1,23 @@
+version: '3'
+services:
+
+  session:
+    # First follow README.md to build this Docker image.
+    image: govsso-session:0.1.0
+    depends_on:
+      - tara
+    deploy:
+      resources:
+        limits:
+          memory: 850M
+    environment:
+      - govsso.hydra.admin-url=https://oidc:4445/
+      - govsso.tara.discovery-url=https://tara:8080/oidc/.well-known/openid-configuration
+      - govsso.tara.jwks-url=https://tara:8080/oidc/jwks
+      - govsso.tara.auth-url=https://localhost:11080/oidc/authorize
+      - govsso.tara.token-url=https://tara:8080/oidc/token
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=30
+    ports:
+      - '8080:8080'
+    #restart: unless-stopped

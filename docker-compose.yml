@@ -1,0 +1,107 @@
+version: '3'
+services:
+  # TODO Replace sleep with a reliable mechanism.
+
+  # TODO Use GOVSSO-Client instead.
+  clienta:
+    # TODO Use specific version.
+    build: https://github.com/e-gov/TARA-Client.git
+    entrypoint: sh -c 'sleep 10 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
+    depends_on:
+      - oidc
+    deploy:
+      resources:
+        limits:
+          memory: 850M
+    environment:
+      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration
+    ports:
+      - '8451:8451'
+    #restart: unless-stopped
+
+  # TODO clientb
+
+  oidc:
+    # TODO Use PostgreSQL instead of SQLite.
+    image: oryd/hydra:v1.10.6-sqlite
+    entrypoint: sh -c 'hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:4444/oauth2/auth
+      - URLS_LOGIN=http://localhost:8080/login
+      - URLS_CONSENT=http://localhost:8080/consent
+      - URLS_LOGOUT=http://localhost:8080/logout
+      - URLS_ERROR=http://localhost:8080/error
+      - URLS_SELF_ISSUER=http://oidc:4444/
+    ports:
+      - '4444:4444'
+      - '4445:4445'
+    #restart: unless-stopped
+    volumes:
+      - ./local/oidc:/etc/hydra
+
+  oidc-setup:
+    image: oryd/hydra:v1.10.6-sqlite
+    entrypoint: sh -c 'sleep 10 && hydra clients create --id openIdDemo --secret secret --callbacks https://localhost:8451/oauth/response'
+    depends_on:
+      - oidc
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    environment:
+      - HYDRA_ADMIN_URL=http://oidc:4445/
+
+  tara:
+    # TODO Use specific version.
+    # TODO Optimize Dockerfile (use multi-stage to exclude build environment).
+    build: https://github.com/e-gov/TARA-Mock.git
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    ports:
+      - '11080:8080'
+    #restart: unless-stopped
+
+  admin:
+    # First follow TARA2-Admin README.md to build this Docker image.
+    image: tara-admin:latest
+    depends_on:
+      - admin-db
+      - oidc
+    deploy:
+      resources:
+        limits:
+          memory: 850M
+    environment:
+      - LOG_CONSOLE_LEVEL=INFO
+      - LOG_FILE_LEVEL=OFF
+      - tara.admin.sso-mode=true
+      - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
+      - tara-oidc.url=http://oidc:4444
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=30
+    ports:
+      - '12080:8080'
+    #restart: unless-stopped
+
+  admin-db:
+    image: postgres:13
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=admin-db
+      - POSTGRES_USER=taraadmin
+      - POSTGRES_PASSWORD=changeme
+    #restart: unless-stopped
+
+# TODO Import initial client data to admin-db.
