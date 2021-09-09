@@ -1,0 +1,23 @@
+# TODO Disable most endpoints in non-dev environments.
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+spring:
+  main:
+    banner-mode: off
+
+govsso:
+  hydra:
+    admin-url: https://localhost:4445/
+  tara:
+    discovery-url: https://localhost:11080/oidc/.well-known/openid-configuration
+    jwks-url: https://localhost:11080/oidc/jwks
+    auth-url: https://localhost:11080/oidc/authorize
+    token-url: https://localhost:11080/oidc/token
