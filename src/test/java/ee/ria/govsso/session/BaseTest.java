@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import static io.restassured.RestAssured.config;
+import static io.restassured.config.RedirectConfig.redirectConfig;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @Slf4j
@@ -17,7 +19,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public abstract class BaseTest {
 
     protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
-            .httpDisabled(true)
             .httpsPort(9877)
             .notifier(new ConsoleNotifier(true))
     );
@@ -27,6 +28,7 @@ public abstract class BaseTest {
 
     @BeforeAll
     static void setUpAll() {
+        config = config().redirect(redirectConfig().followRedirects(false));
         wireMockServer.start();
     }
 

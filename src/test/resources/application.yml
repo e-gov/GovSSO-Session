@@ -1,0 +1,22 @@
+# TODO Disable most endpoints in non-dev environments.
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+spring:
+  main:
+    banner-mode: off
+
+govsso:
+  base-url: base/url/test
+  client-id: testclient123
+  hydra:
+    login-url: https://localhost:9877/oauth2/auth/requests/login
+  tara:
+    auth-url: auth/url/test

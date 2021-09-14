@@ -20,8 +20,11 @@ server:
 govsso:
   # By default use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
   #  and Dependencies in Docker Compose" workflow in README.md.
+  base-url: https://localhost:4445/
+  client-id: testclient123
   hydra:
     admin-url: http://localhost:13445/
+    login-url: https://localhost:4445/oauth2/auth/requests/login
   tara:
     discovery-url: https://localhost:15443/oidc/.well-known/openid-configuration
     jwks-url: https://localhost:15443/oidc/jwks
