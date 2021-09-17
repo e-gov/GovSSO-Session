@@ -13,11 +13,17 @@ spring:
   main:
     banner-mode: off
 
+server:
+  # Use same port as docker-compose-all.yml.
+  port: 14080
+
 govsso:
+  # By default use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
+  #  and Dependencies in Docker Compose" workflow in README.md.
   hydra:
-    admin-url: https://localhost:4445/
+    admin-url: http://localhost:13445/
   tara:
-    discovery-url: https://localhost:11080/oidc/.well-known/openid-configuration
-    jwks-url: https://localhost:11080/oidc/jwks
-    auth-url: https://localhost:11080/oidc/authorize
-    token-url: https://localhost:11080/oidc/token
+    discovery-url: https://localhost:15443/oidc/.well-known/openid-configuration
+    jwks-url: https://localhost:15443/oidc/jwks
+    auth-url: https://localhost:15443/oidc/authorize
+    token-url: https://localhost:15443/oidc/token

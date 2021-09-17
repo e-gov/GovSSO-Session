@@ -45,10 +45,34 @@ docker compose up
    docker compose -f docker-compose.yml -f docker-compose-all.yml up
    ```
 
-## Usage
+## Endpoints
 
-* https://localhost:8451/ui/ - client UI.
-* http://localhost:12080/ - admin UI (username admin, password admin).
+* Example Client A
+    * https://localhost:11443/ui/ - UI
+* Hydra
+    * http://localhost:13444/ - public API
+        * http://localhost:13444/health/ready
+        * http://localhost:13444/.well-known/openid-configuration
+        * http://localhost:13444/.well-known/jwks.json
+        * http://localhost:13444/oauth2/auth
+        * http://localhost:13444/oauth2/token
+    * http://localhost:13445/ - admin API
+        * http://localhost:13445/health/alive
+        * http://localhost:13445/version
+        * https://www.ory.sh/hydra/docs/reference/api/#tag/admin
+* Session Service
+    * http://localhost:14080/actuator/health
+    * http://localhost:14080/actuator/health/readiness
+    * http://localhost:14080/actuator/info
+* TARA Mock
+    * https://localhost:15443/health
+    * https://localhost:15443/oidc/.well-known/openid-configuration
+    * https://localhost:15443/oidc/jwks
+    * https://localhost:15443/oidc/authorize
+    * https://localhost:15443/oidc/token
+* Admin Service
+    * http://localhost:16080/ - UI (username admin, password admin)
+    * http://localhost:16080/actuator/health
 
 ## Configuration
 

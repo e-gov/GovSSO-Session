@@ -3,7 +3,7 @@ services:
   # Service subkey order: build/image, entrypoint, command, * (alphabetically)
   # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
 
-  session:
+  session: # Map to host ports 14xxx.
     # First follow README.md to build this Docker image.
     image: govsso-session:0.1.0
     depends_on:
@@ -13,13 +13,16 @@ services:
         limits:
           memory: 650M
     environment:
-      - govsso.hydra.admin-url=https://oidc:4445/
-      - govsso.tara.discovery-url=https://tara:8080/oidc/.well-known/openid-configuration
-      - govsso.tara.jwks-url=https://tara:8080/oidc/jwks
-      - govsso.tara.auth-url=https://localhost:11080/oidc/authorize
-      - govsso.tara.token-url=https://tara:8080/oidc/token
+      - server.port=8080
+      # Override built-in application.yml URL-s to use container hostnames ("oidc", "tara") from docker-compose.yml,
+      #  except auth-url, which must use a hostname that browser running on host machine can access ("localhost").
+      - govsso.hydra.admin-url=http://oidc:4445/
+      - govsso.tara.discovery-url=https://tara:8443/oidc/.well-known/openid-configuration
+      - govsso.tara.jwks-url=https://tara:8443/oidc/jwks
+      - govsso.tara.auth-url=https://localhost:15443/oidc/authorize
+      - govsso.tara.token-url=https://tara:8443/oidc/token
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
     ports:
-      - '8080:8080'
+      - '14080:8080'
     #restart: unless-stopped

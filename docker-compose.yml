@@ -4,7 +4,7 @@ services:
   # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
   # TODO Replace sleep with a reliable mechanism.
 
-  clienta:
+  clienta: # Map to host ports 11xxx.
     # TODO Use GOVSSO-Client instead.
     build: https://github.com/e-gov/TARA-Client.git
     entrypoint: sh -c 'sleep 10 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
@@ -15,14 +15,15 @@ services:
         limits:
           memory: 650M
     environment:
-      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration
+      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=11443
     ports:
-      - '8451:8451'
+      - '11443:11443'
     #restart: unless-stopped
 
   # TODO clientb
+  # Map to host ports 12xxx.
 
-  oidc:
+  oidc: # Map to host ports 13xxx.
     # TODO Use PostgreSQL instead of SQLite.
     image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
@@ -32,15 +33,18 @@ services:
           memory: 250M
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
-      - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:4444/oauth2/auth
-      - URLS_LOGIN=http://localhost:8080/login
-      - URLS_CONSENT=http://localhost:8080/consent
-      - URLS_LOGOUT=http://localhost:8080/logout
-      - URLS_ERROR=http://localhost:8080/error
+      # Configure endpoints advertised in /.well-known/openid-configuration to use container's hostname "oidc".
       - URLS_SELF_ISSUER=http://oidc:4444/
+      # Override auth endpoint advertised in /.well-known/openid-configuration to use hostname that browser running on host machine can access ("localhost").
+      - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:13444/oauth2/auth
+      # Configure Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
+      - URLS_LOGIN=http://localhost:14080/login
+      - URLS_CONSENT=http://localhost:14080/consent
+      - URLS_LOGOUT=http://localhost:14080/logout
+      - URLS_ERROR=http://localhost:14080/error
     ports:
-      - '4444:4444'
-      - '4445:4445'
+      - '13444:4444'
+      - '13445:4445'
     #restart: unless-stopped
     volumes:
       - ./local/oidc:/etc/hydra
@@ -48,7 +52,7 @@ services:
   # TODO Import initial client data through admin service.
   oidc-setup:
     image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
-    entrypoint: sh -c 'sleep 10 && hydra clients create --id openIdDemo --secret secret --callbacks https://localhost:8451/oauth/response'
+    entrypoint: sh -c 'sleep 10 && hydra clients create --id openIdDemo --secret secret --callbacks https://localhost:11443/oauth/response'
     depends_on:
       - oidc
     deploy:
@@ -58,7 +62,7 @@ services:
     environment:
       - HYDRA_ADMIN_URL=http://oidc:4445/
 
-  tara:
+  tara: # Map to host ports 15xxx.
     # TODO Use specific version.
     # TODO Optimize Dockerfile (use multi-stage to exclude build environment).
     build:
@@ -70,10 +74,12 @@ services:
         limits:
           memory: 250M
     ports:
-      - '11080:8080'
+      - '15443:8443'
     #restart: unless-stopped
+    volumes:
+      - ./local/tara/config.json:/service/config.json
 
-  admin:
+  admin: # Map to host ports 16xxx.
     # First follow TARA2-Admin README.md to build this Docker image.
     image: tara-admin:latest
     depends_on:
@@ -86,13 +92,13 @@ services:
     environment:
       - LOG_CONSOLE_LEVEL=INFO
       - LOG_FILE_LEVEL=OFF
-      - tara.admin.sso-mode=true
+      - tara-oidc.url=http://oidc:4445/
       - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
-      - tara-oidc.url=http://oidc:4444
+      - tara.admin.sso-mode=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
     ports:
-      - '12080:8080'
+      - '16080:8080'
     #restart: unless-stopped
 
   admin-db:
@@ -101,8 +107,6 @@ services:
       resources:
         limits:
           memory: 250M
-    ports:
-      - '5432:5432'
     environment:
       - POSTGRES_DB=admin-db
       - POSTGRES_USER=taraadmin
