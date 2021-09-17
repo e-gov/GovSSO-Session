@@ -1,2 +1,4 @@
 sqa:
   opt_out: true
+log:
+  leak_sensitive_values: true

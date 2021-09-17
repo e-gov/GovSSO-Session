@@ -1,10 +1,11 @@
 version: '3'
 services:
+  # Service subkey order: build/image, entrypoint, command, * (alphabetically)
+  # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
   # TODO Replace sleep with a reliable mechanism.
 
-  # TODO Use GOVSSO-Client instead.
   clienta:
-    # TODO Use specific version.
+    # TODO Use GOVSSO-Client instead.
     build: https://github.com/e-gov/TARA-Client.git
     entrypoint: sh -c 'sleep 10 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
     depends_on:
@@ -23,7 +24,7 @@ services:
 
   oidc:
     # TODO Use PostgreSQL instead of SQLite.
-    image: oryd/hydra:v1.10.6-sqlite
+    image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
     deploy:
       resources:
@@ -44,8 +45,9 @@ services:
     volumes:
       - ./local/oidc:/etc/hydra
 
+  # TODO Import initial client data through admin service.
   oidc-setup:
-    image: oryd/hydra:v1.10.6-sqlite
+    image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'sleep 10 && hydra clients create --id openIdDemo --secret secret --callbacks https://localhost:8451/oauth/response'
     depends_on:
       - oidc
@@ -59,7 +61,10 @@ services:
   tara:
     # TODO Use specific version.
     # TODO Optimize Dockerfile (use multi-stage to exclude build environment).
-    build: https://github.com/e-gov/TARA-Mock.git
+    build:
+      context: https://github.com/e-gov/TARA-Mock.git
+      args:
+        genkeys: 'true'
     deploy:
       resources:
         limits:
@@ -103,5 +108,3 @@ services:
       - POSTGRES_USER=taraadmin
       - POSTGRES_PASSWORD=changeme
     #restart: unless-stopped
-
-# TODO Import initial client data to admin-db.

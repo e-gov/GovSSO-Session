@@ -1,5 +1,7 @@
 version: '3'
 services:
+  # Service subkey order: build/image, entrypoint, command, * (alphabetically)
+  # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
 
   session:
     # First follow README.md to build this Docker image.
