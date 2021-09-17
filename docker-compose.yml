@@ -24,15 +24,16 @@ services:
   # Map to host ports 12xxx.
 
   oidc: # Map to host ports 13xxx.
-    # TODO Use PostgreSQL instead of SQLite.
     image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
+    depends_on:
+      - oidc-db
     deploy:
       resources:
         limits:
           memory: 250M
     environment:
-      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - DSN=postgres://hydra:changeme@oidc-db:5432/oidc-db?sslmode=disable&max_conns=20&max_idle_conns=4
       # Configure endpoints advertised in /.well-known/openid-configuration to use container's hostname "oidc".
       - URLS_SELF_ISSUER=http://oidc:4444/
       # Override auth endpoint advertised in /.well-known/openid-configuration to use hostname that browser running on host machine can access ("localhost").
@@ -101,6 +102,20 @@ services:
       - '16080:8080'
     #restart: unless-stopped
 
+  oidc-db:
+    image: postgres:13
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+    environment:
+      - POSTGRES_DB=oidc-db
+      - POSTGRES_USER=hydra
+      - POSTGRES_PASSWORD=changeme
+    #restart: unless-stopped
+    volumes:
+      - oidc-db-data:/var/lib/postgresql/data
+
   admin-db:
     image: postgres:13
     deploy:
@@ -112,3 +127,9 @@ services:
       - POSTGRES_USER=taraadmin
       - POSTGRES_PASSWORD=changeme
     #restart: unless-stopped
+    volumes:
+      - admin-db-data:/var/lib/postgresql/data
+
+volumes:
+  oidc-db-data:
+  admin-db-data:

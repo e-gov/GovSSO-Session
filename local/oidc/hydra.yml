@@ -1,3 +1,6 @@
+secrets:
+  system:
+    - youReallyNeedToChangeThis
 sqa:
   opt_out: true
 log:
