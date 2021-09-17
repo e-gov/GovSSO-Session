@@ -9,7 +9,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 850M
+          memory: 650M
     environment:
       - govsso.hydra.admin-url=https://oidc:4445/
       - govsso.tara.discovery-url=https://tara:8080/oidc/.well-known/openid-configuration
@@ -17,7 +17,7 @@ services:
       - govsso.tara.auth-url=https://localhost:11080/oidc/authorize
       - govsso.tara.token-url=https://tara:8080/oidc/token
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
-      - BPL_JVM_THREAD_COUNT=30
+      - BPL_JVM_THREAD_COUNT=10
     ports:
       - '8080:8080'
     #restart: unless-stopped
