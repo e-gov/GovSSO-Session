@@ -1,4 +1,3 @@
-# TODO Disable most endpoints in non-dev environments.
 management:
   endpoint:
     health:
@@ -7,6 +6,7 @@ management:
   endpoints:
     web:
       exposure:
+        # TODO Disable most endpoints in non-dev environments.
         include: '*'
 
 spring:
