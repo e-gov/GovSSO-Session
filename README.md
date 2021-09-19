@@ -73,6 +73,8 @@ docker compose up
 * Admin Service
     * http://localhost:16080/ - UI (username admin, password admin)
     * http://localhost:16080/actuator/health
+* MailHog
+    * http://localhost:17080/ - UI
 
 ## Configuration
 

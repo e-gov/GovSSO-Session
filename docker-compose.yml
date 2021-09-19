@@ -86,6 +86,7 @@ services:
     depends_on:
       - admin-db
       - oidc
+      - smtp
     deploy:
       resources:
         limits:
@@ -95,12 +96,23 @@ services:
       - LOG_FILE_LEVEL=OFF
       - tara-oidc.url=http://oidc:4445/
       - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
+      - spring.mail.host=smtp
+      - spring.mail.port=1025
+      - spring.mail.username=
+      - spring.mail.password=
+      - spring.mail.properties.mail.smtp.auth=false
+      - spring.mail.properties.mail.smtp.starttls.enable=false
       - tara.admin.sso-mode=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
     ports:
       - '16080:8080'
     #restart: unless-stopped
+
+  smtp: # Map to host ports 17xxx.
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - '17080:8025'
 
   oidc-db:
     image: postgres:13
