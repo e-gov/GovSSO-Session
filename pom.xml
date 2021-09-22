@@ -24,8 +24,7 @@
     </licenses>
 
     <properties>
-        <!-- TODO Change to 17 when a buildpack supports it. -->
-        <maven.compiler.release>16</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <dependencies><!-- Ordered by scope, groupId, artifactId. -->
