@@ -5,7 +5,7 @@ services:
 
   session: # Map to host ports 14xxx.
     # First follow README.md to build this Docker image.
-    image: govsso-session:0.1.0
+    image: govsso-session:latest
     depends_on:
       - tara
     deploy:

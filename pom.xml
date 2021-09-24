@@ -97,6 +97,9 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <image>
+                        <name>govsso-session:latest</name><!-- Use "latest" tag instead of "<version>" tag. -->
+                    </image>
                 </configuration>
             </plugin>
             <plugin>
