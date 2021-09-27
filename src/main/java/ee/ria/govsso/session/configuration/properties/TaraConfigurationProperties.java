@@ -5,13 +5,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.net.URL;
 
 @Data
 @Validated
 @ConfigurationProperties(prefix = "govsso.tara")
 public class TaraConfigurationProperties {
 
+    @NotNull
+    private URL authUrl;
+
     @NotBlank
-    private String authUrl;
+    private String clientId;
 
 }

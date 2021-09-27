@@ -4,8 +4,9 @@ import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperti
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.session.SsoSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +17,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpSession;
-import javax.validation.Validator;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -25,24 +25,15 @@ import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 @Slf4j
 @Validated
 @Controller
+@RequiredArgsConstructor
 public class AuthInitController {
 
     public static final String AUTH_INIT_REQUEST_MAPPING = "/auth/init";
 
-    @Autowired
-    private HydraConfigurationProperties hydraConfigurationProperties;
-
-    @Autowired
-    private TaraConfigurationProperties taraConfigurationProperties;
-
-    @Autowired
-    private SsoConfigurationProperties ssoConfigurationProperties;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private WebClient webclient;
+    private final HydraConfigurationProperties hydraConfigurationProperties;
+    private final TaraConfigurationProperties taraConfigurationProperties;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final WebClient webclient;
 
     @GetMapping(value = AUTH_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView authInit(
@@ -62,18 +53,26 @@ public class AuthInitController {
     }
 
     private String createTaraOidcUrl() {
-        String url = taraConfigurationProperties.getAuthUrl();
-        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(url)
+        String uri = taraConfigurationProperties.getAuthUrl().toString();
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("state", "123abc")
-                .queryParam("client_id", ssoConfigurationProperties.getClientId())
+                .queryParam("client_id", taraConfigurationProperties.getClientId())
                 .queryParam("redirect_uri", ssoConfigurationProperties.getBaseUrl());
         return builder.toUriString();
     }
 
     private SsoSession.LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
-        String url = hydraConfigurationProperties.getLoginUrl() + "?login_challenge=" + loginChallenge;
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("login_challenge", loginChallenge);
 
-        SsoSession.LoginRequestInfo loginRequestInfo = webclient.get().uri(url).retrieve().bodyToMono(SsoSession.LoginRequestInfo.class).block();
+        SsoSession.LoginRequestInfo loginRequestInfo = webclient.get()
+                .uri(builder.toUriString())
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .retrieve()
+                .bodyToMono(SsoSession.LoginRequestInfo.class)
+                .block();
 
         if (loginRequestInfo == null || !loginRequestInfo.getChallenge().equals(loginChallenge))
             throw new IllegalStateException("Invalid hydra response");

@@ -14,9 +14,9 @@ spring:
     banner-mode: off
 
 govsso:
-  base-url: base/url/test
-  client-id: testclient123
+  base-url: http://localhost:9877/
   hydra:
-    login-url: https://localhost:9877/oauth2/auth/requests/login
+    admin-url: https://localhost:9877/
   tara:
-    auth-url: auth/url/test
+    auth-url: https://localhost:9877/auth/url/test
+    client-id: testclient123

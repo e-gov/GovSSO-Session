@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+    <!-- Decrease the amount of logs from Jetty started by WireMock -->
+    <logger name="org.eclipse.jetty" level="info"/>
+</configuration>

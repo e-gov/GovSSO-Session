@@ -1,8 +1,5 @@
 package ee.ria.govsso.session.configuration;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -12,32 +9,28 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.session.hazelcast.HazelcastIndexedSessionRepository;
-import org.springframework.session.hazelcast.config.annotation.web.http.EnableHazelcastHttpSession;
+import org.springframework.session.MapSessionRepository;
+import org.springframework.session.config.annotation.web.http.EnableSpringHttpSession;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Configuration
-@EnableHazelcastHttpSession
+@EnableSpringHttpSession
 @ConfigurationPropertiesScan
 public class SsoConfiguration {
 
     @Bean
-    public Config config() {
-        return new Config();
-    }
-
-    @Bean
-    public HazelcastInstance hazelcastInstance(final Config config) {
-        config.setInstanceName(HazelcastIndexedSessionRepository.DEFAULT_SESSION_MAP_NAME);
-        return Hazelcast.getOrCreateHazelcastInstance(config);
+    public MapSessionRepository sessionRepository() {
+        return new MapSessionRepository(new ConcurrentHashMap<>());
     }
 
     @Bean
     public WebClient createWebClient() throws SSLException {
+        // TODO Configure proper trust store.
         SslContext sslContext = SslContextBuilder
                 .forClient()
                 .trustManager(InsecureTrustManagerFactory.INSTANCE)

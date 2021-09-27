@@ -2,9 +2,12 @@ package ee.ria.govsso.session.authentication;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.session.SsoSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
@@ -14,16 +17,16 @@ import java.util.Base64;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class AuthInitControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdefg098AAdsCC";
 
-    @Autowired
-    protected SessionRepository<Session> sessionRepository;
+    private final SessionRepository<? extends Session> sessionRepository;
 
     @Test
     void authInit_Ok() {
@@ -44,16 +47,15 @@ public class AuthInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/url/test"))
                 .extract().cookie("SESSION");
 
-        log.info(cookie);
-
         SsoSession ssoSession = sessionRepository.findById(decodeCookieFromBase64(cookie)).getAttribute(SSO_SESSION);
-        assertEquals(TEST_LOGIN_CHALLENGE, ssoSession.getLoginRequestInfo().getChallenge());
+        assertThat(ssoSession.getLoginRequestInfo().getChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
     }
 
-    @Test
-    void authInit_loginChallenge_EmptyValue() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "......"})
+    void authInit_loginChallenge_EmptyValue(String loginChallenge) {
         given()
-                .param("login_challenge", "")
+                .param("login_challenge", loginChallenge)
                 .when()
                 .get("/auth/init")
                 .then()
@@ -72,19 +74,6 @@ public class AuthInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("message", equalTo("Required request parameter 'login_challenge' for method parameter type String is not present"))
-                .body("error", equalTo("Bad Request"));
-    }
-
-    @Test
-    void authInit_loginChallenge_InvalidValue() {
-        given()
-                .param("login_challenge", "......")
-                .when()
-                .get("/auth/init")
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("message", equalTo("authInit.loginChallenge: only characters and numbers allowed"))
                 .body("error", equalTo("Bad Request"));
     }
 
