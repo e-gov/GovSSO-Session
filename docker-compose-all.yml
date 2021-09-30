@@ -21,8 +21,11 @@ services:
       - govsso.tara.jwks-url=https://tara:8443/oidc/jwks
       - govsso.tara.auth-url=https://localhost:15443/oidc/authorize
       - govsso.tara.token-url=https://tara:8443/oidc/token
+      #- BPL_DEBUG_ENABLED=true TODO BPL_DEBUG_ENABLED is broken, specify JAVA_TOOL_OPTIONS manually.
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
     ports:
+      - '14000:8000'
       - '14080:8080'
     #restart: unless-stopped

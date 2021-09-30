@@ -106,6 +106,9 @@
                         </exclude>
                     </excludes>
                     <image>
+                        <env>
+                            <BP_DEBUG_ENABLED>true</BP_DEBUG_ENABLED>
+                        </env>
                         <name>govsso-session:latest</name><!-- Use "latest" tag instead of "<version>" tag. -->
                     </image>
                 </configuration>
