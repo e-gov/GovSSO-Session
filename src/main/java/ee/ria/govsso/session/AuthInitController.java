@@ -56,9 +56,11 @@ public class AuthInitController {
         String uri = taraConfigurationProperties.getAuthUrl().toString();
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
-                .queryParam("state", "123abc")
+                .queryParam("response_type", "code")
+                .queryParam("scope", "openid")
+                .queryParam("state", "1234abcd")
                 .queryParam("client_id", taraConfigurationProperties.getClientId())
-                .queryParam("redirect_uri", ssoConfigurationProperties.getBaseUrl());
+                .queryParam("redirect_uri", ssoConfigurationProperties.getBaseUrl() + "auth/taracallback");
         return builder.toUriString();
     }
 
