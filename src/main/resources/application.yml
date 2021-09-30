@@ -29,4 +29,5 @@ govsso:
     jwks-url: https://localhost:15443/oidc/jwks
     auth-url: https://localhost:15443/oidc/authorize
     token-url: https://localhost:15443/oidc/token
-    client-id: testclient123
+    client-id: govsso
+    client-secret: changeme
