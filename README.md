@@ -47,6 +47,8 @@ docker compose up
 
 ## Endpoints
 
+* Dozzle (log viewer)
+    * http://localhost:9080/ - UI
 * Example Client A
     * https://localhost:11443/ui/ - UI
 * Hydra

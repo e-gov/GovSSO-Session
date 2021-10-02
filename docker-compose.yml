@@ -4,6 +4,13 @@ services:
   # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
   # TODO Replace sleep with a reliable mechanism.
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - '9080:8080'
+
   clienta: # Map to host ports 11xxx.
     # TODO Use GOVSSO-Client instead.
     build: https://github.com/e-gov/TARA-Client.git
