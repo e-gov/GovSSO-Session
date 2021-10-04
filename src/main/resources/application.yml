@@ -22,7 +22,6 @@ govsso:
   #  and Dependencies in Docker Compose" workflow in README.md.
   base-url: http://localhost:14080/
   hydra:
-    base-url: http://localhost:13444/
     admin-url: http://localhost:13445/
   tara:
     discovery-url: https://localhost:15443/oidc/.well-known/openid-configuration

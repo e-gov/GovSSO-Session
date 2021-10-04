@@ -1,4 +1,4 @@
-package ee.ria.govsso.session;
+package ee.ria.govsso.session.controllers;
 
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;

@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import java.util.Base64;
+
 import static io.restassured.config.RedirectConfig.redirectConfig;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -40,6 +42,11 @@ public abstract class BaseTest {
     public void beforeEachTest() {
         RestAssured.port = port;
         wireMockServer.resetAll();
+    }
+
+    protected String decodeCookieFromBase64(String cookie) {
+        byte[] decodedBytes = Base64.getDecoder().decode(cookie);
+        return new String(decodedBytes);
     }
 
 }

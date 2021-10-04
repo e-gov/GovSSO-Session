@@ -16,6 +16,9 @@ public class TaraConfigurationProperties {
     @NotNull
     private URL authUrl;
 
+    @NotNull
+    private URL tokenUrl;
+
     @NotBlank
     private String clientId;
 

@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.authentication;
+package ee.ria.govsso.session.controllers;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.session.SsoSession;
@@ -11,8 +11,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
-
-import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
@@ -124,11 +122,6 @@ public class AuthInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("message", equalTo("500 Internal Server Error from GET https://localhost:9877/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE));
-    }
-
-    private String decodeCookieFromBase64(String cookie) {
-        byte[] decodedBytes = Base64.getDecoder().decode(cookie);
-        return new String(decodedBytes);
     }
 
 }
