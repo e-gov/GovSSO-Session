@@ -1,0 +1,205 @@
+openapi: '3.0.3'
+info:
+  title: GOVSSO Session Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:14080
+paths:
+  /auth/init:
+    get:
+      summary: Start authentication.
+      operationId: authInit
+      parameters:
+        - in: query
+          name: login_challenge
+          description: ID of Ory Hydra's login request.
+          required: true
+          schema:
+            type: string
+            pattern: '[a-zA-Z0-9]'
+            minLength: 32
+            maxLength: 64
+            example: '824113da6da44889943b98715a06d699'
+      responses:
+        '302':
+          description: Redirect to TARA for authentication.
+          headers:
+            Set-Cookie:
+              description: Session cookie.
+              schema:
+                type: string
+              example: SESSION=Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5; Path=/; HttpOnly; SameSite=Lax
+            Location:
+              description: TARA authentication request.
+              schema:
+                type: string
+                format: uri
+              example: https://tara.ria.ee/oidc/authorize?redirect_uri=http%3A%2F%2Flocalhost:14080%2Fauth%2Ftaracallback&scope=openid&state=58ND1G3gn6soaIeMC8Ck1g31N9GCGdGC&response_type=code&client_id=govsso
+        '400':
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+  /auth/taracallback:
+    get:
+      summary: TARA authentication completed, request ID token from TARA.
+      operationId: authTaraCallback
+      parameters:
+        - in: cookie
+          name: SESSION
+          description: Session cookie.
+          required: true
+          schema:
+            type: string
+            pattern: '[a-zA-Z0-9]'
+            minLength: 48
+            maxLength: 64
+            example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
+        - in: query
+          name: code
+          description: Authorization code to use for requesting ID token from TARA.
+          required: true
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 128
+            example: gSVzQ6iWTLWDtD1f7_QZdHNweXzrraQYdys_MWoRK-A.nQ2epEBSzxo_n-P6hQt_I_HvusERdqkGaC31TrjSIlU
+        - in: query
+          name: state
+          description: Security code against false request attacks.
+          required: true
+          schema:
+            type: string
+            minLength: 32
+            maxLength: 64
+            example: 58ND1G3gn6soaIeMC8Ck1g31N9GCGdGC
+      responses:
+        '302':
+          description: ID token from TARA obtained successfully, redirect to Ory Hydra for accepting login request.
+          headers:
+            Location:
+              description: Ory Hydra accept login request.
+              schema:
+                type: string
+                format: uri
+              example: http://localhost:13080/oidc/authorize?client_id=govsso&login_verifier=fd0658bf0d1e4030920b3ab1690d901d&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+        '400':
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+  /auth/consent:
+    get:
+      summary: Display consent view.
+      operationId: authConsent
+      parameters:
+        - in: cookie
+          name: SESSION
+          description: Session cookie.
+          required: true
+          schema:
+            type: string
+            pattern: '[a-zA-Z0-9]'
+            minLength: 48
+            maxLength: 64
+            example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
+        - in: query
+          name: consent_challenge
+          description: ID of Ory Hydra's consent request.
+          required: true
+          schema:
+            type: string
+            pattern: '[a-zA-Z0-9]'
+            minLength: 32
+            maxLength: 64
+            example: '01a9d709fb014160b4f1016bf7868574'
+      responses:
+        '302':
+          description: Consent display skipped, redirect to Ory Hydra for accepting consent request.
+          headers:
+            Location:
+              description: Ory Hydra accept consent request.
+              schema:
+                type: string
+                format: uri
+              example: http://localhost:13080/oidc/authorize?client_id=govsso&consent_verifier=232464aaa3b247979d812752d5f8a020&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+        '400':
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+      properties:
+        timestamp:
+          type: string
+          description: The time the error occurred.
+          example: '2020-12-22T09:09:23.463+00:00'
+        status:
+          type: integer
+          format: int32
+          description: The HTTP statuscode.
+          example: 400
+        error:
+          type: string
+          description: Short error message.
+          example: Bad Request
+        message:
+          type: string
+          description: Human readable error description.
+          example: Required String parameter 'sample_parameter' is not present
+        path:
+          type: string
+          description: The path that returned the error.
+          example: /sample/path
