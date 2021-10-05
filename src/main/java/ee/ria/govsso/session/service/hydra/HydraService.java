@@ -1,14 +1,9 @@
-package ee.ria.govsso.session.services;
+package ee.ria.govsso.session.service.hydra;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.session.SsoSession;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -30,17 +25,17 @@ public class HydraService {
 
         SsoSession.LoginRequestInfo loginRequestInfo = webclient.get()
                 .uri(builder.toUriString())
-                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(SsoSession.LoginRequestInfo.class)
-                .block();
+                .blockOptional().orElseThrow();
 
-        if (loginRequestInfo == null || !loginRequestInfo.getChallenge().equals(loginChallenge))
+        if (!loginRequestInfo.getChallenge().equals(loginChallenge))
             throw new IllegalStateException("Invalid hydra response");
         return loginRequestInfo;
     }
 
-    public String acceptLogin(String loginChallenge, String sub) throws JsonProcessingException {
+    public String acceptLogin(String loginChallenge, String sub) {
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login/accept";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("login_challenge", loginChallenge);
@@ -49,28 +44,32 @@ public class HydraService {
 
         LoginAcceptResponseBody acceptResponseBody = webclient.put()
                 .uri(builder.toUriString())
-                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(requestBody))
                 .retrieve()
                 .bodyToMono(LoginAcceptResponseBody.class)
-                .block();
+                .blockOptional().orElseThrow();
 
         return acceptResponseBody.getRedirectTo();
     }
 
-    @Data
-    static class LoginAcceptRequestBody {
+    public String acceptConsent(String consentChallenge, SsoSession ssoSession) {
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/consent/accept";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("consent_challenge", consentChallenge);
 
-        private final boolean remember;
-        private final String acr;
-        private final String subject;
-    }
+        ConsentAcceptRequestBody requestBody = new ConsentAcceptRequestBody();
 
-    @Data
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    static class LoginAcceptResponseBody {
+        ConsentAcceptResponseBody consentResponseBody = webclient.put()
+                .uri(builder.toUriString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(requestBody))
+                .retrieve()
+                .bodyToMono(ConsentAcceptResponseBody.class)
+                .blockOptional().orElseThrow();
 
-        private String redirectTo;
+        return consentResponseBody.getRedirectTo();
     }
 }

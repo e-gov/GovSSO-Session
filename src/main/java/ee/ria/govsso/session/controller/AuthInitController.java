@@ -1,9 +1,8 @@
-package ee.ria.govsso.session.controllers;
+package ee.ria.govsso.session.controller;
 
-import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
-import ee.ria.govsso.session.services.HydraService;
+import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -30,10 +28,8 @@ public class AuthInitController {
 
     public static final String AUTH_INIT_REQUEST_MAPPING = "/auth/init";
 
-    private final HydraConfigurationProperties hydraConfigurationProperties;
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
-    private final WebClient webclient;
     private final HydraService hydraService;
 
     @GetMapping(value = AUTH_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)

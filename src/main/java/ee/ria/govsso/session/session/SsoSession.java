@@ -19,7 +19,6 @@ public class SsoSession {
         //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getLoginRequest, Ory Hydra response is deserialized into this class.
 
         private String challenge;
-
         private Client client;
     }
 
@@ -29,5 +28,4 @@ public class SsoSession {
 
         private String[] redirectUris;
     }
-
 }

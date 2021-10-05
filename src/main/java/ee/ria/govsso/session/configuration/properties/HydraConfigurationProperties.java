@@ -14,7 +14,5 @@ import java.net.URL;
 @ConfigurationProperties(prefix = "govsso.hydra")
 public class HydraConfigurationProperties {
 
-    @NotNull
-    private URL adminUrl;
-
+    @NotNull URL adminUrl;
 }

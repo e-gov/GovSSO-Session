@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.controllers;
+package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.session.SsoSession;
@@ -16,7 +16,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static ee.ria.govsso.session.controllers.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
+import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
 
@@ -45,16 +45,13 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", "testcode")
-                .param("state", "teststate")
-                .param("nonce", "testnonce")
                 .when()
                 .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.containsString("auth/url/test"))
-                .extract().cookie("SESSION");
+                .header("Location", Matchers.containsString("auth/login/test"));
     }
 
     @Test
@@ -70,8 +67,6 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", "testcode")
-                .param("state", "teststate")
-                .param("nonce", "testnonce")
                 .when()
                 .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
@@ -99,8 +94,6 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", "testcode")
-                .param("state", "teststate")
-                .param("nonce", "testnonce")
                 .when()
                 .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
@@ -114,7 +107,6 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoSession ssoSession = new SsoSession();
         SsoSession.LoginRequestInfo lri = new SsoSession.LoginRequestInfo();
         SsoSession.Client client = new SsoSession.Client();
-        client.setRedirectUris(new String[]{"some/test/url"});
         lri.setClient(client);
         ssoSession.setLoginRequestInfo(lri);
         session.setAttribute(SSO_SESSION, ssoSession);

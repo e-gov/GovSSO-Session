@@ -1,12 +1,8 @@
-package ee.ria.govsso.session.services;
+package ee.ria.govsso.session.service.tara;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -31,8 +27,8 @@ public class TaraService {
 
         TokenResponse tokenResponse = webclient.post()
                 .uri(taraConfigurationProperties.getTokenUrl().toString())
-                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBasicAuth(
                         taraConfigurationProperties.getClientId(),
                         taraConfigurationProperties.getClientSecret()))
@@ -42,12 +38,5 @@ public class TaraService {
                 .block();
 
         return tokenResponse.getIdToken();
-    }
-
-    @Data
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class TokenResponse {
-
-        private String idToken;
     }
 }

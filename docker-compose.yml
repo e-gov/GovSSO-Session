@@ -60,7 +60,7 @@ services:
       - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:13444/oauth2/auth
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
       - URLS_LOGIN=http://localhost:14080/auth/init
-      - URLS_CONSENT=http://localhost:14080/consent
+      - URLS_CONSENT=http://localhost:14080/auth/consent
       - URLS_LOGOUT=http://localhost:14080/logout
       - URLS_ERROR=http://localhost:14080/error
     ports:

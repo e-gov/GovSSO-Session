@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.controllers;
+package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.session.SsoSession;
@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,7 +53,7 @@ public class AuthInitControllerTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......"})
-    void authInit_loginChallenge_EmptyValue(String loginChallenge) {
+    void authInit_loginChallenge_EmptyValue_and_InvalidValue(String loginChallenge) {
         given()
                 .param("login_challenge", loginChallenge)
                 .when()

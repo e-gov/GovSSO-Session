@@ -33,7 +33,6 @@ public abstract class BaseTest {
     @BeforeAll
     static void setUpAll() {
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("wiremock").setLevel(Level.OFF);
-        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("WireMock").setLevel(Level.OFF);
         RestAssured.config = RestAssured.config().redirect(redirectConfig().followRedirects(false));
         wireMockServer.start();
     }
