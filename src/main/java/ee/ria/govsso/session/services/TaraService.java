@@ -1,6 +1,6 @@
 package ee.ria.govsso.session.services;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import lombok.Data;
@@ -33,6 +33,9 @@ public class TaraService {
                 .uri(taraConfigurationProperties.getTokenUrl().toString())
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                .headers(headers -> headers.setBasicAuth(
+                        taraConfigurationProperties.getClientId(),
+                        taraConfigurationProperties.getClientSecret()))
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
                 .bodyToMono(TokenResponse.class)
@@ -42,7 +45,7 @@ public class TaraService {
     }
 
     @Data
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class TokenResponse {
 
         private String idToken;

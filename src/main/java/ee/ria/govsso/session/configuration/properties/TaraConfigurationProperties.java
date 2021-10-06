@@ -22,4 +22,7 @@ public class TaraConfigurationProperties {
     @NotBlank
     private String clientId;
 
+    @NotBlank
+    private String clientSecret;
+
 }

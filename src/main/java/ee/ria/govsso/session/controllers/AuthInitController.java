@@ -3,10 +3,10 @@ package ee.ria.govsso.session.controllers;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
+import ee.ria.govsso.session.services.HydraService;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +34,7 @@ public class AuthInitController {
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final WebClient webclient;
+    private final HydraService hydraService;
 
     @GetMapping(value = AUTH_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView authInit(
@@ -41,7 +42,7 @@ public class AuthInitController {
             @Pattern(regexp = "[A-Za-z0-9]{1,}", message = "only characters and numbers allowed") String loginChallenge,
             HttpSession session) {
 
-        createSsoSession(session, fetchLoginRequestInfo(loginChallenge));
+        createSsoSession(session, hydraService.fetchLoginRequestInfo(loginChallenge));
 
         return new RedirectView(createTaraOidcUrl());
     }
@@ -62,22 +63,5 @@ public class AuthInitController {
                 .queryParam("client_id", taraConfigurationProperties.getClientId())
                 .queryParam("redirect_uri", ssoConfigurationProperties.getBaseUrl() + "auth/taracallback");
         return builder.toUriString();
-    }
-
-    private SsoSession.LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
-        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login";
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
-                .queryParam("login_challenge", loginChallenge);
-
-        SsoSession.LoginRequestInfo loginRequestInfo = webclient.get()
-                .uri(builder.toUriString())
-                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .retrieve()
-                .bodyToMono(SsoSession.LoginRequestInfo.class)
-                .block();
-
-        if (loginRequestInfo == null || !loginRequestInfo.getChallenge().equals(loginChallenge))
-            throw new IllegalStateException("Invalid hydra response");
-        return loginRequestInfo;
     }
 }

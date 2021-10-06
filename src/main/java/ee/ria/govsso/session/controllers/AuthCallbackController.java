@@ -3,6 +3,7 @@ package ee.ria.govsso.session.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
+import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.services.HydraService;
 import ee.ria.govsso.session.services.TaraService;
 import ee.ria.govsso.session.session.SsoSession;
@@ -30,6 +31,7 @@ public class AuthCallbackController {
     public static final String CALLBACK_REQUEST_MAPPING = "/auth/taracallback";
 
     private final HydraConfigurationProperties hydraConfigurationProperties;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
 
     private final TaraService taraService;
     private final HydraService hydraService;
@@ -39,7 +41,7 @@ public class AuthCallbackController {
             @RequestParam(name = "code") String code,
             @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) throws JsonProcessingException {
 
-        String idToken = taraService.getIdToken(code, ssoSession.getLoginRequestInfo().getClient().getRedirect_uris()[0]);
+        String idToken = taraService.getIdToken(code, ssoConfigurationProperties.getBaseUrl() + "auth/taracallback");
         String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginRequestInfo().getChallenge(), getSubFromIdToken(idToken));
 
         return new RedirectView(redirectUrl);

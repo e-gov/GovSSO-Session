@@ -12,7 +12,10 @@ import org.springframework.session.SessionRepository;
 
 import java.util.Base64;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controllers.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
@@ -111,7 +114,7 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoSession ssoSession = new SsoSession();
         SsoSession.LoginRequestInfo lri = new SsoSession.LoginRequestInfo();
         SsoSession.Client client = new SsoSession.Client();
-        client.setRedirect_uris(new String[]{"some/test/url"});
+        client.setRedirectUris(new String[]{"some/test/url"});
         lri.setClient(client);
         ssoSession.setLoginRequestInfo(lri);
         session.setAttribute(SSO_SESSION, ssoSession);

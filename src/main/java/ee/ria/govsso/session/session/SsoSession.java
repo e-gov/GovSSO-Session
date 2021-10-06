@@ -1,6 +1,6 @@
 package ee.ria.govsso.session.session;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ public class SsoSession {
     private LoginRequestInfo loginRequestInfo;
 
     @Data
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class LoginRequestInfo {
         //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getLoginRequest, Hydra response is deserialized into this class.
 
@@ -24,10 +24,10 @@ public class SsoSession {
     }
 
     @Data
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Client {
 
-        private String[] redirect_uris;
+        private String[] redirectUris;
     }
 
 }
