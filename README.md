@@ -51,6 +51,8 @@ docker compose up
     * http://localhost:9080/ - UI
 * Example Client A
     * https://localhost:11443/ui/ - UI
+* Example Client B
+    * https://localhost:12443/ui/ - UI 
 * Hydra
     * http://localhost:13444/ - public API
         * http://localhost:13444/health/ready

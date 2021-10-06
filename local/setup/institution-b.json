@@ -1,0 +1,13 @@
+{
+  "name": "Institution B",
+  "registry_code": "70000002",
+  "type": {
+    "type": "public"
+  },
+  "address": "Address B",
+  "phone": "+37270000002",
+  "email": "contact.institutionb@example.org",
+  "billing_settings": {
+    "email": "billing.institutionb@example.org"
+  }
+}

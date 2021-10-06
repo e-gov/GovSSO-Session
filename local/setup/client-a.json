@@ -1,0 +1,50 @@
+{
+  "client_id": "client-a",
+  "client_name": {
+    "et": "Teenusenimi A",
+    "en": "Service name A",
+    "ru": "Название службы A"
+  },
+  "client_short_name": {
+    "et": "Teenus A",
+    "en": "Service A",
+    "ru": "Название A"
+  },
+  "institution_metainfo": {
+    "registry_code": "70000001",
+    "type": {
+      "type": "public"
+    },
+    "name": "Institution A"
+  },
+  "redirect_uris": [
+    "https://localhost:11443/oauth/response"
+  ],
+  "backchannel_logout_uri": "https://localhost:11443/oauth/logout",
+  "scope": [
+    "openid"
+  ],
+  "secret": "secreta",
+  "description": "This is a sample client. Intended for use in development environment only.",
+  "info_notification_emails": [
+    "notifications.clienta@example.org"
+  ],
+  "client_contacts": [
+    {
+      "name": "Contact 1",
+      "email": "contact1.clienta@example.org",
+      "phone": "+37270000001",
+      "department": "Department 1"
+    },
+    {
+      "name": "Contact 2",
+      "email": "contact2.clienta@example.org",
+      "phone": "+37270000001",
+      "department": "Department 2"
+    }
+  ],
+  "sla_notification_emails": [
+    "slanotifications.clienta@example.org"
+  ],
+  "is_user_consent_required": false
+}

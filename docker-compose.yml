@@ -22,13 +22,26 @@ services:
         limits:
           memory: 650M
     environment:
-      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=11443
+      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=11443 -Dclient.id=client-a -Dclient.secret=secreta -Dclient.domain=localhost
     ports:
       - '11443:11443'
     #restart: unless-stopped
 
-  # TODO clientb
-  # Map to host ports 12xxx.
+  clientb: # Map to host ports 12xxx.
+    # TODO Use GOVSSO-Client instead.
+    build: https://github.com/e-gov/TARA-Client.git
+    entrypoint: sh -c 'sleep 10 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
+    depends_on:
+      - oidc
+    deploy:
+      resources:
+        limits:
+          memory: 650M
+    environment:
+      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=12443 -Dclient.id=client-b -Dclient.secret=secretb -Dclient.domain=localhost
+    ports:
+      - '12443:12443'
+    #restart: unless-stopped
 
   oidc: # Map to host ports 13xxx.
     image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
@@ -57,18 +70,18 @@ services:
     volumes:
       - ./local/oidc:/etc/hydra
 
-  # TODO Import initial client data through admin service.
-  oidc-setup:
-    image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
-    entrypoint: sh -c 'sleep 10 && hydra clients create --id openIdDemo --secret secret --callbacks https://localhost:11443/oauth/response'
+  setup:
+    build: local/setup
     depends_on:
-      - oidc
+      - admin
     deploy:
       resources:
         limits:
           memory: 250M
     environment:
-      - HYDRA_ADMIN_URL=http://oidc:4445/
+      - ADMIN_SERVICE_URL=admin:8080
+      - ADMIN_USER=admin
+      - ADMIN_PASS=admin
 
   tara: # Map to host ports 15xxx.
     # TODO Use specific version.
@@ -128,6 +141,10 @@ services:
       resources:
         limits:
           memory: 250M
+    healthcheck:
+      test: pg_isready -U hydra -d oidc-db
+      interval: 6s
+      retries: 10
     environment:
       - POSTGRES_DB=oidc-db
       - POSTGRES_USER=hydra
