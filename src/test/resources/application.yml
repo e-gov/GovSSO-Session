@@ -21,3 +21,4 @@ govsso:
     auth-url: https://localhost:9877/auth/url/test
     client-id: testclient123
     token-url: https://localhost:9877/oidc/token
+    client-secret: testsecret123
