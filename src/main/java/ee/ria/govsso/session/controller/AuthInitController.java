@@ -27,6 +27,7 @@ import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 public class AuthInitController {
 
     public static final String AUTH_INIT_REQUEST_MAPPING = "/auth/init";
+    public static final String AUTH_VIEW_REQUEST_MAPPING = "/auth/view";
 
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
@@ -41,6 +42,12 @@ public class AuthInitController {
         createSsoSession(session, hydraService.fetchLoginRequestInfo(loginChallenge));
 
         return new RedirectView(createTaraOidcUrl());
+    }
+
+    @GetMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
+    public String authView() {
+
+        return "authView";
     }
 
     private void createSsoSession(HttpSession session, SsoSession.LoginRequestInfo loginRequestInfo) {

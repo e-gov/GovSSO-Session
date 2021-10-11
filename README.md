@@ -83,3 +83,8 @@ docker compose up
 ## Configuration
 
 TODO
+
+## Licenses
+
+* [jquery-3.4.1](https://jquery.com) - MIT license
+* [Roboto font](https://fonts.google.com/specimen/Roboto) - Apache 2.0 license
