@@ -53,7 +53,7 @@ docker compose up
     * https://localhost:11443/ui/ - UI
 * Example Client B
     * https://localhost:12443/ui/ - UI 
-* Hydra
+* Ory Hydra
     * http://localhost:13444/ - public API
         * http://localhost:13444/health/ready
         * http://localhost:13444/.well-known/openid-configuration

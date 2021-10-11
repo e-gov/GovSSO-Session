@@ -58,7 +58,7 @@ services:
       - URLS_SELF_ISSUER=http://oidc:4444/
       # Override auth endpoint advertised in /.well-known/openid-configuration to use hostname that browser running on host machine can access ("localhost").
       - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:13444/oauth2/auth
-      # Configure Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
+      # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
       - URLS_LOGIN=http://localhost:14080/auth/init
       - URLS_CONSENT=http://localhost:14080/consent
       - URLS_LOGOUT=http://localhost:14080/logout

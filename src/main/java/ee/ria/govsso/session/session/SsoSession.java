@@ -16,7 +16,7 @@ public class SsoSession {
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class LoginRequestInfo {
-        //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getLoginRequest, Hydra response is deserialized into this class.
+        //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getLoginRequest, Ory Hydra response is deserialized into this class.
 
         private String challenge;
 
