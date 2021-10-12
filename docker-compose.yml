@@ -132,6 +132,7 @@ services:
   smtp: # Map to host ports 17xxx.
     image: mailhog/mailhog:v1.0.1
     ports:
+      - '17025:1025'
       - '17080:8025'
 
   oidc-db:
@@ -148,6 +149,8 @@ services:
       - POSTGRES_DB=oidc-db
       - POSTGRES_USER=hydra
       - POSTGRES_PASSWORD=changeme
+    ports:
+      - '18432:5432'
     #restart: unless-stopped
     volumes:
       - oidc-db-data:/var/lib/postgresql/data
@@ -162,6 +165,8 @@ services:
       - POSTGRES_DB=admin-db
       - POSTGRES_USER=taraadmin
       - POSTGRES_PASSWORD=changeme
+    ports:
+      - '19432:5432'
     #restart: unless-stopped
     volumes:
       - admin-db-data:/var/lib/postgresql/data
