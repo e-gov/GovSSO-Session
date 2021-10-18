@@ -44,7 +44,7 @@ public class AuthInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.containsString("auth/url/test"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A9877%2Fauth%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie("SESSION");
 
         SsoSession ssoSession = sessionRepository.findById(decodeCookieFromBase64(cookie)).getAttribute(SSO_SESSION);

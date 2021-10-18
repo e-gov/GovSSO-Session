@@ -1,6 +1,8 @@
 package ee.ria.govsso.session.controller;
 
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.BaseTest;
+import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -29,6 +31,7 @@ class AuthConsentControllerTest extends BaseTest {
     public static final String MOCK_CONSENT_CHALLENGE = "abcdefg098AAdsCC";
 
     private final SessionRepository<MapSession> sessionRepository;
+    private final TaraService taraService;
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......"})
@@ -116,10 +119,13 @@ class AuthConsentControllerTest extends BaseTest {
     @SneakyThrows
     private String createSession() {
         MapSession session = sessionRepository.createSession();
-        SsoSession ssoSession = new SsoSession();
+        SsoSession.LoginRequestInfo loginRequest = new SsoSession.LoginRequestInfo();
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
+        String state = authenticationRequest.getState().getValue();
+        String nonce = authenticationRequest.getNonce().getValue();
+        SsoSession ssoSession = new SsoSession(loginRequest, state, nonce);
         session.setAttribute(SSO_SESSION, ssoSession);
         sessionRepository.save(session);
-
         return Base64.getEncoder().withoutPadding().encodeToString(session.getId().getBytes());
     }
 }

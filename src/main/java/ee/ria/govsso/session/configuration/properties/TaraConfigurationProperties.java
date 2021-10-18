@@ -16,14 +16,13 @@ import java.net.URL;
 public class TaraConfigurationProperties {
 
     @NotNull
-    URL authUrl;
-
-    @NotNull
-    URL tokenUrl;
+    URL issuerUrl;
 
     @NotBlank
     String clientId;
 
     @NotBlank
     String clientSecret;
+
+    Integer maxClockSkewSeconds = 10;
 }

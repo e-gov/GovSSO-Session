@@ -1,8 +1,11 @@
 package ee.ria.govsso.session.service.hydra;
 
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -35,12 +38,14 @@ public class HydraService {
         return loginRequestInfo;
     }
 
-    public String acceptLogin(String loginChallenge, String sub) {
+    @SneakyThrows
+    public String acceptLogin(String loginChallenge, JWT idToken) {
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login/accept";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("login_challenge", loginChallenge);
 
-        LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody(false, "high", sub);
+        JWTClaimsSet jwtClaimsSet = idToken.getJWTClaimsSet();
+        LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody(false, "high", jwtClaimsSet.getSubject());
 
         LoginAcceptResponseBody acceptResponseBody = webclient.put()
                 .uri(builder.toUriString())

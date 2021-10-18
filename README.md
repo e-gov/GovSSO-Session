@@ -84,6 +84,22 @@ docker compose up
 
 TODO
 
+<a name="tara_integration_conf"></a>
+
+### Integration with TARA OIDC service
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.tara.issuer-url` | Yes | | TARA OIDC issuer URL where URI `${govsso.tara.issuer-url}/.well-known/openid-configuration` returns OIDC well known configuration. Issuer URL must **exactly** match issuer value published in OIDC configuration. |
+| `govsso.tara.client-id` | Yes | | TARA client identifier. The client ID is issued by [RIA](https://www.ria.ee/). |
+| `govsso.tara.client-secret` | Yes | | TARA client password. The client password is issued by [RIA](https://www.ria.ee/). |
+| `govsso.tara.max-clock-skew-seconds` | No | 10 | Maximum allowed clock skew in seconds, when validating identity token. |
+| `govsso.tara.metadata-interval` | No | PT24H | TARA OIDC well known configuration update interval. The time unit is milliseconds or in [ISO-8601 duration format](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-). |
+| `govsso.tara.metadata-max-attempts` | No | 1440 | Maximum attempts to retry metadata request on error. |
+| `govsso.tara.metadata-backoff-delay-milliseconds` | No | 1000 | Initial delay time in milliseconds between retries. |
+| `govsso.tara.metadata-backoff-max-delay-milliseconds` | No | 60000 | Maximum delay time in milliseconds between retries after applying backoff multiplier to initial delay time. |
+| `govsso.tara.metadata-backoff-multiplier` | No | 1.1 | Multiplier for generating the next delay for backoff. |
+
 ## Licenses
 
 * [jquery](https://jquery.com) - MIT license

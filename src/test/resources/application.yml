@@ -1,4 +1,3 @@
-# TODO Disable most endpoints in non-dev environments.
 management:
   endpoint:
     health:
@@ -18,7 +17,6 @@ govsso:
   hydra:
     admin-url: https://localhost:9877/
   tara:
-    auth-url: https://localhost:9877/auth/url/test
-    token-url: https://localhost:9877/oidc/token
+    issuer-url: https://localhost:9877
     client-id: testclient123
     client-secret: testsecret123

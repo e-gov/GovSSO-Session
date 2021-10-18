@@ -11,7 +11,9 @@ public class SsoSession {
 
     public static final String SSO_SESSION = "sso.session";
 
-    private LoginRequestInfo loginRequestInfo;
+    private final LoginRequestInfo loginRequestInfo;
+    private final String taraAuthenticationRequestState;
+    private final String taraAuthenticationRequestNonce;
 
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

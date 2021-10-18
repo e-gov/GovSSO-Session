@@ -9,7 +9,6 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.Map;
 
-import static org.springframework.boot.web.error.ErrorAttributeOptions.Include.BINDING_ERRORS;
 import static org.springframework.boot.web.error.ErrorAttributeOptions.Include.MESSAGE;
 
 @Slf4j
