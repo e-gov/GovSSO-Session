@@ -52,7 +52,7 @@ docker compose up
 * Example Client A
     * https://localhost:11443/ui/ - UI
 * Example Client B
-    * https://localhost:12443/ui/ - UI 
+    * https://localhost:12443/ui/ - UI
 * Ory Hydra
     * http://localhost:13444/ - public API
         * http://localhost:13444/health/ready
@@ -86,5 +86,5 @@ TODO
 
 ## Licenses
 
-* [jquery-3.4.1](https://jquery.com) - MIT license
+* [jquery](https://jquery.com) - MIT license
 * [Roboto font](https://fonts.google.com/specimen/Roboto) - Apache 2.0 license
