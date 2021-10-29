@@ -1,6 +1,6 @@
 {
-  "taraMockHost": "tara",
-  "httpServerPort": ":8443",
+  "taraMockHost": "tara.localhost",
+  "httpServerPort": ":15443",
   "baseHref": "/",
   "taraMockCert": "vault/https.crt",
   "taraMockKey": "vault/https.key",

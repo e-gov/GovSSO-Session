@@ -24,6 +24,6 @@ govsso:
   hydra:
     admin-url: http://localhost:13445/
   tara:
-    issuer-url: https://localhost:15443
+    issuer-url: https://tara.localhost:15443
     client-id: govsso
     client-secret: changeme

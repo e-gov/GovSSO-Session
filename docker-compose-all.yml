@@ -17,7 +17,7 @@ services:
       # Override built-in application.yml URL-s to use container hostnames ("oidc", "tara") from docker-compose.yml,
       #  except auth-url, which must use a hostname that browser running on host machine can access ("localhost").
       - govsso.hydra.admin-url=http://oidc:4445/
-      - govsso.tara.issuer-url=https://tara:8443
+      - govsso.tara.issuer-url=https://tara.localhost:15443
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
