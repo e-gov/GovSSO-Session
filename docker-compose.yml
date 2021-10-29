@@ -79,7 +79,7 @@ services:
         limits:
           memory: 250M
     environment:
-      - ADMIN_SERVICE_URL=admin:8080
+      - ADMIN_SERVICE_URL=http://admin:8080
       - ADMIN_USER=admin
       - ADMIN_PASS=admin
 

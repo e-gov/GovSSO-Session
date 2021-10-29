@@ -11,21 +11,36 @@ createClientPayload=$7
 echo
 echo "----- [ Login to admin service ]"
 echo
-curl --request POST --cookie-jar cookies.txt \
-  --url "http://$adminServiceUrl/login" \
+curl --silent --request POST --cookie-jar cookies.txt \
+  --url "$adminServiceUrl/login" \
   --header 'Content-Type: application/json' \
   --data "{\"username\":\"$adminServiceUsername\",\"password\":\"$adminServicePassword\"}"
 
 XSRFTOKEN=$(grep -oP 'XSRF-TOKEN\s*\K([\w-]+)' cookies.txt)
 
 echo
-echo "----- [ Delete institution: $institution ]"
+echo "----- [ Delete client: $clientId ]"
 echo
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 http://$adminServiceUrl/institutions/$institution)
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution/clients/$clientId)
 
 echo "response code = '$http_response'"
 
-if [ "$http_response" == 200 ]; then
+if [ "$http_response" = 200 ]; then
+        echo "Existing client successfully removed"
+        echo
+else
+        echo "Error when removing existing client: $clientId"
+        echo "Response: $(cat response.txt)"
+fi
+
+echo
+echo "----- [ Delete institution: $institution ]"
+echo
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution)
+
+echo "response code = '$http_response'"
+
+if [ "$http_response" = 200 ]; then
         echo "Existing institution successfully removed"
         echo
 else
@@ -34,9 +49,9 @@ else
 fi
 
 echo "----- [ Create institution: $institution from file: $createInstitutionPayload ]"
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 http://$adminServiceUrl/institutions -H 'Content-Type: application/json' --data-binary "@$createInstitutionPayload")
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions -H 'Content-Type: application/json' --data-binary "@$createInstitutionPayload")
 
-if [ "$http_response" == 200 ]; then
+if [ "$http_response" = 200 ]; then
        echo "Institution successfully added"
        echo
 else
@@ -45,25 +60,10 @@ else
        exit 1
 fi
 
-echo
-echo "----- [ Delete client: $clientId ]"
-echo
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 http://$adminServiceUrl/institutions/$institution/clients/$clientId)
-
-echo "response code = '$http_response'"
-
-if [ "$http_response" == 200 ]; then
-        echo "Existing client successfully removed"
-        echo
-else
-        echo "Error when removing existing client: $clientId"
-        echo "Response: $(cat response.txt)"
-fi
-
 echo "----- [ Create client: $clientId from file: $createClientPayload ]"
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 http://$adminServiceUrl/institutions/$institution/clients -H 'Content-Type: application/json' --data-binary "@$createClientPayload")
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution/clients -H 'Content-Type: application/json' --data-binary "@$createClientPayload")
 
-if [ "$http_response" == 200 ]; then
+if [ "$http_response" = 200 ]; then
        echo "Client successfully added"
        echo
 else
@@ -71,4 +71,3 @@ else
        echo "Response: $(cat response.txt)"
        exit 1
 fi
-
