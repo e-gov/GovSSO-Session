@@ -73,7 +73,7 @@ TODO What this application does.
     * http://localhost:14080/actuator/info
 * TARA Mock
     * https://tara.localhost:15443/health
-    * https://tara.localhost:15443/oidc/.well-known/openid-configuration
+    * https://tara.localhost:15443/.well-known/openid-configuration
     * https://tara.localhost:15443/oidc/jwks
     * https://tara.localhost:15443/oidc/authorize
     * https://tara.localhost:15443/oidc/token
