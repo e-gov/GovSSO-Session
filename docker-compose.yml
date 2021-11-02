@@ -44,7 +44,7 @@ services:
     #restart: unless-stopped
 
   oidc: # Map to host ports 13xxx.
-    image: oryd/hydra:v1.10.6-sqlite # hydra:v1.10.6 image doesn't have shell, -sqlite image does.
+    image: oryd/hydra:v1.10.7-sqlite # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
     depends_on:
       - oidc-db
