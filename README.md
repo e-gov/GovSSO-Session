@@ -17,10 +17,13 @@ TODO What this application does.
 
 ## Running GOVSSO Session Service Locally and Dependencies in Docker Compose
 
-```shell
-./mvnw spring-boot:run
-docker compose up
-```
+1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from
+   session-service when it's running locally (not in Docker Compose). It's not needed for web browsers as popular
+   browsers already have built-in support for resolving `*.localhost` subdomains.
+2. ```shell
+   ./mvnw spring-boot:run
+   docker compose up
+   ```
 
 ## Running All in Docker Compose
 
@@ -69,11 +72,11 @@ docker compose up
     * http://localhost:14080/actuator/health/readiness
     * http://localhost:14080/actuator/info
 * TARA Mock
-    * https://localhost:15443/health
-    * https://localhost:15443/oidc/.well-known/openid-configuration
-    * https://localhost:15443/oidc/jwks
-    * https://localhost:15443/oidc/authorize
-    * https://localhost:15443/oidc/token
+    * https://tara.localhost:15443/health
+    * https://tara.localhost:15443/oidc/.well-known/openid-configuration
+    * https://tara.localhost:15443/oidc/jwks
+    * https://tara.localhost:15443/oidc/authorize
+    * https://tara.localhost:15443/oidc/token
 * Admin Service
     * http://localhost:16080/ - UI (username admin, password admin)
     * http://localhost:16080/actuator/health
