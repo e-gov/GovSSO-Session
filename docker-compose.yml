@@ -128,6 +128,7 @@ services:
         limits:
           memory: 650M
     environment:
+      - spring.application.name=GOVSSO-Admin
       - tara-oidc.url=http://oidc:4445/
       - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
       - spring.mail.host=smtp
