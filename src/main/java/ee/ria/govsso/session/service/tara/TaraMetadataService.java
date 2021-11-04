@@ -74,6 +74,7 @@ public class TaraMetadataService {
             log.info("TARA metadata successfully updated. Metadata={}, jwkSet={}", metadata, jwkSet);
         } catch (Exception ex) {
             providerMetadata = null;
+            log.error("Unable to update TARA metadata", ex);
             throw new SsoException("Unable to update TARA metadata", ex);
         }
     }
@@ -83,6 +84,7 @@ public class TaraMetadataService {
         Issuer issuer = new Issuer(issuerUrl);
         WellKnownPathComposeStrategy strategy = issuerUrl.endsWith("/") ? POSTFIX : INFIX;
         OIDCProviderConfigurationRequest request = new OIDCProviderConfigurationRequest(issuer, strategy);
+        log.info(request.getEndpointURI().toString());
         HTTPRequest httpRequest = request.toHTTPRequest();
         httpRequest.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT); // TODO: Configurable
         httpRequest.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT); // TODO: Configurable

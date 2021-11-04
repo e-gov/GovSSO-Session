@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -65,6 +67,21 @@ public class HydraService {
                 .queryParam("consent_challenge", consentChallenge);
 
         ConsentAcceptRequestBody requestBody = new ConsentAcceptRequestBody();
+
+        List<String> scopes = List.of("openid");
+        requestBody.setGrantScope(scopes);
+
+        ConsentAcceptRequestBody.LoginSession session = new ConsentAcceptRequestBody.LoginSession();
+        ConsentAcceptRequestBody.IdToken idToken = new ConsentAcceptRequestBody.IdToken();
+
+        ConsentAcceptRequestBody.ProfileAttributes profileAttributes = new ConsentAcceptRequestBody.ProfileAttributes();
+        profileAttributes.setGivenName("Eesnimi");
+        profileAttributes.setFamilyName("Perenimi");
+        profileAttributes.setDateOfBirth("12.12.2012");
+
+        idToken.setProfileAttributes(profileAttributes);
+        session.setIdToken(idToken);
+        requestBody.setSession(session);
 
         ConsentAcceptResponseBody consentResponseBody = webclient.put()
                 .uri(builder.toUriString())
