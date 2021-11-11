@@ -20,6 +20,9 @@
   "redirect_uris": [
     "https://localhost:11443/oauth/response"
   ],
+  "post_logout_redirect_uris": [
+    "https://localhost:11443/"
+  ],
   "backchannel_logout_uri": "https://localhost:11443/oauth/logout",
   "scope": [
     "openid"
