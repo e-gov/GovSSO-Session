@@ -18,7 +18,7 @@
     "name": "Institution B"
   },
   "redirect_uris": [
-    "https://localhost:12443/oauth/response"
+    "https://localhost:12443/login/oauth2/code/govsso"
   ],
   "post_logout_redirect_uris": [
     "https://localhost:12443/"

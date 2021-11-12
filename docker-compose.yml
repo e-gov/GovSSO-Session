@@ -12,9 +12,8 @@ services:
       - '9080:8080'
 
   clienta: # Map to host ports 11xxx.
-    # TODO Use GOVSSO-Client instead.
-    build: https://github.com/e-gov/TARA-Client.git
-    entrypoint: sh -c 'sleep 15 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
+    image: govsso-client:latest
+    entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - oidc
     deploy:
@@ -22,15 +21,20 @@ services:
         limits:
           memory: 650M
     environment:
-      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=11443 -Dclient.id=client-a -Dclient.secret=secreta -Dclient.domain=localhost
+      - server.port=11443
+      - spring.application.name=Client A
+      - spring.security.oauth2.client.registration.govsso.client-id=client-a
+      - spring.security.oauth2.client.registration.govsso.client-secret=secreta
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://oidc.localhost:13444/
+      - govsso.public-url=https://localhost:11443
+      - govsso.logo=client-a.png
     ports:
       - '11443:11443'
     #restart: unless-stopped
 
   clientb: # Map to host ports 12xxx.
-    # TODO Use GOVSSO-Client instead.
-    build: https://github.com/e-gov/TARA-Client.git
-    entrypoint: sh -c 'sleep 15 && java -jar $$JAVA_OPTS /tara-client-jar-with-dependencies.jar'
+    image: govsso-client:latest
+    entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - oidc
     deploy:
@@ -38,7 +42,13 @@ services:
         limits:
           memory: 650M
     environment:
-      - JAVA_OPTS=-Dprovider.domain=oidc -Dprovider.port=4444 -Dprovider.discovery.endpoint=.well-known/openid-configuration -Dclient.port=12443 -Dclient.id=client-b -Dclient.secret=secretb -Dclient.domain=localhost
+      - server.port=12443
+      - spring.application.name=Client B
+      - spring.security.oauth2.client.registration.govsso.client-id=client-b
+      - spring.security.oauth2.client.registration.govsso.client-secret=secretb
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://oidc.localhost:13444/
+      - govsso.public-url=https://localhost:12443
+      - govsso.logo=client-b.png
     ports:
       - '12443:12443'
     #restart: unless-stopped
@@ -53,18 +63,20 @@ services:
         limits:
           memory: 250M
     environment:
+      - SERVE_PUBLIC_PORT=13444
       - DSN=postgres://hydra:changeme@oidc-db:5432/oidc-db?sslmode=disable&max_conns=20&max_idle_conns=4
-      # Configure endpoints advertised in /.well-known/openid-configuration to use container's hostname "oidc".
-      - URLS_SELF_ISSUER=http://oidc:4444/
-      # Override auth endpoint advertised in /.well-known/openid-configuration to use hostname that browser running on host machine can access ("localhost").
-      - WEBFINGER_OIDC_DISCOVERY_AUTH_URL=http://localhost:13444/oauth2/auth
+      - URLS_SELF_ISSUER=http://oidc.localhost:13444/
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
       - URLS_LOGIN=http://localhost:14080/auth/init
       - URLS_CONSENT=http://localhost:14080/auth/consent
       - URLS_LOGOUT=http://localhost:14080/logout
       - URLS_ERROR=http://localhost:14080/error
+    networks:
+      default:
+        aliases:
+          - oidc.localhost
     ports:
-      - '13444:4444'
+      - '13444:13444'
       - '13445:4445'
     #restart: unless-stopped
     volumes:

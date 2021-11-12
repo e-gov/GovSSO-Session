@@ -11,7 +11,8 @@ TODO What this application does.
 ## Building Dependencies
 
 1. Follow TARA2-Admin/README.md to build it's Docker image
-2. ```shell
+2. Follow GOVSSO-Client/README.md to build it's Docker image
+3. ```shell
    docker compose build
    ```
 
@@ -53,9 +54,9 @@ TODO What this application does.
 * Dozzle (log viewer)
     * http://localhost:9080/ - UI
 * Example Client A
-    * https://localhost:11443/ui/ - UI
+    * https://localhost:11443/ - UI
 * Example Client B
-    * https://localhost:12443/ui/ - UI
+    * https://localhost:12443/ - UI
 * Ory Hydra
     * http://localhost:13444/ - public API
         * http://localhost:13444/health/ready
