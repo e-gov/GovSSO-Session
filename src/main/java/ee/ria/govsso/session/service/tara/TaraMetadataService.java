@@ -29,11 +29,19 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URL;
 
+import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
+import static com.nimbusds.oauth2.sdk.GrantType.AUTHORIZATION_CODE;
+import static com.nimbusds.oauth2.sdk.ResponseType.CODE;
 import static com.nimbusds.oauth2.sdk.WellKnownPathComposeStrategy.INFIX;
 import static com.nimbusds.oauth2.sdk.WellKnownPathComposeStrategy.POSTFIX;
+import static com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod.CLIENT_SECRET_BASIC;
+import static com.nimbusds.oauth2.sdk.util.CollectionUtils.contains;
+import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
+import static com.nimbusds.openid.connect.sdk.SubjectType.PUBLIC;
+import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
 
 @Slf4j
 @Service
@@ -93,18 +101,36 @@ public class TaraMetadataService {
         JSONObject contentAsJSONObject = httpResponse.getContentAsJSONObject();
         OIDCProviderMetadata metadata = OIDCProviderMetadata.parse(contentAsJSONObject);
 
-        String metadataIssuer = metadata.getIssuer().getValue();
-        if (!issuerUrl.equals(metadataIssuer)) {
-            throw new ParseException(String.format("Expected OIDC Issuer '%s' does not match published issuer '%s'", issuerUrl, metadataIssuer));
-        }
-        if (metadata.getAuthorizationEndpointURI() == null || metadata.getAuthorizationEndpointURI().toString().isBlank()) {
-            throw new ParseException("The public authorization endpoint URI must not be null");
-        }
-        if (metadata.getTokenEndpointURI() == null || metadata.getTokenEndpointURI().toString().isBlank()) {
-            throw new ParseException("The public token endpoint URI must not be null");
-        }
+        validateMetadata(issuerUrl, metadata);
 
         return metadata;
+    }
+
+    private void validateMetadata(String issuerUrl, OIDCProviderMetadata metadata) throws ParseException {
+        String metadataIssuer = metadata.getIssuer().getValue();
+
+        if (!issuerUrl.equals(metadataIssuer))
+            throw new ParseException(String.format("Expected OIDC Issuer '%s' does not match published issuer '%s'", issuerUrl, metadataIssuer));
+        if (metadata.getAuthorizationEndpointURI() == null || metadata.getAuthorizationEndpointURI().toString().isBlank())
+            throw new ParseException("The public authorization endpoint URI must not be null");
+        if (metadata.getTokenEndpointURI() == null || metadata.getTokenEndpointURI().toString().isBlank())
+            throw new ParseException("The public token endpoint URI must not be null");
+        if (!contains(metadata.getSubjectTypes(), PUBLIC) || metadata.getSubjectTypes().size() != 1)
+            throw new ParseException(String.format("Metadata subject types must contain only '%s'", PUBLIC));
+        if (!contains(metadata.getResponseTypes(), CODE) || metadata.getResponseTypes().size() != 1)
+            throw new ParseException(String.format("Metadata response types can not be null and must contain only '%s'", CODE));
+        if (!contains(metadata.getClaims(), "sub"))
+            throw new ParseException("Metadata claims can not be null and must contain: 'sub'");
+        if (!contains(metadata.getGrantTypes(), AUTHORIZATION_CODE))
+            throw new ParseException(String.format("Metadata grant types can not be null and must contain: '%s'", AUTHORIZATION_CODE));
+        if (!contains(metadata.getIDTokenJWSAlgs(), RS256) || metadata.getIDTokenJWSAlgs().size() != 1)
+            throw new ParseException(String.format("Metadata ID token JWS algorithms can not be null and must contain only '%s'", RS256));
+        if (!contains(metadata.getClaimTypes(), NORMAL) || metadata.getClaimTypes().size() != 1)
+            throw new ParseException(String.format("Metadata claim types can not be null and must contain only '%s'", NORMAL));
+        if (!contains(metadata.getTokenEndpointAuthMethods(), CLIENT_SECRET_BASIC))
+            throw new ParseException(String.format("Metadata token endpoint auth methods can not be null and must contain '%s'", CLIENT_SECRET_BASIC));
+        if (!contains(metadata.getScopes(), OPENID))
+            throw new ParseException("Metadata scopes can not be null and must contain 'openid'");
     }
 
     JWKSet requestJWKSet(OIDCProviderMetadata metadata) throws IOException, java.text.ParseException {
@@ -120,7 +146,7 @@ public class TaraMetadataService {
     IDTokenValidator createIdTokenValidator(OIDCProviderMetadata metadata, JWKSet jwkSet) {
         Issuer issuer = metadata.getIssuer();
         ClientID clientID = new ClientID(taraConfigurationProperties.getClientId());
-        JWSAlgorithm jwsAlg = JWSAlgorithm.RS256;
+        JWSAlgorithm jwsAlg = RS256;
         IDTokenValidator idTokenValidator = new IDTokenValidator(issuer, clientID, jwsAlg, jwkSet);
         idTokenValidator.setMaxClockSkew(taraConfigurationProperties.getMaxClockSkewSeconds());
         return idTokenValidator;

@@ -126,14 +126,12 @@ class TaraMetadataServiceTest extends BaseTest {
         await().atMost(FIVE_SECONDS)
                 .untilAsserted(() -> verify(taraMetadataService, atLeast(1)).createIdTokenValidator(any(), any()));
 
-        // TODO: GSSO-111 Remove irrelevant assertions
         verify(taraMetadataService, atLeast(1)).requestMetadata();
         verify(taraMetadataService, atLeast(1)).requestJWKSet(any());
         verify(taraMetadataService, atLeast(1)).createIdTokenValidator(any(), any());
         OIDCProviderMetadata metadata = taraMetadataService.getMetadata();
         assertThat(metadata.getIssuer().getValue(), equalTo(taraConfigurationProperties.getIssuerUrl().toString()));
         assertThat(metadata.getTokenEndpointURI().toString(), equalTo("https://localhost:9877/oidc/token"));
-        assertThat(metadata.getUserInfoEndpointURI().toString(), equalTo("https://localhost:9877/oidc/profile"));
         assertThat(metadata.getAuthorizationEndpointURI().toString(), equalTo("https://localhost:9877/oidc/authorize"));
         assertThat(metadata.getJWKSetURI().toString(), equalTo("https://localhost:9877/oidc/jwks"));
         assertThat(metadata.getTokenEndpointAuthMethods(), equalTo(of(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)));
@@ -222,6 +220,146 @@ class TaraMetadataServiceTest extends BaseTest {
         setUpTaraMetadataMocks("mock_tara_oidc_metadata_blank_token_endpoint.json");
 
         assertCauseMessage("The public token endpoint URI must not be null");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingSubjectTypePublic_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_subject_type_public.json");
+
+        assertCauseMessage("Metadata subject types must contain only 'public'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingSubjectTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_subject_types.json");
+
+        assertCauseMessage("Missing JSON object member with key subject_types_supported");
+    }
+
+    @Test
+    void updateMetadata_WhenTooManySubjectTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_too_many_subject_types.json");
+
+        assertCauseMessage("Metadata subject types must contain only 'public'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingResponseTypeCode_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_response_type_code.json");
+
+        assertCauseMessage("Metadata response types can not be null and must contain only 'code'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingResponseTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_response_types.json");
+
+        assertCauseMessage("Metadata response types can not be null and must contain only 'code'");
+    }
+
+    @Test
+    void updateMetadata_WhenTooManyResponseTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_too_many_response_types.json");
+
+        assertCauseMessage("Metadata response types can not be null and must contain only 'code'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingClaimSub_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_claim_sub.json");
+
+        assertCauseMessage("Metadata claims can not be null and must contain: 'sub'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingClaims_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_claims.json");
+
+        assertCauseMessage("Metadata claims can not be null and must contain: 'sub'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingGrantTypeAuthorizationCode_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_grant_type_authorization_code.json");
+
+        assertCauseMessage("Metadata grant types can not be null and must contain: 'authorization_code'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingGrantTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_grant_types.json");
+
+        assertCauseMessage("Metadata grant types can not be null and must contain: 'authorization_code'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingIdTokenJwsAlgRS256_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_id_token_jws_alg_RS256.json");
+
+        assertCauseMessage("Metadata ID token JWS algorithms can not be null and must contain only 'RS256'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingIdTokenJwsAlgs_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_id_token_jws_algs.json");
+
+        assertCauseMessage("Metadata ID token JWS algorithms can not be null and must contain only 'RS256'");
+    }
+
+    @Test
+    void updateMetadata_WhenTooManyIdTokenJwsAlgs_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_too_many_id_token_jws_algs.json");
+
+        assertCauseMessage("Metadata ID token JWS algorithms can not be null and must contain only 'RS256'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingClaimTypeNormal_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_claim_type_normal.json");
+
+        assertCauseMessage("Metadata claim types can not be null and must contain only 'normal'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingClaimTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_claim_types.json");
+
+        assertCauseMessage("Metadata claim types can not be null and must contain only 'normal'");
+    }
+
+    @Test
+    void updateMetadata_WhenTooManyClaimTypes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_too_many_claim_types.json");
+
+        assertCauseMessage("Metadata claim types can not be null and must contain only 'normal'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingTokenEndpointAuthMethodClientSecretBasic_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_token_endpoint_auth_method_client_secret_basic.json");
+
+        assertCauseMessage("Metadata token endpoint auth methods can not be null and must contain 'client_secret_basic'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingTokenEndpointAuthMethods_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_token_endpoint_auth_methods.json");
+
+        assertCauseMessage("Metadata token endpoint auth methods can not be null and must contain 'client_secret_basic'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingScopeOpenid_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_scope_openid.json");
+
+        assertCauseMessage("Metadata scopes can not be null and must contain 'openid'");
+    }
+
+    @Test
+    void updateMetadata_WhenMissingScopes_ThrowsSsoException() {
+        setUpTaraMetadataMocks("mock_tara_oidc_metadata_missing_scopes.json");
+
+        assertCauseMessage("Metadata scopes can not be null and must contain 'openid'");
     }
 
     private void assertCauseMessage(String causeMessage) {
