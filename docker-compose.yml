@@ -119,6 +119,7 @@ services:
   admin: # Map to host ports 16xxx.
     # First follow TARA2-Admin README.md to build this Docker image.
     image: tara-admin:latest
+    entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - admin-db
       - oidc
