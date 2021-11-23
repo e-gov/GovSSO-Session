@@ -10,6 +10,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - '9080:8080'
+    restart: unless-stopped
 
   clienta: # Map to host ports 11xxx.
     image: govsso-client:latest
@@ -30,7 +31,7 @@ services:
       - govsso.logo=client-a.png
     ports:
       - '11443:11443'
-    #restart: unless-stopped
+    restart: unless-stopped
 
   clientb: # Map to host ports 12xxx.
     image: govsso-client:latest
@@ -51,7 +52,7 @@ services:
       - govsso.logo=client-b.png
     ports:
       - '12443:12443'
-    #restart: unless-stopped
+    restart: unless-stopped
 
   oidc: # Map to host ports 13xxx.
     image: oryd/hydra:v1.10.7-sqlite # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
@@ -78,7 +79,7 @@ services:
     ports:
       - '13444:13444'
       - '13445:4445'
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - ./local/oidc:/etc/hydra
 
@@ -112,7 +113,7 @@ services:
           - tara.localhost
     ports:
       - '15443:15443'
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - ./local/tara/config.json:/service/config.json
 
@@ -145,13 +146,14 @@ services:
     ports:
       - '16000:8000'
       - '16080:8080'
-    #restart: unless-stopped
+    restart: unless-stopped
 
   smtp: # Map to host ports 17xxx.
     image: mailhog/mailhog:v1.0.1
     ports:
       - '17025:1025'
       - '17080:8025'
+    restart: unless-stopped
 
   oidc-db:
     image: postgres:13
@@ -169,7 +171,7 @@ services:
       - POSTGRES_PASSWORD=changeme
     ports:
       - '18432:5432'
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - oidc-db-data:/var/lib/postgresql/data
 
@@ -185,7 +187,7 @@ services:
       - POSTGRES_PASSWORD=changeme
     ports:
       - '19432:5432'
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - admin-db-data:/var/lib/postgresql/data
 
