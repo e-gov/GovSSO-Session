@@ -16,9 +16,9 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '[a-zA-Z0-9]'
+            pattern: '^[a-f0-9]{32}$'
             minLength: 32
-            maxLength: 64
+            maxLength: 32
             example: '824113da6da44889943b98715a06d699'
       responses:
         '302':
@@ -34,9 +34,9 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: https://tara.ria.ee/oidc/authorize?redirect_uri=http%3A%2F%2Flocalhost:14080%2Fauth%2Ftaracallback&scope=openid&state=58ND1G3gn6soaIeMC8Ck1g31N9GCGdGC&response_type=code&client_id=govsso
+              example: scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost:14080%2Fauth%2Ftaracallback&state=1CdQPV8h6Oej8czeP2GJiqLOkUR70yIPlTNd16DBwGM&nonce=O15XCSiGW2FMeU0u9nN0kNEnwY9mfO7xOm-9wV5KQpI&client_id=govsso
         '400':
-          description: Invalid request data.
+          description: User error (invalid request etc).
           content:
             application/json:
               schema:
@@ -46,7 +46,7 @@ paths:
                 type: string
                 example: HTML error view.
         '500':
-          description: Unexpected error.
+          description: Server error.
           content:
             application/json:
               schema:
@@ -66,9 +66,9 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '[a-zA-Z0-9]'
+            pattern: '^[A-Za-z0-9]{48}$'
             minLength: 48
-            maxLength: 64
+            maxLength: 48
             example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
         - in: query
           name: code
@@ -76,8 +76,9 @@ paths:
           required: true
           schema:
             type: string
-            minLength: 64
-            maxLength: 128
+            pattern: '^[A-Za-z0-9\-_.]{87}$'
+            minLength: 87
+            maxLength: 87
             example: gSVzQ6iWTLWDtD1f7_QZdHNweXzrraQYdys_MWoRK-A.nQ2epEBSzxo_n-P6hQt_I_HvusERdqkGaC31TrjSIlU
         - in: query
           name: state
@@ -85,9 +86,10 @@ paths:
           required: true
           schema:
             type: string
-            minLength: 32
-            maxLength: 64
-            example: 58ND1G3gn6soaIeMC8Ck1g31N9GCGdGC
+            pattern: '^[A-Za-z0-9\-_]{43}$'
+            minLength: 43
+            maxLength: 43
+            example: 1CdQPV8h6Oej8czeP2GJiqLOkUR70yIPlTNd16DBwGM
       responses:
         '302':
           description: ID token from TARA obtained successfully, redirect to Ory Hydra for accepting login request.
@@ -97,9 +99,9 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: http://localhost:13080/oidc/authorize?client_id=govsso&login_verifier=fd0658bf0d1e4030920b3ab1690d901d&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+              example: http://localhost:13080/oidc/authorize?client_id=client-a&login_verifier=824113da6da44889943b98715a06d699&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
         '400':
-          description: Invalid request data.
+          description: User error (invalid request etc).
           content:
             application/json:
               schema:
@@ -109,7 +111,7 @@ paths:
                 type: string
                 example: HTML error view.
         '500':
-          description: Unexpected error.
+          description: Server error.
           content:
             application/json:
               schema:
@@ -129,9 +131,9 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '[a-zA-Z0-9]'
+            pattern: '^[A-Za-z0-9]{48}$'
             minLength: 48
-            maxLength: 64
+            maxLength: 48
             example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
         - in: query
           name: consent_challenge
@@ -139,9 +141,9 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '[a-zA-Z0-9]'
+            pattern: '^[a-f0-9]{32}$'
             minLength: 32
-            maxLength: 64
+            maxLength: 32
             example: '01a9d709fb014160b4f1016bf7868574'
       responses:
         '302':
@@ -152,9 +154,9 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: http://localhost:13080/oidc/authorize?client_id=govsso&consent_verifier=232464aaa3b247979d812752d5f8a020&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+              example: http://localhost:13080/oidc/authorize?client_id=client-a&consent_verifier=01a9d709fb014160b4f1016bf7868574&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
         '400':
-          description: Invalid request data.
+          description: User error (invalid request etc).
           content:
             application/json:
               schema:
@@ -164,7 +166,7 @@ paths:
                 type: string
                 example: HTML error view.
         '500':
-          description: Unexpected error.
+          description: Server error.
           content:
             application/json:
               schema:
@@ -184,22 +186,22 @@ components:
       properties:
         timestamp:
           type: string
-          description: The time the error occurred.
+          description: Time that the error occurred.
           example: '2020-12-22T09:09:23.463+00:00'
         status:
           type: integer
           format: int32
-          description: The HTTP statuscode.
+          description: HTTP status code.
           example: 400
         error:
           type: string
-          description: Short error message.
-          example: Bad Request
+          description: Error code.
+          example: USER_INPUT_OR_EXPIRED
         message:
           type: string
           description: Human readable error description.
-          example: Required String parameter 'sample_parameter' is not present
+          example: Invalid request or request has expired. Please return to service provider and try again.
         path:
           type: string
-          description: The path that returned the error.
+          description: URL path when the error occurred.
           example: /sample/path
