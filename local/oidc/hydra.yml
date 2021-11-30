@@ -1,7 +1,25 @@
+log:
+  leak_sensitive_values: true
 secrets:
   system:
     - youReallyNeedToChangeThis
 sqa:
   opt_out: true
-log:
-  leak_sensitive_values: true
+webfinger:
+  oidc_discovery:
+    supported_claims:
+      - acr
+      - amr
+      - at_has
+      - aud
+      - auth_time
+      - exp
+      - iat
+      - iss
+      - jti
+      - nonce
+      - profile_attributes.date_of_birth
+      - profile_attributes.family_name
+      - profile_attributes.given_name
+      - sid
+      - sub
