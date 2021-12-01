@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import io.restassured.RestAssured;
+import io.restassured.filter.log.ResponseLoggingFilter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,10 +51,15 @@ public abstract class BaseTest {
 
     @BeforeAll
     static void setUpAll() {
+        configureRestAssured();
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("wiremock").setLevel(Level.OFF);
-        RestAssured.config = RestAssured.config().redirect(redirectConfig().followRedirects(false));
         wireMockServer.start();
         setUpTaraMetadataMocks();
+    }
+
+    private static void configureRestAssured() {
+        RestAssured.filters(new ResponseLoggingFilter());
+        RestAssured.config = RestAssured.config().redirect(redirectConfig().followRedirects(false));
     }
 
     protected static void setUpTaraMetadataMocks() {

@@ -13,8 +13,8 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderConfigurationRequest;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
+import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.error.exceptions.TaraException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -54,14 +54,14 @@ public class TaraMetadataService {
 
     public OIDCProviderMetadata getMetadata() {
         if (providerMetadata == null) {
-            throw new TaraException("TARA metadata not available");
+            throw new SsoException(ErrorCode.TECHNICAL_TARA_UNAVAILABLE, "TARA metadata not available");
         }
         return providerMetadata.getT1();
     }
 
     public IDTokenValidator getIDTokenValidator() {
         if (providerMetadata == null) {
-            throw new TaraException("TARA metadata not available");
+            throw new SsoException(ErrorCode.TECHNICAL_TARA_UNAVAILABLE, "TARA metadata not available");
         }
         return providerMetadata.getT2();
     }

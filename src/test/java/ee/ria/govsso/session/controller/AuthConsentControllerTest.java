@@ -34,8 +34,8 @@ class AuthConsentControllerTest extends BaseTest {
     private final TaraService taraService;
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "......"})
-    void authConsent_consentChallenge_EmptyValue_and_InvalidValue(String consentChallenge) {
+    @ValueSource(strings = {"", "......", "123456789012345678901234567890123456789012345678900"})
+    void authConsent_WhenConsentChallengeInvalid_ThrowsUserInputError(String consentChallenge) {
 
         given()
                 .param("consent_challenge", consentChallenge)
@@ -44,43 +44,28 @@ class AuthConsentControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("message", equalTo("authConsent.consentChallenge: only characters and numbers allowed"))
-                .body("error", equalTo("Bad Request"));
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
-    void authConsent_consentChallenge_ParamMissing() {
+    void authConsent_WhenConsentChallengeParamIsMissing_ThrowsUserInputError() {
         given()
                 .when()
                 .get("/auth/consent")
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("message", equalTo("Required request parameter 'consent_challenge' for method parameter type String is not present"))
-                .body("error", equalTo("Bad Request"));
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
-    void authConsent_consentChallenge_InvalidLength() {
-        given()
-                .param("consent_challenge", "123456789012345678901234567890123456789012345678900")
-                .when()
-                .get("/auth/consent")
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("message", equalTo("authConsent.consentChallenge: size must be between 0 and 50"))
-                .body("error", equalTo("Bad Request"));
-    }
-
-    @Test
-    void authConsent_ok() {
+    void authConsent_WhenAcceptConsentIsSuccessful_Redirects() {
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_accept_consent_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
 
         String sessionId = createSession();
 
@@ -96,13 +81,13 @@ class AuthConsentControllerTest extends BaseTest {
     }
 
     @Test
-    void authConsent_HydraRespondsWithError() {
+    void authConsent_WhenAcceptConsentRespondsWith500_ThrowsTechnicalGeneralError() {
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_accept_consent_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
 
         String sessionId = createSession();
 
@@ -113,7 +98,8 @@ class AuthConsentControllerTest extends BaseTest {
                 .get("/auth/consent")
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(500)
+                .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
     @SneakyThrows

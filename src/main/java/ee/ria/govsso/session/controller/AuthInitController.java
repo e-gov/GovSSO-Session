@@ -16,7 +16,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 
@@ -33,9 +32,10 @@ public class AuthInitController {
 
     @GetMapping(value = AUTH_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView authInit(
-            @RequestParam(name = "login_challenge") @Size(max = 50)
-            @Pattern(regexp = "[A-Za-z0-9]{1,}", message = "only characters and numbers allowed") String loginChallenge,
+            @RequestParam(name = "login_challenge")
+            @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
             HttpSession session) {
+
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         SsoSession ssoSession = new SsoSession(loginRequestInfo, authenticationRequest.getState().getValue(), authenticationRequest.getNonce().getValue());

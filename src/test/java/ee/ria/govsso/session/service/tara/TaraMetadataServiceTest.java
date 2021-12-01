@@ -8,7 +8,6 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.error.exceptions.TaraException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ import static com.nimbusds.oauth2.sdk.GrantType.AUTHORIZATION_CODE;
 import static com.nimbusds.oauth2.sdk.ResponseType.CODE;
 import static com.nimbusds.openid.connect.sdk.SubjectType.PUBLIC;
 import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
-import static ee.ria.govsso.session.error.ErrorCode.TARA_ERROR;
+import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_TARA_UNAVAILABLE;
 import static java.util.List.of;
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
@@ -69,20 +68,20 @@ class TaraMetadataServiceTest extends BaseTest {
 
     @Test
     @Order(1)
-    void getMetadata_WhenMetadataNotUpdated_ThrowsTaraException() {
-        TaraException taraException = assertThrows(TaraException.class, taraMetadataService::getMetadata);
+    void getMetadata_WhenMetadataNotUpdated_ThrowsSsoException() {
+        SsoException ssoException = assertThrows(SsoException.class, taraMetadataService::getMetadata);
 
-        assertThat(taraException.getErrorCode(), equalTo(TARA_ERROR));
-        assertThat(taraException.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(ssoException.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
+        assertThat(ssoException.getMessage(), equalTo("TARA metadata not available"));
     }
 
     @Test
     @Order(2)
-    void getIDTokenValidator_WhenMetadataNotUpdated_ThrowsTaraException() {
-        TaraException taraException = assertThrows(TaraException.class, taraMetadataService::getIDTokenValidator);
+    void getIDTokenValidator_WhenMetadataNotUpdated_ThrowsSsoException() {
+        SsoException ssoException = assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
 
-        assertThat(taraException.getErrorCode(), equalTo(TARA_ERROR));
-        assertThat(taraException.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(ssoException.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
+        assertThat(ssoException.getMessage(), equalTo("TARA metadata not available"));
     }
 
     @Test
@@ -96,8 +95,8 @@ class TaraMetadataServiceTest extends BaseTest {
 
         verify(taraMetadataService, atLeast(nextScheduledInvocationCall)).requestMetadata();
         verify(taraMetadataService, never()).requestJWKSet(any());
-        assertThrows(TaraException.class, taraMetadataService::getMetadata);
-        assertThrows(TaraException.class, taraMetadataService::getIDTokenValidator);
+        assertThrows(SsoException.class, taraMetadataService::getMetadata);
+        assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
     }
 
     @Test
@@ -113,8 +112,8 @@ class TaraMetadataServiceTest extends BaseTest {
         verify(taraMetadataService, atLeast(metadataUpdateMaxAttempts)).requestMetadata();
         verify(taraMetadataService, atLeast(metadataUpdateMaxAttempts)).requestJWKSet(any());
         verify(taraMetadataService, never()).createIdTokenValidator(any(), any());
-        assertThrows(TaraException.class, taraMetadataService::getMetadata);
-        assertThrows(TaraException.class, taraMetadataService::getIDTokenValidator);
+        assertThrows(SsoException.class, taraMetadataService::getMetadata);
+        assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
     }
 
     @Test

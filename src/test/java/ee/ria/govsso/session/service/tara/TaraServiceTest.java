@@ -14,7 +14,6 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.error.exceptions.TaraException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +103,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     }
 
     @Test
-    void requestIdToken_WhenTokenEndpointStatus404_ThrowsTaraException() {
+    void requestIdToken_WhenTokenEndpointStatus404_ThrowsSsoException() {
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(404)));
@@ -115,7 +114,18 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     }
 
     @Test
-    void requestIdToken_WhenTokenEndpointRequestTimeout_ThrowsTaraException() {
+    void requestIdToken_WhenTokenEndpointStatus400_ThrowsSsoException() {
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(400)));
+
+        SsoException ssoException = assertThrows(SsoException.class, () -> taraService.requestIdToken("code"));
+
+        assertThat(ssoException.getMessage(), equalTo("ErrorCode:null, Error description:null, Status Code:400"));
+    }
+
+    @Test
+    void requestIdToken_WhenTokenEndpointRequestTimeout_ThrowsSsoException() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
@@ -216,7 +226,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     }
 
     @Test
-    void verifyIdToken_WhenMissingNonce_ThrowsTaraExceptionn() {
+    void verifyIdToken_WhenMissingNonce_ThrowsSsoException() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("state", authenticationRequest.getState().getValue())
@@ -229,16 +239,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        TaraException taraException = assertThrows(TaraException.class,
+        SsoException ssoException = assertThrows(SsoException.class,
                 () -> taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT));
 
-        assertThat(taraException.getMessage(), equalTo("Unable to validate ID Token"));
-        Throwable cause = taraException.getCause();
+        assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
+        Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("Missing JWT nonce (nonce) claim"));
     }
 
     @Test
-    void verifyIdToken_WhenInvalidAudience_ThrowsTaraExceptionn() {
+    void verifyIdToken_WhenInvalidAudience_ThrowsSsoException() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
@@ -252,16 +262,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        TaraException taraException = assertThrows(TaraException.class,
+        SsoException ssoException = assertThrows(SsoException.class,
                 () -> taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT));
 
-        assertThat(taraException.getMessage(), equalTo("Unable to validate ID Token"));
-        Throwable cause = taraException.getCause();
+        assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
+        Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("Unexpected JWT audience: [unknownclient123]"));
     }
 
     @Test
-    void verifyIdToken_WhenInvalidIssuer_ThrowsTaraException() {
+    void verifyIdToken_WhenInvalidIssuer_ThrowsSsoException() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
@@ -275,16 +285,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        TaraException taraException = assertThrows(TaraException.class,
+        SsoException ssoException = assertThrows(SsoException.class,
                 () -> taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT));
 
-        assertThat(taraException.getMessage(), equalTo("Unable to validate ID Token"));
-        Throwable cause = taraException.getCause();
+        assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
+        Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("Unexpected JWT issuer: https://unknownissuer:9877"));
     }
 
     @Test
-    void verifyIdToken_WhenIssueTimeAheadOfCurrentTime_ThrowsTaraException() {
+    void verifyIdToken_WhenIssueTimeAheadOfCurrentTime_ThrowsSsoException() {
         Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -299,11 +309,11 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        TaraException taraException = assertThrows(TaraException.class,
+        SsoException ssoException = assertThrows(SsoException.class,
                 () -> taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT));
 
-        assertThat(taraException.getMessage(), equalTo("Unable to validate ID Token"));
-        Throwable cause = taraException.getCause();
+        assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
+        Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("JWT issue time ahead of current time"));
     }
 
@@ -327,7 +337,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     }
 
     @Test
-    void verifyIdToken_WhenExpired_ThrowsTaraException() {
+    void verifyIdToken_WhenExpired_ThrowsSsoException() {
         Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -342,11 +352,11 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        TaraException taraException = assertThrows(TaraException.class,
+        SsoException ssoException = assertThrows(SsoException.class,
                 () -> taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT));
 
-        assertThat(taraException.getMessage(), equalTo("Unable to validate ID Token"));
-        Throwable cause = taraException.getCause();
+        assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
+        Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("Expired JWT"));
     }
 

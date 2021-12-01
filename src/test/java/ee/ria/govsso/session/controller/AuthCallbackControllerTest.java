@@ -34,6 +34,7 @@ import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -44,7 +45,7 @@ class AuthCallbackControllerTest extends BaseTest {
     private final TaraService taraService;
 
     @Test
-    void authCallback_Ok() {
+    void authCallback_WhenTokenRequestAndAcceptRequestAreSuccessful_Redirects() {
         SsoSession ssoSession = createSsoSession();
         String sessionId = createSession(ssoSession);
         OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession);
@@ -59,7 +60,7 @@ class AuthCallbackControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_accept_login_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         given()
                 .param("code", "testcode")
@@ -74,13 +75,13 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @Test
-    void authCallback_TaraRespondsWithError() {
+    void authCallback_WhenRequestIdTokenRespondsWith500_ThrowsTechnicalGeneralError() {
 
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_idToken_response.json")));
+                        .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
 
         SsoSession ssoSession = createSsoSession();
         String sessionId = createSession(ssoSession);
@@ -93,23 +94,48 @@ class AuthCallbackControllerTest extends BaseTest {
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(500)
+                .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
     @Test
-    void authCallback_HydraRespondsWithError() {
+    void authCallback_WhenRequestIdTokenRespondsWith400_ThrowsUserInputOrExpiredError() {
+
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(400)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", "testcode")
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+    }
+
+    @Test
+    void authCallback_WhenAcceptLoginRespondsWith500_ThrowsTechnicalGeneralError() {
 
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_idToken_response.json")));
+                        .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_accept_login_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         SsoSession ssoSession = createSsoSession();
         String sessionId = createSession(ssoSession);
@@ -122,7 +148,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(500)
+                .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
     private SsoSession createSsoSession() {

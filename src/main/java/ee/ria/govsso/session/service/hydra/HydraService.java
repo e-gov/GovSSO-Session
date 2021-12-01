@@ -3,14 +3,18 @@ package ee.ria.govsso.session.service.hydra;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
+import ee.ria.govsso.session.error.ErrorCode;
+import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
@@ -28,16 +32,25 @@ public class HydraService {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("login_challenge", loginChallenge);
 
-        SsoSession.LoginRequestInfo loginRequestInfo = webclient.get()
-                .uri(builder.toUriString())
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(SsoSession.LoginRequestInfo.class)
-                .blockOptional().orElseThrow();
+        try {
+            SsoSession.LoginRequestInfo loginRequestInfo = webclient.get()
+                    .uri(builder.toUriString())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(SsoSession.LoginRequestInfo.class)
+                    .blockOptional().orElseThrow();
 
-        if (!loginRequestInfo.getChallenge().equals(loginChallenge))
-            throw new IllegalStateException("Invalid hydra response");
-        return loginRequestInfo;
+            if (!loginRequestInfo.getChallenge().equals(loginChallenge))
+                throw new IllegalStateException("Invalid hydra response");
+            return loginRequestInfo;
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else if (ex.getStatusCode() == HttpStatus.GONE)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
     }
 
     @SneakyThrows

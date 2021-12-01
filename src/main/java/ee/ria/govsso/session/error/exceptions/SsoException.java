@@ -3,7 +3,7 @@ package ee.ria.govsso.session.error.exceptions;
 import ee.ria.govsso.session.error.ErrorCode;
 import lombok.Getter;
 
-import static ee.ria.govsso.session.error.ErrorCode.INTERNAL_ERROR;
+import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 
 @Getter
 public class SsoException extends RuntimeException {
@@ -12,12 +12,12 @@ public class SsoException extends RuntimeException {
 
     public SsoException(String message) {
         super(message);
-        this.errorCode = INTERNAL_ERROR;
+        this.errorCode = TECHNICAL_GENERAL;
     }
 
     public SsoException(String message, Throwable cause) {
         super(message, cause);
-        this.errorCode = INTERNAL_ERROR;
+        this.errorCode = TECHNICAL_GENERAL;
     }
 
     public SsoException(ErrorCode errorCode, String message) {

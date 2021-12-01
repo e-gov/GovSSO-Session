@@ -8,7 +8,7 @@ import static io.restassured.RestAssured.given;
 public class ApplicationHealthEndpointTest extends BaseTest {
 
     @Test
-    void applicationHealth_ok() {
+    void applicationHealth_WhenReadinessEndpointIsCorrectlyConfigured_RespondsWith200() {
 
         given()
                 .when()

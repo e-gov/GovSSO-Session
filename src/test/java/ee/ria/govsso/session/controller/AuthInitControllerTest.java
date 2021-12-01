@@ -24,18 +24,18 @@ import static org.hamcrest.Matchers.equalTo;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class AuthInitControllerTest extends BaseTest {
 
-    private static final String TEST_LOGIN_CHALLENGE = "abcdefg098AAdsCC";
+    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
     private final SessionRepository<? extends Session> sessionRepository;
 
     @Test
-    void authInit_Ok() {
+    void authInit_WhenFetchLoginRequestInfoIsSuccessful_Redirects() {
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         String cookie = given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -52,8 +52,8 @@ public class AuthInitControllerTest extends BaseTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "......"})
-    void authInit_loginChallenge_EmptyValue_and_InvalidValue(String loginChallenge) {
+    @ValueSource(strings = {"", "......", "123456789012345678901234567890123456789012345678900"})
+    void authInit_WhenLoginChallengeInvalid_ThrowsUserInputError(String loginChallenge) {
         given()
                 .param("login_challenge", loginChallenge)
                 .when()
@@ -61,42 +61,27 @@ public class AuthInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("message", equalTo("authInit.loginChallenge: only characters and numbers allowed"))
-                .body("error", equalTo("Bad Request"));
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
-    void authInit_loginChallenge_ParamMissing() {
+    void authInit_WhenLoginChallengeMissing_ThrowsUserInputError() {
         given()
                 .when()
                 .get("/auth/init")
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("message", equalTo("Required request parameter 'login_challenge' for method parameter type String is not present"))
-                .body("error", equalTo("Bad Request"));
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
-    void authInit_loginChallenge_InvalidLength() {
-        given()
-                .param("login_challenge", "123456789012345678901234567890123456789012345678900")
-                .when()
-                .get("/auth/init")
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("message", equalTo("authInit.loginChallenge: size must be between 0 and 50"))
-                .body("error", equalTo("Bad Request"));
-    }
-
-    @Test
-    void authInit_OidcRespondsWith404() {
+    void authInit_WhenFetchLoginRequestInfoRespondsWith404_ThrowsUserInputError() {
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_response.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -104,17 +89,35 @@ public class AuthInitControllerTest extends BaseTest {
                 .get("/auth/init")
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .body("message", equalTo("404 Not Found from GET https://localhost:9877/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE));
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
-    void authInit_OidcRespondsWith500() {
+    void authInit_WhenFetchLoginRequestInfoRespondsWith410_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(410)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get("/auth/init")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authInit_WhenFetchLoginRequestInfoRespondsWith500_ThrowsSsoException() {
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/oidc/mock_response.json")));
+                        .withBodyFile("mock_responses/oidc/mock_sso_oidc_login_request.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -123,7 +126,7 @@ public class AuthInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(500)
-                .body("message", equalTo("500 Internal Server Error from GET https://localhost:9877/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE));
+                .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
 }

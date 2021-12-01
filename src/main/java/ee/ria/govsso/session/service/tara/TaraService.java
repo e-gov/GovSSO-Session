@@ -29,11 +29,12 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
+import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.error.exceptions.TaraException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLContext;
@@ -84,7 +85,12 @@ public class TaraService {
                 String errorMessage = "ErrorCode:" + errorObject.getCode() +
                         ", Error description:" + errorObject.getDescription() +
                         ", Status Code:" + errorObject.getHTTPStatusCode();
-                throw new TaraException(errorMessage); // TODO: Needs more work
+
+                if (errorObject.getHTTPStatusCode() == HttpStatus.BAD_REQUEST.value())
+                    throw new SsoException(ErrorCode.USER_INPUT_OR_EXPIRED, errorMessage);
+                else {
+                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL, errorMessage);
+                }
             }
 
             OIDCTokenResponse successResponse = (OIDCTokenResponse) tokenResponse.toSuccessResponse();
@@ -106,7 +112,7 @@ public class TaraService {
             // TODO: https://e-gov.github.io/TARA-Doku/TehnilineKirjeldus#51-identsust%C3%B5endi-kontrollimine
 
         } catch (BadJOSEException ex) {
-            throw new TaraException("Unable to validate ID Token", ex);
+            throw new SsoException("Unable to validate ID Token", ex);
         } catch (JOSEException ex) {
             throw new SsoException("Unable to parse ID Token", ex);
         }

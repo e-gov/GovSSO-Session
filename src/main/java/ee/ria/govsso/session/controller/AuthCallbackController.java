@@ -1,7 +1,8 @@
 package ee.ria.govsso.session.controller;
 
 import com.nimbusds.jwt.SignedJWT;
-import ee.ria.govsso.session.error.exceptions.TaraException;
+import ee.ria.govsso.session.error.ErrorCode;
+import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoSession;
@@ -34,7 +35,7 @@ public class AuthCallbackController {
             @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) {
 
         if (!ssoSession.getTaraAuthenticationRequestState().equals(state)) {
-            throw new TaraException("Invalid TARA callback state");
+            throw new SsoException(ErrorCode.USER_INPUT, "Invalid TARA callback state");
         }
 
         SignedJWT idToken = taraService.requestIdToken(code);
