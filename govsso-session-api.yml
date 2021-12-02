@@ -5,10 +5,10 @@ info:
 servers:
   - url: http://localhost:14080
 paths:
-  /auth/init:
+  /login/init:
     get:
       summary: Start authentication.
-      operationId: authInit
+      operationId: loginInit
       parameters:
         - in: query
           name: login_challenge
@@ -55,10 +55,10 @@ paths:
               schema:
                 type: string
                 example: HTML error view.
-  /auth/taracallback:
+  /login/taracallback:
     get:
       summary: TARA authentication completed, request ID token from TARA.
-      operationId: authTaraCallback
+      operationId: loginTaraCallback
       parameters:
         - in: cookie
           name: SESSION
@@ -120,10 +120,10 @@ paths:
               schema:
                 type: string
                 example: HTML error view.
-  /auth/consent:
+  /consent/init:
     get:
       summary: Display consent view.
-      operationId: authConsent
+      operationId: consentInit
       parameters:
         - in: cookie
           name: SESSION
