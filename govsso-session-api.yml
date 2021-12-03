@@ -127,6 +127,65 @@ paths:
               schema:
                 type: string
                 example: HTML error view.
+  /login/reauthenticate:
+    post:
+      summary: End existing session and redirect to initial authentication request.
+      operationId: loginReauthenticate
+      parameters:
+        - in: cookie
+          name: SESSION
+          description: Session cookie.
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9]{48}$'
+            minLength: 48
+            maxLength: 48
+            example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              #properties:
+              #  _csrf:
+              #    description: CSRF token.
+              #    type: string
+              #    pattern: '^[a-z0-9\-]{36}$'
+              #    minLength: 36
+              #    maxLength: 36
+              #    example: 'c316e550-23e3-4fee-8cee-f8079a630fba'
+      responses:
+        '302':
+          description: Logout completed successfully, redirect to initial authentication request.
+          headers:
+            Location:
+              description: TODO
+              schema:
+                type: string
+                format: uri
+              example: TODO
+        '400':
+          description: User error (invalid request etc).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
   /login/taracallback:
     get:
       summary: TARA authentication completed, request ID token from TARA.
@@ -227,6 +286,95 @@ paths:
                 type: string
                 format: uri
               example: http://localhost:13080/oidc/authorize?client_id=client-a&consent_verifier=01a9d709fb014160b4f1016bf7868574&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+        '400':
+          description: User error (invalid request etc).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+  /logout/init:
+    get:
+      summary: Logout provider for Ory Hydra.
+      operationId: logoutInit
+      parameters:
+        - in: query
+          name: logout_challenge
+          description: ID of Ory Hydra's logout request.
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-f0-9]{32}$'
+            minLength: 32
+            maxLength: 32
+            example: '824113da6da44889943b98715a06d699'
+      responses:
+        # TODO 200
+        # TODO 302
+        '400':
+          description: User error (invalid request etc).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            text/html:
+              schema:
+                type: string
+                example: HTML error view.
+  /logout/endsession:
+    post:
+      summary: End existing session.
+      operationId: logoutEndSession
+      parameters:
+        - in: cookie
+          name: SESSION
+          description: Session cookie.
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9]{48}$'
+            minLength: 48
+            maxLength: 48
+            example: Nzc5ODFlZTktODhhNS00ZTEwLTk0NWQtN2EzNTU5N2E2MmY5
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              #properties:
+              #  _csrf:
+              #    description: CSRF token.
+              #    type: string
+              #    pattern: '^[a-z0-9\-]{36}$'
+              #    minLength: 36
+              #    maxLength: 36
+              #    example: 'c316e550-23e3-4fee-8cee-f8079a630fba'
+      responses:
+        # TODO 302
         '400':
           description: User error (invalid request etc).
           content:
