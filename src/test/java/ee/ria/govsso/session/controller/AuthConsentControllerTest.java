@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class AuthConsentControllerTest extends BaseTest {
 
-    public static final String MOCK_CONSENT_CHALLENGE = "abcdefg098AAdsCC";
+    public static final String MOCK_CONSENT_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
     private final SessionRepository<MapSession> sessionRepository;
     private final TaraService taraService;
@@ -50,6 +50,19 @@ class AuthConsentControllerTest extends BaseTest {
     @Test
     void authConsent_WhenConsentChallengeParamIsMissing_ThrowsUserInputError() {
         given()
+                .when()
+                .get("/auth/consent")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authConsent_WhenConsentChallengeParamIsDuplicate_ThrowsUserInputError() {
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
                 .when()
                 .get("/auth/consent")
                 .then()

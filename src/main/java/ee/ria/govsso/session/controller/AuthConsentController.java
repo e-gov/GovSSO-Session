@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.view.RedirectView;
 
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 
@@ -28,8 +27,8 @@ public class AuthConsentController {
 
     @GetMapping(value = AUTH_CONSENT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView authConsent(
-            @RequestParam(name = "consent_challenge") @Size(max = 50)
-            @Pattern(regexp = "[A-Za-z0-9]{1,}", message = "only characters and numbers allowed") String consentChallenge,
+            @RequestParam(name = "consent_challenge")
+            @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge,
             @SessionAttribute(value = SSO_SESSION, required = false) SsoSession ssoSession) {
 
         String redirectUrl = hydraService.acceptConsent(consentChallenge, ssoSession);

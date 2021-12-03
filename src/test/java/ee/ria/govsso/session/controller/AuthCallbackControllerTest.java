@@ -18,6 +18,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.MapSession;
 import org.springframework.session.SessionRepository;
@@ -40,6 +42,7 @@ import static org.hamcrest.Matchers.equalTo;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class AuthCallbackControllerTest extends BaseTest {
 
+    private static final String TEST_CODE = "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg";
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SessionRepository<MapSession> sessionRepository;
     private final TaraService taraService;
@@ -63,7 +66,7 @@ class AuthCallbackControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         given()
-                .param("code", "testcode")
+                .param("code", TEST_CODE)
                 .param("state", ssoSession.getTaraAuthenticationRequestState())
                 .when()
                 .sessionId("SESSION", sessionId)
@@ -72,6 +75,122 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", Matchers.containsString("auth/login/test"));
+    }
+
+    @Test
+    void authCallback_WhenCodeParameterIsMissing_ThrowsUserInputError() {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenCodeParameterIsDuplicate_ThrowsUserInputError() {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("code", TEST_CODE)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"",
+            "_wBCd",
+            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX+TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg",
+            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLgg"})
+    void authCallback_WhenCodeParameterIsInvalid_ThrowsUserInputError(String codeParameter) {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", codeParameter)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenStateParameterIsMissing_ThrowsUserInputError() {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenStateParameterIsDuplicate_ThrowsUserInputError() {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"",
+            "727cWytFrnR5Qnd3.WJ2ceQVFNQIjEI05TNguUzjE9E",
+            "727cWytFrnR5Qnd3_WJ2ceQVFNQIjEI05TNguUzjE9EE",
+            "727cWytFrnR5Qnd3_WJ2ceQVFNQIjEI05TNguUzjE9"})
+    void authCallback_WhenStateParameterIsInvalid_ThrowsUserInputError(String stateParameter) {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", stateParameter)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
@@ -87,7 +206,7 @@ class AuthCallbackControllerTest extends BaseTest {
         String sessionId = createSession(ssoSession);
 
         given()
-                .param("code", "testcode")
+                .param("code", TEST_CODE)
                 .param("state", ssoSession.getTaraAuthenticationRequestState())
                 .when()
                 .sessionId("SESSION", sessionId)
@@ -111,7 +230,7 @@ class AuthCallbackControllerTest extends BaseTest {
         String sessionId = createSession(ssoSession);
 
         given()
-                .param("code", "testcode")
+                .param("code", TEST_CODE)
                 .param("state", ssoSession.getTaraAuthenticationRequestState())
                 .when()
                 .sessionId("SESSION", sessionId)
@@ -141,7 +260,7 @@ class AuthCallbackControllerTest extends BaseTest {
         String sessionId = createSession(ssoSession);
 
         given()
-                .param("code", "testcode")
+                .param("code", TEST_CODE)
                 .param("state", ssoSession.getTaraAuthenticationRequestState())
                 .when()
                 .sessionId("SESSION", sessionId)

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.view.RedirectView;
 
+import javax.validation.constraints.Pattern;
+
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 
 @Slf4j
@@ -30,8 +32,8 @@ public class AuthCallbackController {
 
     @GetMapping(value = CALLBACK_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView authCallback(
-            @RequestParam(name = "code") String code,
-            @RequestParam(name = "state") String state,
+            @RequestParam(name = "code") @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
+            @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
             @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) {
 
         if (!ssoSession.getTaraAuthenticationRequestState().equals(state)) {

@@ -65,6 +65,19 @@ public class AuthInitControllerTest extends BaseTest {
     }
 
     @Test
+    void authInit_WhenLoginChallengeParamIsDuplicate_ThrowsUserInputError() {
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get("/auth/init")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
     void authInit_WhenLoginChallengeMissing_ThrowsUserInputError() {
         given()
                 .when()

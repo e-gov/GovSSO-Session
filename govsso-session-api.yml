@@ -76,8 +76,8 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '^[A-Za-z0-9\-_.]{87}$'
-            minLength: 87
+            pattern: '^[A-Za-z0-9\-_.]{6,87}$'
+            minLength: 6
             maxLength: 87
             example: gSVzQ6iWTLWDtD1f7_QZdHNweXzrraQYdys_MWoRK-A.nQ2epEBSzxo_n-P6hQt_I_HvusERdqkGaC31TrjSIlU
         - in: query
