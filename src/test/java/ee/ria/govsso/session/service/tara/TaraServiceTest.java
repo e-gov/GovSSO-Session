@@ -70,7 +70,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         assertThat(authenticationRequest.getState().getValue(), hasLength(43));
         assertThat(authenticationRequest.getNonce().getValue(), hasLength(43));
         assertThat(authenticationRequest.getEndpointURI().toString(), equalTo("https://localhost:9877/oidc/authorize"));
-        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo("http://localhost:9877/auth/taracallback"));
+        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo("http://localhost:9877/login/taracallback"));
         List<String> scopes = authenticationRequest.getScope().toStringList();
         assertThat(authenticationRequest.getResponseType().toString(), equalTo("code"));
         assertThat(scopes, contains("openid"));

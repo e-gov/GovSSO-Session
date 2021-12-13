@@ -2,16 +2,11 @@ package ee.ria.govsso.session.service.hydra;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LoginAcceptRequestBody {
+public class Context {
 
-    boolean remember;
-    String acr;
-    String subject;
-    Context context;
-    int rememberFor;
-
+    private String taraIdToken;
 }

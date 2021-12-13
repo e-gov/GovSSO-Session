@@ -68,8 +68,8 @@ services:
       - DSN=postgres://hydra:changeme@oidc-db:5432/oidc-db?sslmode=disable&max_conns=20&max_idle_conns=4
       - URLS_SELF_ISSUER=http://oidc.localhost:13444/
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
-      - URLS_LOGIN=http://localhost:14080/auth/init
-      - URLS_CONSENT=http://localhost:14080/auth/consent
+      - URLS_LOGIN=http://localhost:14080/login/init
+      - URLS_CONSENT=http://localhost:14080/consent/init
       - URLS_LOGOUT=http://localhost:14080/logout
       - URLS_ERROR=http://localhost:14080/error
     networks:

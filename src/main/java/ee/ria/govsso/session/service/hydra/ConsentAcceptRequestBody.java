@@ -12,6 +12,8 @@ public class ConsentAcceptRequestBody {
 
     private ConsentAcceptRequestBody.LoginSession session;
     private List<String> grantScope;
+    private boolean remember;
+    private int rememberFor;
 
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

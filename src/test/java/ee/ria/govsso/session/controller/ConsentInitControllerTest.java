@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class AuthConsentControllerTest extends BaseTest {
+class ConsentInitControllerTest extends BaseTest {
 
     public static final String MOCK_CONSENT_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
@@ -35,12 +35,12 @@ class AuthConsentControllerTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "123456789012345678901234567890123456789012345678900"})
-    void authConsent_WhenConsentChallengeInvalid_ThrowsUserInputError(String consentChallenge) {
+    void consentInit_WhenConsentChallengeInvalid_ThrowsUserInputError(String consentChallenge) {
 
         given()
                 .param("consent_challenge", consentChallenge)
                 .when()
-                .get("/auth/consent")
+                .get("/consent/init")
                 .then()
                 .assertThat()
                 .statusCode(400)
@@ -48,10 +48,10 @@ class AuthConsentControllerTest extends BaseTest {
     }
 
     @Test
-    void authConsent_WhenConsentChallengeParamIsMissing_ThrowsUserInputError() {
+    void consentInit_WhenConsentChallengeParamIsMissing_ThrowsUserInputError() {
         given()
                 .when()
-                .get("/auth/consent")
+                .get("/consent/init")
                 .then()
                 .assertThat()
                 .statusCode(400)
@@ -59,12 +59,12 @@ class AuthConsentControllerTest extends BaseTest {
     }
 
     @Test
-    void authConsent_WhenConsentChallengeParamIsDuplicate_ThrowsUserInputError() {
+    void consentInit_WhenConsentChallengeParamIsDuplicate_ThrowsUserInputError() {
         given()
                 .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
                 .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
                 .when()
-                .get("/auth/consent")
+                .get("/consent/init")
                 .then()
                 .assertThat()
                 .statusCode(400)
@@ -72,7 +72,7 @@ class AuthConsentControllerTest extends BaseTest {
     }
 
     @Test
-    void authConsent_WhenAcceptConsentIsSuccessful_Redirects() {
+    void consentInit_WhenAcceptConsentIsSuccessful_Redirects() {
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
@@ -86,7 +86,7 @@ class AuthConsentControllerTest extends BaseTest {
                 .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
                 .when()
                 .sessionId("SESSION", sessionId)
-                .get("/auth/consent")
+                .get("/consent/init")
                 .then()
                 .assertThat()
                 .statusCode(302)
@@ -94,7 +94,7 @@ class AuthConsentControllerTest extends BaseTest {
     }
 
     @Test
-    void authConsent_WhenAcceptConsentRespondsWith500_ThrowsTechnicalGeneralError() {
+    void consentInit_WhenAcceptConsentRespondsWith500_ThrowsTechnicalGeneralError() {
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
@@ -108,7 +108,7 @@ class AuthConsentControllerTest extends BaseTest {
                 .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
                 .when()
                 .sessionId("SESSION", sessionId)
-                .get("/auth/consent")
+                .get("/consent/init")
                 .then()
                 .assertThat()
                 .statusCode(500)
@@ -118,11 +118,12 @@ class AuthConsentControllerTest extends BaseTest {
     @SneakyThrows
     private String createSession() {
         MapSession session = sessionRepository.createSession();
-        SsoSession.LoginRequestInfo loginRequest = new SsoSession.LoginRequestInfo();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         String state = authenticationRequest.getState().getValue();
         String nonce = authenticationRequest.getNonce().getValue();
-        SsoSession ssoSession = new SsoSession(loginRequest, state, nonce);
+        SsoSession ssoSession = new SsoSession();
+        ssoSession.setTaraAuthenticationRequestState(state);
+        ssoSession.setTaraAuthenticationRequestNonce(nonce);
         session.setAttribute(SSO_SESSION, ssoSession);
         sessionRepository.save(session);
         return Base64.getEncoder().withoutPadding().encodeToString(session.getId().getBytes());

@@ -20,13 +20,13 @@ import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 @Validated
 @Controller
 @RequiredArgsConstructor
-public class AuthConsentController {
-    public static final String AUTH_CONSENT_REQUEST_MAPPING = "/auth/consent";
+public class ConsentInitController {
+    public static final String CONSENT_INIT_REQUEST_MAPPING = "/consent/init";
 
     private final HydraService hydraService;
 
-    @GetMapping(value = AUTH_CONSENT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
-    public RedirectView authConsent(
+    @GetMapping(value = CONSENT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
+    public RedirectView consentInit(
             @RequestParam(name = "consent_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge,
             @SessionAttribute(value = SSO_SESSION, required = false) SsoSession ssoSession) {

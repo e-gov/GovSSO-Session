@@ -18,18 +18,20 @@
                         </div>
                         <div class="c-tab-login__content-text">
                             <div aria-level="2" role="heading">
-                                <h2 th:utext="${#messages.msg('label.sso.title')}"></h2>
+                                <h2 th:utext="#{label.sso.title(${clientName})}"></h2>
                             </div>
-                            <p th:utext="${#messages.msg('label.sso.instruction')}"></p>
-                            <form class="c-form" id="idCardForm" layout:fragment="login-form-content" method="post"
-                                  role="form"
-                                  th:action="@{/auth/accept}">
-                                <button class="c-btn c-btn--primary" role="button" th:text="#{label.sso.continue}"
-                                        type="button">
+                            <p th:utext="#{label.sso.instruction(${clientName})}"></p>
+                            <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
+                                  role="form">
+                                <button class="c-btn c-btn--primary" formaction="/login/continuesession" role="button"
+                                        th:text="#{label.sso.continue}"
+                                        type="submit">
                                     Login
                                 </button>
-                                <button class="c-btn c-btn--cancel" role="button" th:text="#{label.sso.reauthenticate}"
-                                        type="button">Cancel
+                                <button class="c-btn c-btn--cancel" formaction="/logout" role="button"
+                                        th:text="#{label.sso.reauthenticate}"
+                                        type="submit">
+                                    Cancel
                                 </button>
                             </form>
                         </div>

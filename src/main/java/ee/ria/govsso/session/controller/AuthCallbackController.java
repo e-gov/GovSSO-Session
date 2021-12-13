@@ -26,12 +26,12 @@ import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 @RequiredArgsConstructor
 public class AuthCallbackController {
 
-    public static final String CALLBACK_REQUEST_MAPPING = "/auth/taracallback";
+    public static final String CALLBACK_REQUEST_MAPPING = "/login/taracallback";
     private final TaraService taraService;
     private final HydraService hydraService;
 
     @GetMapping(value = CALLBACK_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
-    public RedirectView authCallback(
+    public RedirectView loginCallback(
             @RequestParam(name = "code") @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
             @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
             @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) {
@@ -42,7 +42,7 @@ public class AuthCallbackController {
 
         SignedJWT idToken = taraService.requestIdToken(code);
         taraService.verifyIdToken(ssoSession.getTaraAuthenticationRequestNonce(), idToken);
-        String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginRequestInfo().getChallenge(), idToken);
+        String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginChallenge(), idToken);
         return new RedirectView(redirectUrl);
     }
 }

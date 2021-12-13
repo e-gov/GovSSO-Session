@@ -24,7 +24,6 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
-import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
@@ -63,6 +62,7 @@ public class TaraService {
         Nonce nonce = new Nonce();
         ResponseType responseType = new ResponseType(CODE);
         Scope scope = new Scope(OPENID);
+
         return new AuthenticationRequest.Builder(responseType, scope, clientID, callback)
                 .endpointURI(taraMetadataService.getMetadata().getAuthorizationEndpointURI())
                 .state(state)
@@ -108,8 +108,7 @@ public class TaraService {
     public void verifyIdToken(@NonNull String nonce, @NonNull SignedJWT idToken) {
         try {
             IDTokenValidator verifier = taraMetadataService.getIDTokenValidator();
-            IDTokenClaimsSet claimsSet = verifier.validate(idToken, Nonce.parse(nonce));
-            // TODO: https://e-gov.github.io/TARA-Doku/TehnilineKirjeldus#51-identsust%C3%B5endi-kontrollimine
+            verifier.validate(idToken, Nonce.parse(nonce));
 
         } catch (BadJOSEException ex) {
             throw new SsoException("Unable to validate ID Token", ex);

@@ -88,6 +88,16 @@ TODO What this application does.
 
 TODO
 
+<a name="sso_session_service_conf"></a>
+
+### SSO Session service configuration
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: http://localhost:14080/ |
+| `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
+| `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
+
 <a name="tara_integration_conf"></a>
 
 ### Integration with TARA OIDC service

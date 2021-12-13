@@ -272,12 +272,11 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     private SsoSession createSsoSession() {
-        SsoSession.LoginRequestInfo loginRequest = new SsoSession.LoginRequestInfo();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
-        SsoSession.Client client = new SsoSession.Client();
-        client.setRedirectUris(new String[]{"some/test/url"});
-        loginRequest.setClient(client);
-        return new SsoSession(loginRequest, authenticationRequest.getState().getValue(), authenticationRequest.getNonce().getValue());
+        SsoSession ssoSession = new SsoSession();
+        ssoSession.setTaraAuthenticationRequestState(authenticationRequest.getState().getValue());
+        ssoSession.setTaraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue());
+        return ssoSession;
     }
 
     private String createSession(SsoSession ssoSession) {
