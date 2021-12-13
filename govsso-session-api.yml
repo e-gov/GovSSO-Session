@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://localhost:14080
 paths:
-  /auth/init:
+  /login/init:
     get:
       summary: Start authentication.
       operationId: authInit
@@ -55,7 +55,7 @@ paths:
               schema:
                 type: string
                 example: HTML error view.
-  /auth/taracallback:
+  /login/taracallback:
     get:
       summary: TARA authentication completed, request ID token from TARA.
       operationId: authTaraCallback

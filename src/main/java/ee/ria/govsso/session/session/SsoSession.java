@@ -10,6 +10,4 @@ public class SsoSession {
     private String loginChallenge;
     private String taraAuthenticationRequestNonce;
     private String taraAuthenticationRequestState;
-
-
 }

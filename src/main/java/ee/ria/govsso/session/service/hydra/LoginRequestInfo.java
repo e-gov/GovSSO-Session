@@ -13,4 +13,5 @@ public class LoginRequestInfo {
     private Client client;
     private String subject;
     private String sessionId;
+    private String requestUrl;
 }

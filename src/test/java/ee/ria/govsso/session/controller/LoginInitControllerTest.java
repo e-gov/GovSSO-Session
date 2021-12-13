@@ -232,33 +232,6 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(200);
     }
 
-    private String createConsentsResponseBodyWithIdToken(SignedJWT jwt) {
-        String consentsResponseBody = "[\n" +
-                "  {\n" +
-                "    \"consent_request\": {\n" +
-                "      \"context\": {\n" +
-                "        \"tara_id_token\": \"%s\"\n" +
-                "      },\n" +
-                "      \"login_session_id\": \"e56cbaf9-81e9-4473-a733-261e8dd38e95\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "]\n";
-
-        String responseBody = String.format(consentsResponseBody, jwt.serialize());
-        return responseBody;
-    }
-
-    private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
-        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .notBeforeTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
-                .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
-                .build();
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
-        JWSSigner signer = new RSASSASigner(taraJWK);
-        jwt.sign(signer);
-        return jwt;
-    }
-
     @Test
     void loginInit_WhenConsentsRequestRespondsWith500_ThrowsSsoException() {
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -370,6 +343,33 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
+
+    private String createConsentsResponseBodyWithIdToken(SignedJWT jwt) {
+        String consentsResponseBody = "[\n" +
+                "  {\n" +
+                "    \"consent_request\": {\n" +
+                "      \"context\": {\n" +
+                "        \"tara_id_token\": \"%s\"\n" +
+                "      },\n" +
+                "      \"login_session_id\": \"e56cbaf9-81e9-4473-a733-261e8dd38e95\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "]\n";
+
+        String responseBody = String.format(consentsResponseBody, jwt.serialize());
+        return responseBody;
+    }
+
+    private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .notBeforeTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
+                .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
+                .build();
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
+        JWSSigner signer = new RSASSASigner(taraJWK);
+        jwt.sign(signer);
+        return jwt;
     }
 
 }

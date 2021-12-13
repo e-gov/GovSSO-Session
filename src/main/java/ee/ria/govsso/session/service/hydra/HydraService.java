@@ -92,7 +92,6 @@ public class HydraService {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
 
         return idToken;
-
     }
 
     @SneakyThrows
@@ -154,6 +153,67 @@ public class HydraService {
                 .blockOptional().orElseThrow();
 
         return consentResponseBody.getRedirectTo();
+    }
+
+    public void deleteConsent(String subject, String loginSessionId) {
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/sessions/consent";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("subject", subject)
+                .queryParam("login_session_id", loginSessionId)
+                .queryParam("all", true)
+                .queryParam("trigger_backchannel_logout", true);
+
+        try {
+            webclient.delete()
+                    .uri(builder.toUriString())
+                    .retrieve()
+                    .toBodilessEntity()
+                    .blockOptional().orElseThrow();
+        } catch (Exception ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
+    }
+
+    public void deleteLogin(String loginSessionId) {
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/sessions/login/" + loginSessionId;
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri);
+
+        try {
+            webclient.delete()
+                    .uri(builder.toUriString())
+                    .retrieve()
+                    .toBodilessEntity()
+                    .blockOptional().orElseThrow();
+
+        } catch (Exception ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
+    }
+
+    public String rejectLogin(String loginChallenge) {
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login/reject";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("login_challenge", loginChallenge);
+
+        try {
+            LoginRejectResponseBody loginRejectResponseBody = webclient.put()
+                    .uri(builder.toUriString())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(new LoginRejectRequestBody()))
+                    .retrieve()
+                    .bodyToMono(LoginRejectResponseBody.class)
+                    .blockOptional().orElseThrow();
+
+            return loginRejectResponseBody.getRedirectTo();
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else if (ex.getStatusCode() == HttpStatus.CONFLICT)
+                return null;
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
     }
 
     private boolean isNbfValid(JWT idToken) throws ParseException {

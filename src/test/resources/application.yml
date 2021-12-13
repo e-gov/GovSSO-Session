@@ -14,7 +14,7 @@ spring:
 
 govsso:
   base-url: http://localhost:9877/
-  session-max-update-interval-minutes: 20
+  session-max-update-interval-minutes: 15
   session-max-duration-hours: 1000000
   hydra:
     admin-url: https://localhost:9877/
