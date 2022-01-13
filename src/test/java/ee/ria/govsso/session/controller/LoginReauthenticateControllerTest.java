@@ -2,6 +2,7 @@ package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.session.SsoSession;
+import io.restassured.matcher.RestAssuredMatchers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
@@ -11,6 +12,7 @@ import org.springframework.session.MapSession;
 import org.springframework.session.SessionRepository;
 
 import java.util.Base64;
+import java.util.Date;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
@@ -224,6 +226,42 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
+
+    @Test
+    void loginInit_IfHydraSessionCookieExists_HydraSessionCookieIsDeleted() {
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95&all=true&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(204)));
+
+        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(204)));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_reject.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .cookie("oauth2_authentication_session_insecure", "test1234")
+                .sessionId("SESSION", sessionId)
+                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .cookie("oauth2_authentication_session_insecure", RestAssuredMatchers.detailedCookie().maxAge(0).value("test1234").path("/").expiryDate(new Date(10000)));
     }
 
     private SsoSession createSsoSession() {
