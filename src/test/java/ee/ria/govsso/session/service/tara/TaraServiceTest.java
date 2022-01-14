@@ -178,7 +178,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
         assertThat(ssoException.getMessage(), equalTo("Unable to request ID Token"));
         Throwable cause = ssoException.getCause();
-        assertThat(cause.getMessage(), equalTo("Token type must be Bearer"));
+        assertThat(cause.getMessage(), equalTo("Unsupported token_type: abc123"));
     }
 
     @Test
