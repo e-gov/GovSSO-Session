@@ -114,6 +114,14 @@ TODO
 | `govsso.tara.metadata-backoff-max-delay-milliseconds` | No | 60000 | Maximum delay time in milliseconds between retries after applying backoff multiplier to initial delay time. |
 | `govsso.tara.metadata-backoff-multiplier` | No | 1.1 | Multiplier for generating the next delay for backoff. |
 
+<a name="sec_conf"></a>
+
+## Security configuration
+
+| Parameter | Mandatory | Description, example |
+|:--------- |:--------- |:-------------------- |
+| `govsso.security.content-security-policy` | No | Content security policy. Default value `connect-src 'self'; default-src 'none'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; base-uri 'none'; frame-ancestors 'none'; block-all-mixed-content` |
+
 ## Licenses
 
 * [jquery](https://jquery.com) - MIT license

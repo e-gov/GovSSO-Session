@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import io.restassured.RestAssured;
+import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -32,6 +35,16 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseTest {
+
+    private static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
+        put("X-XSS-Protection", "0");
+        put("X-Content-Type-Options", "nosniff");
+        put("X-Frame-Options", "DENY");
+        put("Content-Security-Policy", "connect-src 'self'; default-src 'none'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; base-uri 'none'; frame-ancestors 'none'; block-all-mixed-content");
+        put("Pragma", "no-cache");
+        put("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
+        put("Expires", "0");
+    }};
 
     protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpsPort(9877)
@@ -85,6 +98,7 @@ public abstract class BaseTest {
 
     @BeforeEach
     public void beforeEachTest() {
+        RestAssured.responseSpecification = new ResponseSpecBuilder().expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
         RestAssured.port = port;
         wireMockServer.resetAll();
     }
