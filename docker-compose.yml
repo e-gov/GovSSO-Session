@@ -59,12 +59,12 @@ services:
     depends_on:
       - hydra
       - session
+    ports:
+      - '13080:13080'
     networks:
       default:
         aliases:
           - gateway.localhost
-    ports:
-      - '13080:13080'
     volumes:
       - ./local/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
 
@@ -85,6 +85,9 @@ services:
       - URLS_CONSENT=http://gateway.localhost:13080/consent/init
       - URLS_LOGOUT=http://gateway.localhost:13080/logout
       - URLS_ERROR=http://gateway.localhost:13080/error
+    ports:
+      - '14444:4444'
+      - '14445:4445'
     networks:
       default:
         aliases:

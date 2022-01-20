@@ -15,17 +15,17 @@ spring:
 
 server:
   # Use same port as docker-compose-all.yml.
-  port: 14080
+  port: 15080
 
 govsso:
   # By default use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
   #  and Dependencies in Docker Compose" workflow in README.md.
-  base-url: http://gateway.localhost:80/
+  base-url: http://gateway.localhost:13080/
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 12
   hydra:
-    admin-url: http://hydra.localhost:13445/
+    admin-url: http://hydra.localhost:4445/
   tara:
-    issuer-url: https://tara.localhost:15443
+    issuer-url: https://tara.localhost:16443
     client-id: govsso
     client-secret: changeme

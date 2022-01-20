@@ -60,29 +60,29 @@ TODO What this application does.
 * Example Client B
     * https://localhost:12443/ - UI
 * Ory Hydra
-    * http://localhost:13444/ - public API
-        * http://localhost:13444/health/ready
-        * http://localhost:13444/.well-known/openid-configuration
-        * http://localhost:13444/.well-known/jwks.json
-        * http://localhost:13444/oauth2/auth
-        * http://localhost:13444/oauth2/token
-    * http://localhost:13445/ - admin API
-        * http://localhost:13445/health/alive
-        * http://localhost:13445/version
+    * http://localhost:14444/ - public API
+        * http://localhost:14444/health/ready
+        * http://localhost:14444/.well-known/openid-configuration
+        * http://localhost:14444/.well-known/jwks.json
+        * http://localhost:14444/oauth2/auth
+        * http://localhost:14444/oauth2/token
+    * http://localhost:14445/ - admin API
+        * http://localhost:14445/health/alive
+        * http://localhost:14445/version
         * https://www.ory.sh/hydra/docs/reference/api/#tag/admin
 * Session Service
-    * http://localhost:14080/actuator/health
-    * http://localhost:14080/actuator/health/readiness
-    * http://localhost:14080/actuator/info
+    * http://localhost:15080/actuator/health
+    * http://localhost:15080/actuator/health/readiness
+    * http://localhost:15080/actuator/info
 * TARA Mock
-    * https://tara.localhost:15443/health
-    * https://tara.localhost:15443/.well-known/openid-configuration
-    * https://tara.localhost:15443/oidc/jwks
-    * https://tara.localhost:15443/oidc/authorize
-    * https://tara.localhost:15443/oidc/token
+    * https://tara.localhost:16443/health
+    * https://tara.localhost:16443/.well-known/openid-configuration
+    * https://tara.localhost:16443/oidc/jwks
+    * https://tara.localhost:16443/oidc/authorize
+    * https://tara.localhost:16443/oidc/token
 * Admin Service
-    * http://localhost:16080/ - UI (username admin, password admin)
-    * http://localhost:16080/actuator/health
+    * http://localhost:17080/ - UI (username admin, password admin)
+    * http://localhost:17080/actuator/health
 * MailHog
     * http://localhost:17080/ - UI
 
@@ -96,7 +96,7 @@ TODO
 
 | Parameter        | Mandatory | Default value | Description, example |
 | :---------------- | :---------- | :---------- | :---------------- |
-| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: http://localhost:14080/ |
+| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: http://localhost:15080/ |
 | `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
 

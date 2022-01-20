@@ -3,7 +3,7 @@ info:
   title: GOVSSO Session Service
   version: 0.1.0
 servers:
-  - url: http://localhost:14080
+  - url: http://localhost:15080
 paths:
   /login/init:
     get:
@@ -34,7 +34,7 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost:14080%2Fauth%2Ftaracallback&state=1CdQPV8h6Oej8czeP2GJiqLOkUR70yIPlTNd16DBwGM&nonce=O15XCSiGW2FMeU0u9nN0kNEnwY9mfO7xOm-9wV5KQpI&client_id=govsso
+              example: scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost:15080%2Fauth%2Ftaracallback&state=1CdQPV8h6Oej8czeP2GJiqLOkUR70yIPlTNd16DBwGM&nonce=O15XCSiGW2FMeU0u9nN0kNEnwY9mfO7xOm-9wV5KQpI&client_id=govsso
         '400':
           description: User error (invalid request etc).
           content:
