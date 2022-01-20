@@ -64,6 +64,23 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
+    void loginInit_WhenUserSessionLoginChallengeDoesntExist_ThrowUserInputOrExpiredError() {
+
+        SsoSession ssoSession = new SsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+    }
+
+    @Test
     void loginInit_WhenFetchLoginRequestInfoSubjectIsEmpty_ThrowsUserInputError() {
 
         SsoSession ssoSession = createSsoSession();
@@ -74,6 +91,29 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenFetchLoginRequestInfoIdTokenHintClaimIsNonEmpty_ThrowsUserInputError() {
+
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)

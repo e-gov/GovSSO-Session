@@ -103,9 +103,16 @@ public class HydraService {
         JWTClaimsSet jwtClaimsSet = idToken.getJWTClaimsSet();
 
         Context context = new Context();
-
         context.setTaraIdToken(idToken.getParsedString());
-        LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody(true, "high", jwtClaimsSet.getSubject(), context, ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+
+        LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody();
+        requestBody.setRemember(true);
+        requestBody.setAcr("high");
+        requestBody.setSubject(jwtClaimsSet.getSubject());
+        requestBody.setContext(context);
+        requestBody.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        requestBody.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
+        requestBody.setRefreshRememberFor(true);
 
         LoginAcceptResponseBody acceptResponseBody = webclient.put()
                 .uri(builder.toUriString())

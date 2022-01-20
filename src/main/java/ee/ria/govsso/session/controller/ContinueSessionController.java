@@ -29,14 +29,22 @@ public class ContinueSessionController {
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView continueSession(@SessionAttribute(value = SSO_SESSION, required = false) SsoSession ssoSession) {
 
-        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoSession.getLoginChallenge());
+        if (ssoSession.getLoginChallenge() == null)
+            throw new SsoException(ErrorCode.USER_INPUT_OR_EXPIRED, "User session login challenge must not be null");
 
-        if (loginRequestInfo.getSubject().isEmpty())
-            throw new SsoException(ErrorCode.USER_INPUT, "Login request subject must not be empty");
+        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoSession.getLoginChallenge());
+        validateLoginRequestInfo(loginRequestInfo);
 
         JWT idToken = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginChallenge(), idToken);
 
         return new RedirectView(redirectUrl);
+    }
+
+    private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
+        if (loginRequestInfo.getSubject().isEmpty())
+            throw new SsoException(ErrorCode.USER_INPUT, "Login request subject must not be empty");
+        if (loginRequestInfo.getOidcContext() != null && loginRequestInfo.getOidcContext().getIdTokenHintClaims() != null)
+            throw new SsoException(ErrorCode.USER_INPUT, "Login request ID token hint claim must be null");
     }
 }

@@ -89,7 +89,7 @@ public class TaraService {
                 if (errorObject.getHTTPStatusCode() == HttpStatus.BAD_REQUEST.value())
                     throw new SsoException(ErrorCode.USER_INPUT_OR_EXPIRED, errorMessage);
                 else {
-                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL, errorMessage);
+                    throw new SsoException(ErrorCode.TECHNICAL_TARA_UNAVAILABLE, errorMessage);
                 }
             }
 

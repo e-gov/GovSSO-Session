@@ -14,4 +14,7 @@ public class LoginRequestInfo {
     private String subject;
     private String sessionId;
     private String requestUrl;
+    private String[] requestedScope;
+    private OidcContext oidcContext;
+    private boolean skip;
 }

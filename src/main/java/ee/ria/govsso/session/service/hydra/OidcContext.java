@@ -6,14 +6,8 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LoginAcceptRequestBody {
+public class OidcContext {
 
-    boolean remember;
-    String acr;
-    String subject;
-    Context context;
-    int rememberFor;
-    String[] amr;
-    boolean refreshRememberFor;
-
+    private String[] acrValues;
+    private Object idTokenHintClaims;
 }

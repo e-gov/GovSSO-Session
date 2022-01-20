@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
@@ -29,6 +30,7 @@ import java.util.Base64;
 import java.util.Date;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -42,7 +44,9 @@ import static org.hamcrest.Matchers.equalTo;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class AuthCallbackControllerTest extends BaseTest {
 
+    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private static final String TEST_CODE = "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg";
+    private static final String TEST_STATE = "VuF_ylfAWHflipdR2d6xKGLh6VB_7UrNetD3lXfOc0g";
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SessionRepository<MapSession> sessionRepository;
     private final TaraService taraService;
@@ -53,13 +57,19 @@ class AuthCallbackControllerTest extends BaseTest {
         String sessionId = createSession(ssoSession);
         OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession);
 
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody(tokenResponse.toJSONObject().toJSONString())));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge"))
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -196,6 +206,12 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenRequestIdTokenRespondsWith500_ThrowsTechnicalGeneralError() {
 
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(500)
@@ -214,11 +230,17 @@ class AuthCallbackControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(500)
-                .body("error", equalTo("TECHNICAL_GENERAL"));
+                .body("error", equalTo("TECHNICAL_TARA_UNAVAILABLE"));
     }
 
     @Test
     void authCallback_WhenRequestIdTokenRespondsWith400_ThrowsUserInputOrExpiredError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
@@ -243,6 +265,12 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @Test
     void authCallback_WhenAcceptLoginRespondsWith500_ThrowsTechnicalGeneralError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
@@ -271,9 +299,47 @@ class AuthCallbackControllerTest extends BaseTest {
                 .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
+    @Test
+    void authCallback_WhenSessionTaraAuthenticationRequestStateIsMissing_ThrowsUserInputOrExpiredError() {
+
+        SsoSession ssoSession = new SsoSession();
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", TEST_STATE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+    }
+
+    @Test
+    void authCallback_WhenSessionLoginRequestInfoChallengeIsMissing_ThrowsUserInputOrExpiredError() {
+
+        SsoSession ssoSession = new SsoSession();
+        ssoSession.setTaraAuthenticationRequestState(new State().getValue());
+        String sessionId = createSession(ssoSession);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", TEST_STATE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+    }
+
     private SsoSession createSsoSession() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
         SsoSession ssoSession = new SsoSession();
+        ssoSession.setLoginChallenge(TEST_LOGIN_CHALLENGE);
         ssoSession.setTaraAuthenticationRequestState(authenticationRequest.getState().getValue());
         ssoSession.setTaraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue());
         return ssoSession;
