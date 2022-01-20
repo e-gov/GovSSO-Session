@@ -20,11 +20,11 @@ server:
 govsso:
   # By default use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
   #  and Dependencies in Docker Compose" workflow in README.md.
-  base-url: http://localhost:14080/
+  base-url: http://gateway.localhost:80/
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 12
   hydra:
-    admin-url: http://localhost:13445/
+    admin-url: http://hydra.localhost:13445/
   tara:
     issuer-url: https://tara.localhost:15443
     client-id: govsso

@@ -4,7 +4,7 @@ services:
   # Beware: https://github.com/docker-library/docs/tree/master/openjdk#environment-variables-with-periods-in-their-names
   # TODO Replace sleep with a reliable mechanism.
 
-  dozzle:
+  dozzle: # Map to host ports 9xxx.
     image: amir20/dozzle:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -16,7 +16,7 @@ services:
     image: govsso-client:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
-      - oidc
+      - gateway
     deploy:
       resources:
         limits:
@@ -26,7 +26,7 @@ services:
       - spring.application.name=Client A
       - spring.security.oauth2.client.registration.govsso.client-id=client-a
       - spring.security.oauth2.client.registration.govsso.client-secret=secreta
-      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://oidc.localhost:13444/
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://gateway.localhost:13080/
       - govsso.public-url=https://localhost:11443
       - govsso.logo=client-a.png
     ports:
@@ -37,7 +37,7 @@ services:
     image: govsso-client:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
-      - oidc
+      - gateway
     deploy:
       resources:
         limits:
@@ -47,41 +47,74 @@ services:
       - spring.application.name=Client B
       - spring.security.oauth2.client.registration.govsso.client-id=client-b
       - spring.security.oauth2.client.registration.govsso.client-secret=secretb
-      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://oidc.localhost:13444/
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://gateway.localhost:13080/
       - govsso.public-url=https://localhost:12443
       - govsso.logo=client-b.png
     ports:
       - '12443:12443'
     restart: unless-stopped
 
-  oidc: # Map to host ports 13xxx.
+  gateway: # Map to host ports 13xxx.
+    build: local/gateway
+    depends_on:
+      - hydra
+      - session
+    networks:
+      default:
+        aliases:
+          - gateway.localhost
+    ports:
+      - '13080:13080'
+    volumes:
+      - ./local/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  hydra: # Map to host ports 14xxx.
     image: oryd/hydra:v1.10.7-sqlite # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
     depends_on:
-      - oidc-db
+      - hydra-db
     deploy:
       resources:
         limits:
           memory: 250M
     environment:
-      - SERVE_PUBLIC_PORT=13444
-      - DSN=postgres://hydra:changeme@oidc-db:5432/oidc-db?sslmode=disable&max_conns=20&max_idle_conns=4
-      - URLS_SELF_ISSUER=http://oidc.localhost:13444/
+      - DSN=postgres://hydra:changeme@hydra-db:5432/hydra-db?sslmode=disable&max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=http://gateway.localhost:13080/
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
-      - URLS_LOGIN=http://localhost:14080/login/init
-      - URLS_CONSENT=http://localhost:14080/consent/init
-      - URLS_LOGOUT=http://localhost:14080/logout
-      - URLS_ERROR=http://localhost:14080/error
+      - URLS_LOGIN=http://gateway.localhost:13080/login/init
+      - URLS_CONSENT=http://gateway.localhost:13080/consent/init
+      - URLS_LOGOUT=http://gateway.localhost:13080/logout
+      - URLS_ERROR=http://gateway.localhost:13080/error
     networks:
       default:
         aliases:
-          - oidc.localhost
+          - hydra.localhost
     ports:
-      - '13444:13444'
-      - '13445:4445'
+      - '14444:4444'
+      - '14445:4445'
     restart: unless-stopped
     volumes:
-      - ./local/oidc:/etc/hydra
+      - ./local/hydra:/etc/hydra:ro
+
+  session: # Map to host ports 15xxx.
+    # First follow README.md to build this Docker image.
+    image: govsso-session:latest
+    depends_on:
+      - tara
+    deploy:
+      resources:
+        limits:
+          memory: 650M
+    environment:
+      - server.port=8080
+      - govsso.hydra.base-url=http://gateway.localhost:13080/
+      # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
+      - govsso.hydra.admin-url=http://hydra.localhost:4445/
+      - govsso.tara.issuer-url=https://tara.localhost:16443
+    ports:
+      - '15000:8000'
+      - '15080:8080'
+    restart: unless-stopped
 
   setup:
     build: local/setup
@@ -96,7 +129,7 @@ services:
       - ADMIN_USER=admin
       - ADMIN_PASS=admin
 
-  tara: # Map to host ports 15xxx.
+  tara: # Map to host ports 16xxx.
     # TODO Use specific version.
     # TODO Optimize Dockerfile (use multi-stage to exclude build environment).
     build:
@@ -112,18 +145,18 @@ services:
         aliases:
           - tara.localhost
     ports:
-      - '15443:15443'
+      - '16443:16443'
     restart: unless-stopped
     volumes:
-      - ./local/tara/config.json:/service/config.json
+      - ./local/tara/config.json:/service/config.json:ro
 
-  admin: # Map to host ports 16xxx.
+  admin: # Map to host ports 17xxx.
     # First follow TARA2-Admin README.md to build this Docker image.
     image: tara-admin:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - admin-db
-      - oidc
+      - hydra
       - smtp
     deploy:
       resources:
@@ -131,7 +164,7 @@ services:
           memory: 650M
     environment:
       - spring.application.name=GOVSSO-Admin
-      - tara-oidc.url=http://oidc:4445/
+      - tara-oidc.url=http://hydra:4445/
       - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
       - spring.mail.host=smtp
       - spring.mail.port=1025
@@ -144,38 +177,38 @@ services:
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
     ports:
-      - '16000:8000'
-      - '16080:8080'
+      - '17000:8000'
+      - '17080:8080'
     restart: unless-stopped
 
-  smtp: # Map to host ports 17xxx.
+  smtp: # Map to host ports 18xxx.
     image: mailhog/mailhog:v1.0.1
     ports:
-      - '17025:1025'
-      - '17080:8025'
+      - '18025:1025'
+      - '18080:8025'
     restart: unless-stopped
 
-  oidc-db:
+  hydra-db: # Map to host ports 19xxx.
     image: postgres:13
     deploy:
       resources:
         limits:
           memory: 250M
     healthcheck:
-      test: pg_isready -U hydra -d oidc-db
+      test: pg_isready -U hydra -d hydra-db
       interval: 6s
       retries: 10
     environment:
-      - POSTGRES_DB=oidc-db
+      - POSTGRES_DB=hydra-db
       - POSTGRES_USER=hydra
       - POSTGRES_PASSWORD=changeme
     ports:
-      - '18432:5432'
+      - '19432:5432'
     restart: unless-stopped
     volumes:
-      - oidc-db-data:/var/lib/postgresql/data
+      - hydra-db-data:/var/lib/postgresql/data
 
-  admin-db:
+  admin-db: # Map to host ports 20xxx.
     image: postgres:13
     deploy:
       resources:
@@ -186,11 +219,11 @@ services:
       - POSTGRES_USER=taraadmin
       - POSTGRES_PASSWORD=changeme
     ports:
-      - '19432:5432'
+      - '20432:5432'
     restart: unless-stopped
     volumes:
       - admin-db-data:/var/lib/postgresql/data
 
 volumes:
-  oidc-db-data:
+  hydra-db-data:
   admin-db-data:

@@ -99,7 +99,7 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: http://localhost:13080/oidc/authorize?client_id=client-a&login_verifier=824113da6da44889943b98715a06d699&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+              example: http://localhost:13080/oauth2/auth?client_id=client-a&login_verifier=824113da6da44889943b98715a06d699&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
         '400':
           description: User error (invalid request etc).
           content:
@@ -154,7 +154,7 @@ paths:
               schema:
                 type: string
                 format: uri
-              example: http://localhost:13080/oidc/authorize?client_id=client-a&consent_verifier=01a9d709fb014160b4f1016bf7868574&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
+              example: http://localhost:13080/oauth2/auth?client_id=client-a&consent_verifier=01a9d709fb014160b4f1016bf7868574&redirect_uri=https%3A%2F%2Flocalhost:11443%2Foauth%2Fresponse&response_type=code&scope=openid&state=I00ORQdhpLdhZVa5mliUexwkWFevHV0Z8Xuh7gaps0E%3D
         '400':
           description: User error (invalid request etc).
           content:

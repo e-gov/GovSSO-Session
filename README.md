@@ -21,9 +21,11 @@ TODO What this application does.
 1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from
    session-service when it's running locally (not in Docker Compose). It's not needed for web browsers as popular
    browsers already have built-in support for resolving `*.localhost` subdomains.
+   NB! Also have to change 'session' proxy_pass hosts to 'host.docker.internal' in local/gateway/nginx.conf.
 2. ```shell
-   ./mvnw spring-boot:run
    docker compose up
+   docker compose stop session
+   ./mvnw spring-boot:run
    ```
 
 ## Running All in Docker Compose
@@ -46,7 +48,7 @@ TODO What this application does.
       Git Bash users on Windows should add `MSYS_NO_PATHCONV=1` in front of the command.
 2. Run
    ```shell
-   docker compose -f docker-compose.yml -f docker-compose-all.yml up
+   docker compose up
    ```
 
 ## Endpoints
