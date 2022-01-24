@@ -24,14 +24,8 @@ public class ConsentAcceptRequestBody {
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class IdToken {
-        private ConsentAcceptRequestBody.ProfileAttributes profileAttributes;
-    }
-
-    @Data
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class ProfileAttributes {
-        private String familyName;
         private String givenName;
-        private String dateOfBirth;
+        private String familyName;
+        private String birthdate;
     }
 }

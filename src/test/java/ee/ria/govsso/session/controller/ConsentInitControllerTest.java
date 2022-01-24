@@ -18,6 +18,7 @@ import org.springframework.session.SessionRepository;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
@@ -74,6 +75,12 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenAcceptConsentIsSuccessful_Redirects() {
 
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
+
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -94,13 +101,81 @@ class ConsentInitControllerTest extends BaseTest {
     }
 
     @Test
+    void consentInit_WhenGetConsentRequestInfoRespondswith404_ThrowsUserInputError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        String sessionId = createSession();
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void consentInit_WhenGetConsentRequestInfoRespondswith410_ThrowsUserInputError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(410)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        String sessionId = createSession();
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void consentInit_WhenGetConsentRequestInfoRespondswith500_ThrowsTechnicalGeneralError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        String sessionId = createSession();
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
+
+    @Test
     void consentInit_WhenAcceptConsentRespondsWith500_ThrowsTechnicalGeneralError() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
 
         wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
 
         String sessionId = createSession();
 

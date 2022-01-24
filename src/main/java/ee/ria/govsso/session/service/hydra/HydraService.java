@@ -7,7 +7,6 @@ import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperti
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +20,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -50,6 +51,32 @@ public class HydraService {
             if (!loginRequestInfo.getChallenge().equals(loginChallenge))
                 throw new IllegalStateException("Invalid hydra response");
             return loginRequestInfo;
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else if (ex.getStatusCode() == HttpStatus.GONE)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
+    }
+
+    public ConsentRequestInfo fetchConsentRequestInfo(String consentChallenge) {
+        String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/consent";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("consent_challenge", consentChallenge);
+
+        try {
+            ConsentRequestInfo consentRequestInfo = webclient.get()
+                    .uri(builder.toUriString())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(ConsentRequestInfo.class)
+                    .blockOptional().orElseThrow();
+
+            if (!consentRequestInfo.getChallenge().equals(consentChallenge))
+                throw new IllegalStateException("Invalid hydra response");
+            return consentRequestInfo;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
@@ -126,27 +153,27 @@ public class HydraService {
         return acceptResponseBody.getRedirectTo();
     }
 
-    public String acceptConsent(String consentChallenge, SsoSession ssoSession) {
+    @SneakyThrows
+    public String acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo) {
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/consent/accept";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("consent_challenge", consentChallenge);
 
         ConsentAcceptRequestBody requestBody = new ConsentAcceptRequestBody();
+        ConsentAcceptRequestBody.LoginSession session = new ConsentAcceptRequestBody.LoginSession();
+        ConsentAcceptRequestBody.IdToken idToken = new ConsentAcceptRequestBody.IdToken();
 
-        List<String> scopes = List.of("openid");
+        List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         requestBody.setGrantScope(scopes);
         requestBody.setRemember(true);
         requestBody.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
 
-        ConsentAcceptRequestBody.LoginSession session = new ConsentAcceptRequestBody.LoginSession();
-        ConsentAcceptRequestBody.IdToken idToken = new ConsentAcceptRequestBody.IdToken();
+        JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
+        Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");
 
-        ConsentAcceptRequestBody.ProfileAttributes profileAttributes = new ConsentAcceptRequestBody.ProfileAttributes();
-        profileAttributes.setGivenName("Eesnimi");
-        profileAttributes.setFamilyName("Perenimi");
-        profileAttributes.setDateOfBirth("12.12.2012");
-
-        idToken.setProfileAttributes(profileAttributes);
+        idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
+        idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
+        idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
         session.setIdToken(idToken);
         requestBody.setSession(session);
 

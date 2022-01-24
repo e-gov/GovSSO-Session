@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,8 @@ public class ConsentInitController {
             @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge,
             @SessionAttribute(value = SSO_SESSION, required = false) SsoSession ssoSession) {
 
-        String redirectUrl = hydraService.acceptConsent(consentChallenge, ssoSession);
+        ConsentRequestInfo consentRequestInfo = hydraService.fetchConsentRequestInfo(consentChallenge);
+        String redirectUrl = hydraService.acceptConsent(consentChallenge, consentRequestInfo);
 
         return new RedirectView(redirectUrl);
     }

@@ -10,7 +10,7 @@ webfinger:
     supported_claims:
       - acr
       - amr
-      - at_has
+      - at_hash
       - aud
       - auth_time
       - exp
@@ -18,8 +18,8 @@ webfinger:
       - iss
       - jti
       - nonce
-      - profile_attributes.date_of_birth
-      - profile_attributes.family_name
-      - profile_attributes.given_name
+      - birthdate
+      - family_name
+      - given_name
       - sid
       - sub
