@@ -55,7 +55,10 @@ services:
     restart: unless-stopped
 
   gateway: # Map to host ports 13xxx.
-    build: local/gateway
+    build:
+      context: local/gateway
+      args:
+        ENABLED_MODULES: headers-more
     depends_on:
       - hydra
       - session
@@ -93,9 +96,6 @@ services:
       default:
         aliases:
           - hydra.localhost
-    ports:
-      - '14444:4444'
-      - '14445:4445'
     restart: unless-stopped
     volumes:
       - ./local/hydra:/etc/hydra:ro
