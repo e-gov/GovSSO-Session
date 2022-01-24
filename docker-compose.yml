@@ -69,7 +69,8 @@ services:
       - ./local/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
 
   hydra: # Map to host ports 14xxx.
-    image: oryd/hydra:v1.10.7-sqlite # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
+    # TODO Temporarily a fork is used until all pull requests are merged upstream.
+    image: oryd/hydra:feature-govsso # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
     depends_on:
       - hydra-db
