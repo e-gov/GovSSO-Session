@@ -60,7 +60,7 @@ RUN set -ex \
     done \
     && echo "BUILT_MODULES=\"$BUILT_MODULES\"" > /tmp/packages/modules.env
 
-FROM nginx:mainline-alpine
+FROM nginx:1.21.5-alpine
 COPY --from=builder /tmp/packages /tmp/packages
 RUN set -ex \
     && . /tmp/packages/modules.env \
