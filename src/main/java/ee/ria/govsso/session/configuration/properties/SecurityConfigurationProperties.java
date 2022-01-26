@@ -1,15 +1,20 @@
 package ee.ria.govsso.session.configuration.properties;
 
-import lombok.Data;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Slf4j
-@Data
+@Value
 @Validated
+@ConstructorBinding
 @ConfigurationProperties(prefix = "govsso.security")
 public class SecurityConfigurationProperties {
     public static final String DEFAULT_CONTENT_SECURITY_POLICY = "connect-src 'self'; " +
@@ -22,6 +27,20 @@ public class SecurityConfigurationProperties {
             "frame-ancestors 'none'; " +
             "block-all-mixed-content";
 
+    @Size(min = 32)
+    String cookieSigningSecret;
+
     @NotBlank
-    private String contentSecurityPolicy = DEFAULT_CONTENT_SECURITY_POLICY;
+    String contentSecurityPolicy;
+
+    @Min(value = -1)
+    long cookieMaxAgeSeconds;
+
+    public SecurityConfigurationProperties(
+            @DefaultValue(DEFAULT_CONTENT_SECURITY_POLICY) String contentSecurityPolicy, String cookieSigningSecret,
+            @DefaultValue("3600") long cookieMaxAgeSeconds) {
+        this.contentSecurityPolicy = contentSecurityPolicy;
+        this.cookieSigningSecret = cookieSigningSecret;
+        this.cookieMaxAgeSeconds = cookieMaxAgeSeconds;
+    }
 }

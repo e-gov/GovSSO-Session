@@ -13,7 +13,8 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.service.tara.TaraService;
-import ee.ria.govsso.session.session.SsoSession;
+import ee.ria.govsso.session.session.SsoCookie;
+import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.session.MapSession;
-import org.springframework.session.SessionRepository;
 
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Date;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -36,7 +34,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
-import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -48,14 +45,13 @@ class AuthCallbackControllerTest extends BaseTest {
     private static final String TEST_CODE = "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg";
     private static final String TEST_STATE = "VuF_ylfAWHflipdR2d6xKGLh6VB_7UrNetD3lXfOc0g";
     private final TaraConfigurationProperties taraConfigurationProperties;
-    private final SessionRepository<MapSession> sessionRepository;
     private final TaraService taraService;
+    private final SsoCookieSigner ssoCookieSigner;
 
     @Test
     void authCallback_WhenTokenRequestAndAcceptRequestAreSuccessful_Redirects() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "high");
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -77,9 +73,9 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -89,9 +85,8 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @Test
     void authCallback_WhenTokenRequestWithSubstantialAcrAndIdTokenWithLowAcr_ThrowsUserInputError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "low");
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -107,9 +102,9 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -119,9 +114,8 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @Test
     void authCallback_WhenTokenLoginRequestResponseAcrIsEmpty_Redirects() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "high");
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -143,9 +137,9 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -155,9 +149,8 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @Test
     void authCallback_WhenTokenRequestResponseAcrIsLow_ThrowsUserInputError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "low");
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -173,9 +166,9 @@ class AuthCallbackControllerTest extends BaseTest {
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -186,13 +179,12 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenCodeParameterIsMissing_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -203,15 +195,14 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenCodeParameterIsDuplicate_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -226,14 +217,13 @@ class AuthCallbackControllerTest extends BaseTest {
             "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLgg"})
     void authCallback_WhenCodeParameterIsInvalid_ThrowsUserInputError(String codeParameter) {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", codeParameter)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -244,13 +234,12 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenStateParameterIsMissing_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -261,15 +250,114 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenStateParameterIsDuplicate_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenStateParameterNotValidatingAgainstSsoCookie_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", new State().getValue())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenSsoCookieMissing_ThrowsUserInputError() {
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", TEST_STATE)
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_COOKIE_MISSING"));
+    }
+
+    @Test
+    void authCallback_WhenSsoCookieTaraStateValueIsNull_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie().withTaraAuthenticationRequestState(null);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", TEST_STATE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenSsoCookieTaraStateValueIsBlank_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+        ssoCookie.withTaraAuthenticationRequestState(" ");
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", TEST_STATE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenSsoCookieTaraNonceValueIsNull_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie().withTaraAuthenticationRequestNonce(null);
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenSsoCookieTaraNonceValueIsBlank_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie().withTaraAuthenticationRequestNonce(" ");
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -284,14 +372,13 @@ class AuthCallbackControllerTest extends BaseTest {
             "727cWytFrnR5Qnd3_WJ2ceQVFNQIjEI05TNguUzjE9"})
     void authCallback_WhenStateParameterIsInvalid_ThrowsUserInputError(String stateParameter) {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
                 .param("state", stateParameter)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -314,14 +401,13 @@ class AuthCallbackControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -344,14 +430,13 @@ class AuthCallbackControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -380,14 +465,13 @@ class AuthCallbackControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("code", TEST_CODE)
-                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -395,65 +479,21 @@ class AuthCallbackControllerTest extends BaseTest {
                 .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
-    @Test
-    void authCallback_WhenSessionTaraAuthenticationRequestStateIsMissing_ThrowsUserInputOrExpiredError() {
-
-        SsoSession ssoSession = new SsoSession();
-        String sessionId = createSession(ssoSession);
-
-        given()
-                .param("code", TEST_CODE)
-                .param("state", TEST_STATE)
-                .when()
-                .sessionId("SESSION", sessionId)
-                .get(CALLBACK_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
-    }
-
-    @Test
-    void authCallback_WhenSessionLoginRequestInfoChallengeIsMissing_ThrowsUserInputOrExpiredError() {
-
-        SsoSession ssoSession = new SsoSession();
-        ssoSession.setTaraAuthenticationRequestState(new State().getValue());
-        String sessionId = createSession(ssoSession);
-
-        given()
-                .param("code", TEST_CODE)
-                .param("state", TEST_STATE)
-                .when()
-                .sessionId("SESSION", sessionId)
-                .get(CALLBACK_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
-    }
-
-    private SsoSession createSsoSession() {
+    private SsoCookie createSsoCookie() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
-        SsoSession ssoSession = new SsoSession();
-        ssoSession.setLoginChallenge(TEST_LOGIN_CHALLENGE);
-        ssoSession.setTaraAuthenticationRequestState(authenticationRequest.getState().getValue());
-        ssoSession.setTaraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue());
-        return ssoSession;
-    }
-
-    private String createSession(SsoSession ssoSession) {
-        MapSession session = sessionRepository.createSession();
-        session.setAttribute(SSO_SESSION, ssoSession);
-        sessionRepository.save(session);
-        return Base64.getEncoder().withoutPadding().encodeToString(session.getId().getBytes());
+        return SsoCookie.builder()
+                .loginChallenge(TEST_LOGIN_CHALLENGE)
+                .taraAuthenticationRequestState(authenticationRequest.getState().getValue())
+                .taraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue())
+                .build();
     }
 
     @SneakyThrows
-    private OIDCTokenResponse getOidcTokenResponse(SsoSession ssoSession, String acr) {
+    private OIDCTokenResponse getTaraOidcTokenResponse(SsoCookie ssoCookie, String acr) {
         JWSSigner signer = new RSASSASigner(taraJWK);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .claim("nonce", ssoSession.getTaraAuthenticationRequestNonce())
-                .claim("state", ssoSession.getTaraAuthenticationRequestState())
+                .claim("nonce", ssoCookie.getTaraAuthenticationRequestNonce())
+                .claim("state", ssoCookie.getTaraAuthenticationRequestState())
                 .claim("acr", acr)
                 .audience(taraConfigurationProperties.getClientId())
                 .subject("test")

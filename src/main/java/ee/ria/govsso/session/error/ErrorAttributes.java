@@ -29,8 +29,8 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         Throwable error = getError(webRequest);
         HttpStatus status = HttpStatus.resolve((int) attr.get("status"));
 
-        if (error instanceof SsoException) {
-            ErrorCode errorCode = ((SsoException) error).getErrorCode();
+        if (error instanceof SsoException ssoException) {
+            ErrorCode errorCode = ssoException.getErrorCode();
             setAttributes(attr, errorCode);
         } else {
             if (status != null && status.is4xxClientError())

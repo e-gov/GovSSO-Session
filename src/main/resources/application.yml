@@ -36,3 +36,5 @@ govsso:
     issuer-url: https://tara.localhost:16443
     client-id: govsso
     client-secret: changeme
+  security:
+    cookie-signing-secret: changeme

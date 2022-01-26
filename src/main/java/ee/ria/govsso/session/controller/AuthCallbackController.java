@@ -6,7 +6,8 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.tara.TaraService;
-import ee.ria.govsso.session.session.SsoSession;
+import ee.ria.govsso.session.session.SsoCookie;
+import ee.ria.govsso.session.session.SsoCookieValue;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +16,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
 
 import javax.validation.constraints.Pattern;
 import java.util.Map;
-
-import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 
 @Slf4j
 @Validated
@@ -38,15 +36,15 @@ public class AuthCallbackController {
     public RedirectView loginCallback(
             @RequestParam(name = "code") @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
             @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
-            @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) {
+            @SsoCookieValue SsoCookie ssoCookie) {
 
-        validateLoginRequestInfo(state, ssoSession);
-        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoSession.getLoginChallenge());
+        validateLoginRequestInfo(state, ssoCookie);
+        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
 
         SignedJWT idToken = taraService.requestIdToken(code);
         verifyAcr(idToken, loginRequestInfo);
-        taraService.verifyIdToken(ssoSession.getTaraAuthenticationRequestNonce(), idToken);
-        String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginChallenge(), idToken);
+        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken);
+        String redirectUrl = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
         return new RedirectView(redirectUrl);
     }
 
@@ -67,15 +65,15 @@ public class AuthCallbackController {
         }
     }
 
-    private void validateLoginRequestInfo(String state, SsoSession ssoSession) {
-        if (ssoSession.getTaraAuthenticationRequestState() == null) {
-            throw new SsoException(ErrorCode.USER_INPUT_OR_EXPIRED, "Session tara authentication request state must not be null");
+    private void validateLoginRequestInfo(String state, SsoCookie ssoCookie) {
+        if (ssoCookie.getTaraAuthenticationRequestState() == null || ssoCookie.getTaraAuthenticationRequestState().isBlank()) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Session tara authentication request state must not be null");
         }
-        if (ssoSession.getLoginChallenge() == null) {
-            throw new SsoException(ErrorCode.USER_INPUT_OR_EXPIRED, "Session login request info challenge must not be null");
-        }
-        if (!ssoSession.getTaraAuthenticationRequestState().equals(state)) {
+        if (!ssoCookie.getTaraAuthenticationRequestState().equals(state)) {
             throw new SsoException(ErrorCode.USER_INPUT, "Invalid TARA callback state");
+        }
+        if (ssoCookie.getTaraAuthenticationRequestNonce() == null || ssoCookie.getTaraAuthenticationRequestNonce().isBlank()) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Session tara authentication request nonce must not be null");
         }
     }
 }

@@ -148,6 +148,7 @@ services:
       # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
       - govsso.hydra.admin-url=https://hydra.localhost:4445/
       - govsso.tara.issuer-url=https://tara.localhost:16443
+      - govsso.security.cookie-signing-secret=exampleCookieSigningSecret123456
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=/var/certs/session.localhost.keystore.p12
       - server.ssl.key-store-password=changeit

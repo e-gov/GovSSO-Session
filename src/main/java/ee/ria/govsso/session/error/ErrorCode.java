@@ -9,6 +9,7 @@ public enum ErrorCode {
 
     USER_INPUT(400, false),
     USER_INPUT_OR_EXPIRED(400, false),
+    USER_COOKIE_MISSING(400, false),
     TECHNICAL_TARA_UNAVAILABLE(500, false),
     TECHNICAL_GENERAL(500, true);
 

@@ -1,17 +1,15 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.session.SsoSession;
+import ee.ria.govsso.session.session.SsoCookie;
+import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.matcher.RestAssuredMatchers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.session.MapSession;
-import org.springframework.session.SessionRepository;
 
-import java.util.Base64;
 import java.util.Date;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -19,7 +17,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.LoginReauthenticateController.LOGIN_REAUTHENTICATE_REQUEST_MAPPING;
-import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -28,12 +25,11 @@ import static org.hamcrest.Matchers.equalTo;
 class LoginReauthenticateControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
-    private final SessionRepository<MapSession> sessionRepository;
+    private final SsoCookieSigner ssoCookieSigner;
 
     @Test
-    void loginInit_WhenLoginReauthenticateIsSuccessful_Redirects() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+    void loginReauthenticate_WhenLoginReauthenticateIsSuccessful_Redirects() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -50,9 +46,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(204)));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -61,24 +56,20 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenSsoSessionLoginRequestInfoIsMissing_ThrowsUserInputOrExpiredError() {
-        String sessionId = createSession(new SsoSession());
+    void loginReauthenticate_WhenSsoCookieMissing_ThrowsUserInputError() {
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+                .body("error", equalTo("USER_COOKIE_MISSING"));
     }
 
     @Test
-    void loginInit_WhenDeleteConsentReturns400_ThrowsTechnicalGeneralError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+    void loginReauthenticate_WhenDeleteConsentReturns400_ThrowsTechnicalGeneralError() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -91,9 +82,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(400)));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -102,9 +92,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLoginRequestInfoSubjectEmpty_ThrowsTechnicalGeneralError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+    void loginReauthenticate_WhenLoginRequestInfoSubjectEmpty_ThrowsTechnicalGeneralError() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -113,9 +102,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -124,9 +112,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenDeleteLoginReturns400_ThrowsTechnicalGeneralError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+    void loginReauthenticate_WhenDeleteLoginReturns400_ThrowsTechnicalGeneralError() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -143,9 +130,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(400)));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -154,9 +140,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_IfHydraSessionCookieExists_HydraSessionCookieIsDeleted() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+    void loginReauthenticate_IfHydraSessionCookieExists_HydraSessionCookieIsDeleted() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -173,26 +158,18 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(204)));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
                 .cookie("oauth2_authentication_session_insecure", "test1234")
-                .sessionId("SESSION", sessionId)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
                 .cookie("oauth2_authentication_session_insecure", RestAssuredMatchers.detailedCookie().maxAge(0).value("test1234").path("/").expiryDate(new Date(10000)));
     }
 
-    private SsoSession createSsoSession() {
-        SsoSession ssoSession = new SsoSession();
-        ssoSession.setLoginChallenge(TEST_LOGIN_CHALLENGE);
-        return ssoSession;
-    }
-
-    private String createSession(SsoSession ssoSession) {
-        MapSession session = sessionRepository.createSession();
-        session.setAttribute(SSO_SESSION, ssoSession);
-        sessionRepository.save(session);
-        return Base64.getEncoder().withoutPadding().encodeToString(session.getId().getBytes());
+    private SsoCookie createSsoCookie() {
+        return SsoCookie.builder()
+                .loginChallenge(TEST_LOGIN_CHALLENGE)
+                .build();
     }
 }

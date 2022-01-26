@@ -36,6 +36,15 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseTest {
 
+    protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
+            .httpsPort(9877)
+            .keystorePath("src/test/resources/session.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
+            .notifier(new ConsoleNotifier(true))
+    );
+    protected static final RSAKey taraJWK = setUpTaraJwk();
     private static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");
@@ -48,15 +57,6 @@ public abstract class BaseTest {
 //        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
     }};
 
-    protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
-            .httpDisabled(true)
-            .httpsPort(9877)
-            .keystorePath("src/test/resources/session.localhost.keystore.p12")
-            .keystorePassword("changeit")
-            .keyManagerPassword("changeit")
-            .notifier(new ConsoleNotifier(true))
-    );
-    protected static final RSAKey taraJWK = setUpTaraJwk();
     @LocalServerPort
     protected int port;
 

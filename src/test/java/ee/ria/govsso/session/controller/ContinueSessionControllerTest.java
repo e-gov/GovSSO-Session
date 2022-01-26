@@ -1,23 +1,19 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.session.SsoSession;
+import ee.ria.govsso.session.session.SsoCookie;
+import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.session.MapSession;
-import org.springframework.session.SessionRepository;
-
-import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.ContinueSessionController.AUTH_VIEW_REQUEST_MAPPING;
-import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -26,13 +22,12 @@ import static org.hamcrest.Matchers.equalTo;
 class ContinueSessionControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
-    private final SessionRepository<MapSession> sessionRepository;
+    private final SsoCookieSigner ssoCookieSigner;
 
     @Test
-    void loginInit_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
+    void continueSession_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -53,9 +48,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -64,27 +58,21 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenUserSessionLoginChallengeDoesntExist_ThrowUserInputOrExpiredError() {
-
-        SsoSession ssoSession = new SsoSession();
-        String sessionId = createSession(ssoSession);
+    void continueSession_WhenSsoCookieMissing_ThrowsUserInputError() {
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+                .body("error", equalTo("USER_COOKIE_MISSING"));
     }
 
     @Test
-    void loginInit_WhenFetchLoginRequestInfoSubjectIsEmpty_ThrowsUserInputError() {
+    void continueSession_WhenFetchLoginRequestInfoSubjectIsEmpty_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -93,9 +81,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -104,10 +91,9 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenFetchLoginRequestInfoIdTokenHintClaimIsNonEmpty_ThrowsUserInputError() {
+    void continueSession_WhenFetchLoginRequestInfoIdTokenHintClaimIsNonEmpty_ThrowsUserInputError() {
 
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
+        SsoCookie ssoCookie = createSsoCookie();
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -116,9 +102,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty.json")));
 
         given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
-                .sessionId("SESSION", sessionId)
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -126,17 +111,9 @@ class ContinueSessionControllerTest extends BaseTest {
                 .body("error", equalTo("USER_INPUT"));
     }
 
-    private SsoSession createSsoSession() {
-        SsoSession ssoSession = new SsoSession();
-        ssoSession.setLoginChallenge(TEST_LOGIN_CHALLENGE);
-        return ssoSession;
+    private SsoCookie createSsoCookie() {
+        return SsoCookie.builder()
+                .loginChallenge(TEST_LOGIN_CHALLENGE)
+                .build();
     }
-
-    private String createSession(SsoSession ssoSession) {
-        MapSession session = sessionRepository.createSession();
-        session.setAttribute(SSO_SESSION, ssoSession);
-        sessionRepository.save(session);
-        return Base64.getEncoder().withoutPadding().encodeToString(session.getId().getBytes());
-    }
-
 }
