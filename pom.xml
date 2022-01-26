@@ -13,6 +13,7 @@
     <groupId>ee.ria.govsso</groupId>
     <artifactId>govsso-session</artifactId>
     <version>0.1.0</version>
+    <packaging>war</packaging>
 
     <name>GOVSSO Session Service</name>
     <licenses>
@@ -62,6 +63,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.6.3/reference/htmlsingle/#howto.traditional-deployment.war -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -107,6 +114,7 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
