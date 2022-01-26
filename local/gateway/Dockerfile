@@ -1,3 +1,8 @@
+# Official DockerHub nginx images have mismatching plugin versions, therefore build plugins using the recommended
+# approach: https://github.com/nginxinc/docker-nginx/blob/1.21.5/modules/README.md
+# This Dockerfile is copied from https://raw.githubusercontent.com/nginxinc/docker-nginx/1.21.5/modules/Dockerfile.alpine
+# and "mainline" is replaced with "1.21.5".
+
 FROM nginx:1.21.5-alpine as builder
 
 ARG ENABLED_MODULES
