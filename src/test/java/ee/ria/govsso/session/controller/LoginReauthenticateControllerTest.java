@@ -17,7 +17,6 @@ import java.util.Date;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.LoginReauthenticateController.LOGIN_REAUTHENTICATE_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
@@ -49,12 +48,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
         wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
-
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_reject.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -161,74 +154,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenRejectLoginReturns404_ThrowsUserInputError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95&all=true&trigger_backchannel_logout=true"))
-                .willReturn(aResponse()
-                        .withStatus(204)));
-
-        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
-                .willReturn(aResponse()
-                        .withStatus(204)));
-
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(404)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .sessionId("SESSION", sessionId)
-                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("error", equalTo("USER_INPUT"));
-    }
-
-    @Test
-    void loginInit_WhenRejectLoginReturns400_ThrowsTechnicalGeneralError() {
-        SsoSession ssoSession = createSsoSession();
-        String sessionId = createSession(ssoSession);
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95&all=true&trigger_backchannel_logout=true"))
-                .willReturn(aResponse()
-                        .withStatus(204)));
-
-        wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
-                .willReturn(aResponse()
-                        .withStatus(204)));
-
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(400)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .sessionId("SESSION", sessionId)
-                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body("error", equalTo("TECHNICAL_GENERAL"));
-    }
-
-    @Test
     void loginInit_IfHydraSessionCookieExists_HydraSessionCookieIsDeleted() {
         SsoSession ssoSession = createSsoSession();
         String sessionId = createSession(ssoSession);
@@ -246,12 +171,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
         wireMockServer.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
-
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_reject.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)

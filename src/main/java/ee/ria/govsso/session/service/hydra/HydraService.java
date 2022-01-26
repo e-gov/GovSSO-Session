@@ -208,7 +208,7 @@ public class HydraService {
         }
     }
 
-    public void deleteLogin(String loginSessionId) {
+    public void deleteLoginSessionAndRelatedLoginRequests(String loginSessionId) {
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/sessions/login/" + loginSessionId;
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri);
 
@@ -224,6 +224,7 @@ public class HydraService {
         }
     }
 
+    // TODO GSSO-244 Call this on unsuccessful outcome of login flows so that Hydra resource cleanup would be immediate.
     public String rejectLogin(String loginChallenge) {
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/requests/login/reject";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
