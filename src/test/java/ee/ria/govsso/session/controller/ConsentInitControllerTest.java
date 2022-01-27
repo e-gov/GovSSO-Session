@@ -193,7 +193,7 @@ class ConsentInitControllerTest extends BaseTest {
     @SneakyThrows
     private String createSession() {
         MapSession session = sessionRepository.createSession();
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         String state = authenticationRequest.getState().getValue();
         String nonce = authenticationRequest.getNonce().getValue();
         SsoSession ssoSession = new SsoSession();

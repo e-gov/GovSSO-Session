@@ -89,6 +89,7 @@ public class HydraService {
 
     @SneakyThrows
     public JWT getConsents(String subject, String sessionId) {
+
         String uri = hydraConfigurationProperties.getAdminUrl() + "/oauth2/auth/sessions/consent";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("subject", subject);
@@ -107,16 +108,17 @@ public class HydraService {
                 validConsents.add(consent);
         }
 
-        if (validConsents.isEmpty())
+        if (validConsents.isEmpty()) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
-        else if (!validConsents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken()))) {
+        } else if (!validConsents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken()))) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
         }
 
         JWT idToken = SignedJWT.parse(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken());
 
-        if (!isNbfValid(idToken))
+        if (!isNbfValid(idToken)) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
+        }
 
         return idToken;
     }
@@ -134,7 +136,7 @@ public class HydraService {
 
         LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody();
         requestBody.setRemember(true);
-        requestBody.setAcr("high");
+        requestBody.setAcr(jwtClaimsSet.getStringClaim("acr"));
         requestBody.setSubject(jwtClaimsSet.getSubject());
         requestBody.setContext(context);
         requestBody.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());

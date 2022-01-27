@@ -24,6 +24,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
@@ -55,7 +57,7 @@ public class TaraService {
     private final TaraMetadataService taraMetadataService;
     private final SSLContext trustContext;
 
-    public AuthenticationRequest createAuthenticationRequest() {
+    public AuthenticationRequest createAuthenticationRequest(String acrValue) {
         ClientID clientID = new ClientID(taraConfigurationProperties.getClientId());
         URI callback = ssoConfigurationProperties.getCallbackUri();
         State state = new State();
@@ -67,6 +69,7 @@ public class TaraService {
                 .endpointURI(taraMetadataService.getMetadata().getAuthorizationEndpointURI())
                 .state(state)
                 .nonce(nonce)
+                .acrValues(List.of(new ACR(acrValue)))
                 .build();
     }
 
@@ -109,7 +112,6 @@ public class TaraService {
         try {
             IDTokenValidator verifier = taraMetadataService.getIDTokenValidator();
             verifier.validate(idToken, Nonce.parse(nonce));
-
         } catch (BadJOSEException ex) {
             throw new SsoException("Unable to validate ID Token", ex);
         } catch (JOSEException ex) {

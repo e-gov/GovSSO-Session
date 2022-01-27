@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.thymeleaf.util.ArrayUtils;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.constraints.Pattern;
@@ -64,6 +65,9 @@ public class LoginInitController {
             }
 
             JWT idToken = hydraService.getConsents(subject, loginRequestInfo.getSessionId());
+            if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(idToken.getJWTClaimsSet().getStringClaim("acr"), loginRequestInfo.getOidcContext().getAcrValues()[0])) {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
+            }
             JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
             Map<String, String> profileAttributes = (Map<String, String>) claimsSet.getClaims().get("profile_attributes");
 
@@ -80,8 +84,11 @@ public class LoginInitController {
             if (loginRequestInfo.isSkip()) {
                 throw new SsoException(TECHNICAL_GENERAL, "Subject is null, therefore login response skip value can not be true");
             }
+            if (loginRequestInfo.getOidcContext() != null && ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())) {
+                loginRequestInfo.getOidcContext().setAcrValues(new String[]{"high"});
+            }
 
-            AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
+            AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(loginRequestInfo.getOidcContext().getAcrValues()[0]);
             ssoSession.setTaraAuthenticationRequestState(authenticationRequest.getState().getValue());
             ssoSession.setTaraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue());
             session.setAttribute(SSO_SESSION, ssoSession);
@@ -90,6 +97,7 @@ public class LoginInitController {
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
+
         if (loginRequestInfo.getRequestUrl().contains("prompt=none")) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Request URL contains prompt=none");
         } else if (!loginRequestInfo.getRequestUrl().contains("prompt=consent")) {
@@ -98,6 +106,12 @@ public class LoginInitController {
             throw new SsoException(ErrorCode.USER_INPUT, "Requested scope most contain openid and nothing else");
         } else if (loginRequestInfo.getOidcContext() != null && loginRequestInfo.getOidcContext().getIdTokenHintClaims() != null) {
             throw new SsoException(ErrorCode.USER_INPUT, "id_token_hint_claims must be null");
+        } else if (loginRequestInfo.getOidcContext() != null && !ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())) {
+            if (loginRequestInfo.getOidcContext().getAcrValues().length > 1) {
+                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
+            } else if (!loginRequestInfo.getOidcContext().getAcrValues()[0].matches("low|substantial|high")) {
+                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
+            }
         }
     }
 
@@ -109,5 +123,10 @@ public class LoginInitController {
             subject = visibleCharacters + hiddenCharacters;
         }
         return subject;
+    }
+
+    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {
+        Map<String, Integer> acrMap = Map.of("low", 1, "substantial", 2, "high", 3);
+        return acrMap.get(idTokenAcr) >= acrMap.get(loginRequestInfoAcr);
     }
 }

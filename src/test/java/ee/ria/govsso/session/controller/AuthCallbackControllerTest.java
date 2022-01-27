@@ -55,7 +55,7 @@ class AuthCallbackControllerTest extends BaseTest {
     void authCallback_WhenTokenRequestAndAcceptRequestAreSuccessful_Redirects() {
         SsoSession ssoSession = createSsoSession();
         String sessionId = createSession(ssoSession);
-        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession);
+        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "high");
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -85,6 +85,102 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", Matchers.containsString("auth/login/test"));
+    }
+
+    @Test
+    void authCallback_WhenTokenRequestWithSubstantialAcrAndIdTokenWithLowAcr_ThrowsUserInputError() {
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "low");
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_substantial_acr.json")));
+
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenTokenLoginRequestResponseAcrIsEmpty_Redirects() {
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "high");
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
+
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/login/test"));
+    }
+
+    @Test
+    void authCallback_WhenTokenRequestResponseAcrIsLow_ThrowsUserInputError() {
+        SsoSession ssoSession = createSsoSession();
+        String sessionId = createSession(ssoSession);
+        OIDCTokenResponse tokenResponse = getOidcTokenResponse(ssoSession, "low");
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
+
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoSession.getTaraAuthenticationRequestState())
+                .when()
+                .sessionId("SESSION", sessionId)
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
@@ -337,7 +433,7 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     private SsoSession createSsoSession() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest();
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         SsoSession ssoSession = new SsoSession();
         ssoSession.setLoginChallenge(TEST_LOGIN_CHALLENGE);
         ssoSession.setTaraAuthenticationRequestState(authenticationRequest.getState().getValue());
@@ -353,11 +449,12 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @SneakyThrows
-    private OIDCTokenResponse getOidcTokenResponse(SsoSession ssoSession) {
+    private OIDCTokenResponse getOidcTokenResponse(SsoSession ssoSession, String acr) {
         JWSSigner signer = new RSASSASigner(taraJWK);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", ssoSession.getTaraAuthenticationRequestNonce())
                 .claim("state", ssoSession.getTaraAuthenticationRequestState())
+                .claim("acr", acr)
                 .audience(taraConfigurationProperties.getClientId())
                 .subject("test")
                 .issuer("https://localhost:9877")

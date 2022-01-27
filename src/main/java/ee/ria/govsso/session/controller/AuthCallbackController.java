@@ -8,6 +8,7 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoSession;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -16,8 +17,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.view.RedirectView;
+import org.thymeleaf.util.ArrayUtils;
 
 import javax.validation.constraints.Pattern;
+import java.util.Map;
 
 import static ee.ria.govsso.session.session.SsoSession.SSO_SESSION;
 
@@ -38,13 +41,30 @@ public class AuthCallbackController {
             @SessionAttribute(value = SSO_SESSION) SsoSession ssoSession) {
 
         validateLoginRequestInfo(state, ssoSession);
-
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoSession.getLoginChallenge());
 
         SignedJWT idToken = taraService.requestIdToken(code);
+        verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoSession.getTaraAuthenticationRequestNonce(), idToken);
         String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginChallenge(), idToken);
         return new RedirectView(redirectUrl);
+    }
+
+    @SneakyThrows
+    private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
+        String idTokenAcr = idToken.getJWTClaimsSet().getStringClaim("acr");
+        String loginRequestAcr = "high";
+
+        if (loginRequestInfo.getOidcContext() != null
+                && !ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())
+                && !loginRequestInfo.getOidcContext().getAcrValues()[0].isEmpty()) {
+            loginRequestAcr = loginRequestInfo.getOidcContext().getAcrValues()[0];
+        }
+
+        Map<String, Integer> acrMap = Map.of("low", 1, "substantial", 2, "high", 3);
+        if (acrMap.get(idTokenAcr) < acrMap.get(loginRequestAcr)) {
+            throw new SsoException(ErrorCode.USER_INPUT, "ID Token acr value must be equal to or higher than hydra login request acr");
+        }
     }
 
     private void validateLoginRequestInfo(String state, SsoSession ssoSession) {
