@@ -44,11 +44,19 @@ public class LoginInitController {
             HttpSession session) throws ParseException {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
-        validateLoginRequestInfo(loginRequestInfo);
 
         SsoSession ssoSession = new SsoSession();
         ssoSession.setLoginChallenge(loginRequestInfo.getChallenge());
         String subject = loginRequestInfo.getSubject();
+
+        // TODO: Temporary solution, full implementation by GSSO-170
+        if (loginRequestInfo.getOidcContext().getIdTokenHintClaims() != null && loginRequestInfo.isSkip()) {
+            JWT idToken = hydraService.getConsents(subject, loginRequestInfo.getSessionId());
+            String redirectUrl = hydraService.acceptLogin(ssoSession.getLoginChallenge(), idToken);
+            session.setAttribute(SSO_SESSION, ssoSession);
+            return new ModelAndView("redirect:" + redirectUrl);
+        }
+        validateLoginRequestInfo(loginRequestInfo);
 
         if (subject != null && !subject.isEmpty()) {
             if (!loginRequestInfo.isSkip()) {
