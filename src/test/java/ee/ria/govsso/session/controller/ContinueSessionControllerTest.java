@@ -13,6 +13,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.ContinueSessionController.AUTH_VIEW_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
 import static java.util.Collections.emptyMap;
@@ -50,6 +51,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
@@ -60,9 +63,41 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
+    void continueSession_WhenCsrfTokenFormParameterMissing_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(403)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void continueSession_WhenCsrfTokenCookieMissing_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(403)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
     void continueSession_WhenSsoCookieMissing_ThrowsUserInputError() {
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -83,6 +118,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
@@ -104,6 +141,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty.json")));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
@@ -137,6 +176,8 @@ class ContinueSessionControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .header(ORIGIN, "https://clienta.localhost:11443")
                 .when()

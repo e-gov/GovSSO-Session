@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.header.HeaderWriter;
 
 import static ee.ria.govsso.session.controller.ConsentInitController.CONSENT_INIT_REQUEST_MAPPING;
@@ -21,6 +23,7 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    public static final String COOKIE_NAME_XSRF_TOKEN = "__Host-XSRF-TOKEN";
     private final SecurityConfigurationProperties securityConfigurationProperties;
 
     @Override
@@ -33,7 +36,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .servletApi().disable()
                 .httpBasic().disable()
                 .sessionManagement().disable()
-                .csrf().disable()
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
                 .headers()
                 .addHeaderWriter(relaxedCorsHeaderWriter())
                 .xssProtection().xssProtectionEnabled(false)
@@ -46,7 +49,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .maxAgeInSeconds(186 * 24 * 60 * 60);
     }
 
-    public HeaderWriter relaxedCorsHeaderWriter() {
+    private CsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieName(COOKIE_NAME_XSRF_TOKEN);
+        repository.setSecure(true);
+        repository.setCookiePath("/");
+        repository.setCookieMaxAge(securityConfigurationProperties.getCookieMaxAgeSeconds());
+        return repository;
+    }
+
+    private HeaderWriter relaxedCorsHeaderWriter() {
         return (request, response) -> {
             if (request.getRequestURI().equals(LOGIN_INIT_REQUEST_MAPPING) ||
                     request.getRequestURI().equals(CONSENT_INIT_REQUEST_MAPPING)) {

@@ -56,7 +56,7 @@ public class LoginInitController {
             SsoCookie ssoCookie = SsoCookie.builder()
                     .loginChallenge(loginRequestInfo.getChallenge())
                     .build();
-            response.setHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
+            response.addHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
             return new ModelAndView("redirect:" + redirectUrl);
         }
 
@@ -88,7 +88,7 @@ public class LoginInitController {
             SsoCookie ssoCookie = SsoCookie.builder()
                     .loginChallenge(loginRequestInfo.getChallenge())
                     .build();
-            response.setHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
+            response.addHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
             return model;
         } else {
             if (loginRequestInfo.isSkip()) {
@@ -102,7 +102,7 @@ public class LoginInitController {
                     .taraAuthenticationRequestState(authenticationRequest.getState().getValue())
                     .taraAuthenticationRequestNonce(authenticationRequest.getNonce().getValue())
                     .build();
-            response.setHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
+            response.addHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
             return new ModelAndView("redirect:" + authenticationRequest.toURI().toString());
         }
     }

@@ -45,6 +45,7 @@ public abstract class BaseTest {
             .notifier(new ConsoleNotifier(true))
     );
     protected static final RSAKey taraJWK = setUpTaraJwk();
+    protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
     private static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");

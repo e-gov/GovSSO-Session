@@ -23,6 +23,7 @@
                             <p th:utext="#{label.sso.instruction(${clientName})}"></p>
                             <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
                                   role="form">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                 <button class="c-btn c-btn--primary" formaction="/login/continuesession" role="button"
                                         th:text="#{label.sso.continue}"
                                         type="submit">

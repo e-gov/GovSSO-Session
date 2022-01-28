@@ -7,8 +7,11 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
+import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
+import io.restassured.matcher.DetailedCookieMatcher;
+import io.restassured.matcher.RestAssuredMatchers;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
+import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.LoginInitController.LOGIN_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoCookie.COOKIE_NAME_GOVSSO;
 import static io.restassured.RestAssured.given;
@@ -49,6 +53,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private final SsoCookieSigner ssoCookieSigner;
+    private final SecurityConfigurationProperties securityConfigurationProperties;
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
@@ -563,6 +568,32 @@ public class LoginInitControllerTest extends BaseTest {
                 .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
                 .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+    }
+
+    @Test
+    void loginInit_WhenNoCSRFCookieIsSet_SetsCSRFCookie() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        DetailedCookieMatcher detailedCookieMatcher = RestAssuredMatchers.detailedCookie();
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .cookie(COOKIE_NAME_XSRF_TOKEN, detailedCookieMatcher
+                        .httpOnly(true)
+                        .secured(true)
+                        .path("/")
+                        .maxAge(securityConfigurationProperties.getCookieMaxAgeSeconds()));
     }
 
     @Nested

@@ -16,6 +16,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.LoginReauthenticateController.LOGIN_REAUTHENTICATE_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
 import static java.util.Collections.emptyMap;
@@ -48,6 +49,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(204)));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -58,9 +61,41 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
+    void loginReauthenticate_WhenCsrfTokenFormParameterMissing_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(403)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginReauthenticate_WhenCsrfTokenCookieMissing_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(403)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
     void loginReauthenticate_WhenSsoCookieMissing_ThrowsUserInputError() {
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -84,6 +119,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(400)));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -104,6 +141,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -132,6 +171,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(400)));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -160,6 +201,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(204)));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie("oauth2_authentication_session_insecure", "test1234")
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
@@ -188,6 +231,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                         .withStatus(204)));
 
         given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .header(ORIGIN, "https://clienta.localhost:11443")
                 .when()

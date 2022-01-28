@@ -34,11 +34,11 @@ public class SecurityConfigurationProperties {
     String contentSecurityPolicy;
 
     @Min(value = -1)
-    long cookieMaxAgeSeconds;
+    int cookieMaxAgeSeconds;
 
     public SecurityConfigurationProperties(
             @DefaultValue(DEFAULT_CONTENT_SECURITY_POLICY) String contentSecurityPolicy, String cookieSigningSecret,
-            @DefaultValue("3600") long cookieMaxAgeSeconds) {
+            @DefaultValue("3600") int cookieMaxAgeSeconds) {
         this.contentSecurityPolicy = contentSecurityPolicy;
         this.cookieSigningSecret = cookieSigningSecret;
         this.cookieMaxAgeSeconds = cookieMaxAgeSeconds;
