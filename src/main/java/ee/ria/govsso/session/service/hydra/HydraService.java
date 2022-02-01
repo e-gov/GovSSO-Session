@@ -18,7 +18,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -335,9 +334,9 @@ public class HydraService {
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
-            else if (ex.getStatusCode() == HttpStatus.CONFLICT)
-                return null;
-            else
+            else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            } else
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
         }
     }

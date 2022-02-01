@@ -23,7 +23,7 @@
                             <p th:utext="#{label.sso.instruction(${clientName})}"></p>
                             <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
                                   role="form">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
                                 <button class="c-btn c-btn--primary" formaction="/login/continuesession" role="button"
                                         th:text="#{label.sso.continue}"
                                         type="submit">
@@ -38,9 +38,16 @@
                         </div>
                     </div>
                     <div class="c-tab-login__footer">
-                        <p><a th:href="@{http://www.thymeleaf/documentation.html}"
-                              th:text="#{label.common.home}">Home</a>
-                        </p>
+                        <form class="c-form" id="rejectForm" layout:fragment="login-form-content" method="post"
+                              role="form">
+                            <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
+                            <input th:name="loginChallenge" th:value="${loginChallenge}" type="hidden"/>
+                            <button class="link" formaction="/login/reject" role="button"
+                                    th:text="#{label.common.home}"
+                                    type="submit">
+                                Home
+                            </button>
+                        </form>
                         <p>
                             <a rel="noopener"
                                target="_blank" th:href="${#messages.msg('link.sso.help')}"
@@ -52,9 +59,18 @@
         </main>
     </div>
 </div>
-<p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
-    <a th:href="@{http://www.thymeleaf/documentation.html}" th:text="#{label.common.home}">Home</a>
-</p>
+<div class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
+    <form class="c-form" id="mobileRejectForm" layout:fragment="login-form-content" method="post"
+          role="form">
+        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
+        <input th:name="loginChallenge" th:value="${loginChallenge}" type="hidden"/>
+        <button class="link" formaction="/login/reject" role="button"
+                th:text="#{label.common.home}"
+                type="submit">
+            Home
+        </button>
+    </form>
+</div>
 <svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns="http://www.w3.org/2000/svg"
      xmlns:th="http://www.w3.org/1999/xhtml">
     <defs>

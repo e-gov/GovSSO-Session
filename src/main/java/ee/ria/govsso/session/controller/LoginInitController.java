@@ -169,6 +169,7 @@ public class LoginInitController {
             model.addObject("familyName", profileAttributes.get("family_name"));
             model.addObject("subject", hideCharactersExceptFirstFive(loginRequestInfo.getSubject()));
             model.addObject("clientName", loginRequestInfo.getClient().getClientName());
+            model.addObject("loginChallenge", loginRequestInfo.getChallenge());
         }
 
         SsoCookie ssoCookie = SsoCookie.builder()
