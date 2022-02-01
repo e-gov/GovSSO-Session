@@ -3,7 +3,7 @@ RUN apk add --no-cache --upgrade grep curl
 
 COPY *.sh /
 COPY *.json /
-ADD https://raw.githubusercontent.com/Eficode/wait-for/v2.1.3/wait-for /wait-for.sh
+ADD https://raw.githubusercontent.com/Eficode/wait-for/v2.2.2/wait-for /wait-for.sh
 RUN chmod +x /*.sh
 
 ENTRYPOINT ["/init.sh"]

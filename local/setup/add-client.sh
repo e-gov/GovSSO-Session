@@ -11,8 +11,9 @@ createClientPayload=$7
 echo
 echo "----- [ Login to admin service ]"
 echo
-curl --silent --request POST --cookie-jar cookies.txt \
-  --url "$adminServiceUrl/login" \
+#TODO: possible to use --cacert to pass truststore instead of --insecure
+curl --insecure --request POST --cookie-jar cookies.txt \
+  --url "https://$adminServiceUrl/login" \
   --header 'Content-Type: application/json' \
   --data "{\"username\":\"$adminServiceUsername\",\"password\":\"$adminServicePassword\"}"
 
@@ -21,7 +22,7 @@ XSRFTOKEN=$(grep -oP 'XSRF-TOKEN\s*\K([\w-]+)' cookies.txt)
 echo
 echo "----- [ Delete client: $clientId ]"
 echo
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution/clients/$clientId)
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --insecure --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 https://$adminServiceUrl/institutions/$institution/clients/$clientId)
 
 echo "response code = '$http_response'"
 
@@ -36,7 +37,7 @@ fi
 echo
 echo "----- [ Delete institution: $institution ]"
 echo
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution)
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --insecure --request DELETE --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 https://$adminServiceUrl/institutions/$institution)
 
 echo "response code = '$http_response'"
 
@@ -49,7 +50,7 @@ else
 fi
 
 echo "----- [ Create institution: $institution from file: $createInstitutionPayload ]"
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions -H 'Content-Type: application/json' --data-binary "@$createInstitutionPayload")
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --insecure --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 https://$adminServiceUrl/institutions -H 'Content-Type: application/json' --data-binary "@$createInstitutionPayload")
 
 if [ "$http_response" = 200 ]; then
        echo "Institution successfully added"
@@ -61,7 +62,7 @@ else
 fi
 
 echo "----- [ Create client: $clientId from file: $createClientPayload ]"
-http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 $adminServiceUrl/institutions/$institution/clients -H 'Content-Type: application/json' --data-binary "@$createClientPayload")
+http_response=$(curl --silent --output response.txt --write-out "%{http_code}" --insecure --request POST --cookie cookies.txt --header "X-XSRF-TOKEN: $XSRFTOKEN" --retry-connrefused --retry-delay 15 https://$adminServiceUrl/institutions/$institution/clients -H 'Content-Type: application/json' --data-binary "@$createClientPayload")
 
 if [ "$http_response" = 200 ]; then
        echo "Client successfully added"

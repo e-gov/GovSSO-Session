@@ -44,10 +44,16 @@ public abstract class BaseTest {
         put("Pragma", "no-cache");
         put("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
         put("Expires", "0");
+        // TODO: Returned during actual application run but for some reason not returned during tests
+//        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
     }};
 
     protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
             .httpsPort(9877)
+            .keystorePath("local/tls/session/session.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
     protected static final RSAKey taraJWK = setUpTaraJwk();
