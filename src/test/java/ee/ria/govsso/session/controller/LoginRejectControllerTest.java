@@ -38,7 +38,7 @@ class LoginRejectControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.containsString("/auth/login/test"));
+                .header("Location", Matchers.containsString("/auth/reject/test"));
     }
 
     @Test

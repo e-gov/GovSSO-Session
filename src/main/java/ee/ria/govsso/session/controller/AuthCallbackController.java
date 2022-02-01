@@ -34,11 +34,20 @@ public class AuthCallbackController {
 
     @GetMapping(value = CALLBACK_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView loginCallback(
-            @RequestParam(name = "code") @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
+            @RequestParam(name = "code", required = false) @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
             @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
+            @RequestParam(name = "error", required = false) @Pattern(regexp = "user_cancel", message = "the only supported value is: 'user_cancel'") String error,
             @SsoCookieValue SsoCookie ssoCookie) {
 
         validateLoginRequestInfo(state, ssoCookie);
+
+        if (error != null) {
+            String redirectUrl = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
+            return new RedirectView(redirectUrl);
+        } else if (code == null) {
+            throw new SsoException(ErrorCode.USER_INPUT, "code parameter must not be null");
+        }
+
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
 
         SignedJWT idToken = taraService.requestIdToken(code);

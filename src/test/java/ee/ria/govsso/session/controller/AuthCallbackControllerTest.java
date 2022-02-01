@@ -179,6 +179,71 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @Test
+    void authCallback_WhenErrorParemeterIsUserCancel_Redirects() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_reject.json")));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .param("error", "user_cancel")
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/reject/test"));
+    }
+
+    @Test
+    void authCallback_WhenErrorParemeterIsIncorrect_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_reject.json")));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .param("error", "xuser_cancelx")
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void authCallback_WhenErrorParameterIsDuplicate_ThrowsUserInputError() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+
+        given()
+                .param("code", TEST_CODE)
+                .param("error", "user_cancel")
+                .param("error", "user_cancel")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
     void authCallback_WhenCodeParameterIsMissing_ThrowsUserInputError() {
 
         SsoCookie ssoCookie = createSsoCookie();
