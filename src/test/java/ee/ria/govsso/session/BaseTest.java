@@ -51,7 +51,7 @@ public abstract class BaseTest {
     protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpDisabled(true)
             .httpsPort(9877)
-            .keystorePath("local/tls/session/session.localhost.keystore.p12")
+            .keystorePath("src/test/resources/session.localhost.keystore.p12")
             .keystorePassword("changeit")
             .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))

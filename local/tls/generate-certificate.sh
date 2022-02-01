@@ -28,7 +28,7 @@ openssl req \
   -sha512 \
   -nodes \
   -key "$host".key \
-  -subj "/C=EE/L=Tallinn/O=govsso-local/CN=$host" \
+  -subj "/CN=$host" \
   -out "$host".csr
 
 # Configure subject alternate names, passed to openssl.cnf and openssl-ext.cnf

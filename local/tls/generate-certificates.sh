@@ -41,8 +41,12 @@ cp ./hydra-db/hydra-db.localhost.key ../hydra-db
 cp ./admin-db/admin-db.localhost.crt ../admin-db
 cp ./admin-db/admin-db.localhost.key ../admin-db
 
+# Copy keystore for use in unit tests
+cp ./session/session.localhost.keystore.p12 ../../src/test/resources
+
 ./generate-admin-truststore.sh
 ./generate-clients-truststore.sh
 
+echo "---------------------------------- Process finished ----------------------------------"
 # Prevents script window to be closed after completion
 read -rn1

@@ -15,7 +15,7 @@ TODO What this application does.
 3. Generate TLS certificates. Stored locally in local/tls folder.
    ```shell
    cd local/tls
-   .\generate-certificates.sh
+   ./generate-certificates.sh
    ```
 4. ```shell
    docker compose build
