@@ -8,6 +8,10 @@ services:
     image: amir20/dozzle:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      default:
+        aliases:
+          - dozzle.localhost
     ports:
       - '9080:8080'
     restart: unless-stopped
@@ -26,12 +30,24 @@ services:
       - spring.application.name=Client A
       - spring.security.oauth2.client.registration.govsso.client-id=client-a
       - spring.security.oauth2.client.registration.govsso.client-secret=secreta
-      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://gateway.localhost:13080/
-      - govsso.public-url=https://localhost:11443
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.public-url=https://clienta.localhost:11443
       - govsso.logo=client-a.png
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=/var/certs/clienta.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+      - server.ssl.trust-store=/var/certs/clienta.localhost.truststore.p12
+      - server.ssl.trust-store-password=changeit
+    networks:
+      default:
+        aliases:
+          - clienta.localhost
     ports:
       - '11443:11443'
     restart: unless-stopped
+    volumes:
+      - ./local/tls/clienta/clienta.localhost.keystore.p12:/var/certs/clienta.localhost.keystore.p12:ro
+      - ./local/tls/clienta/clienta.localhost.truststore.p12:/var/certs/clienta.localhost.truststore.p12:ro
 
   clientb: # Map to host ports 12xxx.
     image: govsso-client:latest
@@ -47,12 +63,24 @@ services:
       - spring.application.name=Client B
       - spring.security.oauth2.client.registration.govsso.client-id=client-b
       - spring.security.oauth2.client.registration.govsso.client-secret=secretb
-      - spring.security.oauth2.client.provider.govsso.issuer-uri=http://gateway.localhost:13080/
-      - govsso.public-url=https://localhost:12443
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.public-url=https://clientb.localhost:12443
       - govsso.logo=client-b.png
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=/var/certs/clientb.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+      - server.ssl.truststore=/var/certs/clientb.localhost.truststore.p12
+      - server.ssl.truststore-password=changeit
+    networks:
+      default:
+        aliases:
+          - clientb.localhost
     ports:
       - '12443:12443'
     restart: unless-stopped
+    volumes:
+      - ./local/tls/clientb/clientb.localhost.keystore.p12:/var/certs/clientb.localhost.keystore.p12:ro
+      - ./local/tls/clientb/clientb.localhost.truststore.p12:/var/certs/clientb.localhost.truststore.p12:ro
 
   gateway: # Map to host ports 13xxx.
     build:
@@ -62,19 +90,20 @@ services:
     depends_on:
       - hydra
       - session
-    ports:
-      - '13080:13080'
     networks:
       default:
         aliases:
           - gateway.localhost
+    ports:
+      - '13443:13443'
     volumes:
       - ./local/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./local/tls/gateway:/var/certs:ro
 
   hydra: # Map to host ports 14xxx.
     # TODO Temporarily a fork is used until all pull requests are merged upstream.
     image: oryd/hydra:feature-govsso # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
-    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all --dangerous-force-http'
+    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/hydra/hydra.yml all'
     depends_on:
       - hydra-db
     deploy:
@@ -82,23 +111,27 @@ services:
         limits:
           memory: 250M
     environment:
-      - DSN=postgres://hydra:changeme@hydra-db:5432/hydra-db?sslmode=disable&max_conns=20&max_idle_conns=4
-      - URLS_SELF_ISSUER=http://gateway.localhost:13080/
+      - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
+      - URLS_SELF_ISSUER=https://gateway.localhost:13443/
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
-      - URLS_LOGIN=http://gateway.localhost:13080/login/init
-      - URLS_CONSENT=http://gateway.localhost:13080/consent/init
-      - URLS_LOGOUT=http://gateway.localhost:13080/logout
-      - URLS_ERROR=http://gateway.localhost:13080/error
-    ports:
-      - '14444:4444'
-      - '14445:4445'
+      - URLS_LOGIN=https://gateway.localhost:13443/login/init
+      - URLS_CONSENT=https://gateway.localhost:13443/consent/init
+      - URLS_LOGOUT=https://gateway.localhost:13443/logout
+      - URLS_ERROR=https://gateway.localhost:13443/error
+      - SERVE_PUBLIC_PORT=8443
+      - SERVE_TLS_KEY_PATH=/var/certs/hydra.localhost.key
+      - SERVE_TLS_CERT_PATH=/var/certs/hydra.localhost.crt
     networks:
       default:
         aliases:
           - hydra.localhost
     restart: unless-stopped
+    ports:
+      - '14443:8443'
+      - '14445:4445'
     volumes:
       - ./local/hydra:/etc/hydra:ro
+      - ./local/tls/hydra:/var/certs:ro
 
   session: # Map to host ports 15xxx.
     # First follow README.md to build this Docker image.
@@ -110,15 +143,23 @@ services:
         limits:
           memory: 650M
     environment:
-      - server.port=8080
-      - govsso.hydra.base-url=http://gateway.localhost:13080/
+      - server.port=15443
+      - govsso.hydra.base-url=https://gateway.localhost:13443/
       # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
-      - govsso.hydra.admin-url=http://hydra.localhost:4445/
+      - govsso.hydra.admin-url=https://hydra.localhost:4445/
       - govsso.tara.issuer-url=https://tara.localhost:16443
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=/var/certs/session.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+    networks:
+      default:
+        aliases:
+          - session.localhost
     ports:
-      - '15000:8000'
-      - '15080:8080'
+      - '15443:15443'
     restart: unless-stopped
+    volumes:
+      - ./local/tls/session:/var/certs:ro
 
   setup:
     build: local/setup
@@ -129,7 +170,7 @@ services:
         limits:
           memory: 250M
     environment:
-      - ADMIN_SERVICE_URL=http://admin:8080
+      - ADMIN_SERVICE_URL=admin.localhost:443 # Must be set without protocol
       - ADMIN_USER=admin
       - ADMIN_PASS=admin
 
@@ -168,32 +209,56 @@ services:
           memory: 650M
     environment:
       - spring.application.name=GOVSSO-Admin
-      - tara-oidc.url=http://hydra:4445/
-      - spring.datasource.url=jdbc:postgresql://admin-db:5432/admin-db
-      - spring.mail.host=smtp
+      - tara-oidc.url=https://hydra.localhost:4445/
+      - auth.tls-truststore-path=/var/certs/admin.localhost.truststore.p12
+      - auth.tls-truststore-password=changeit
+      - spring.datasource.url=jdbc:postgresql://admin-db.localhost:5432/admin-db?sslmode=require
+      - spring.mail.host=smtp.localhost
       - spring.mail.port=1025
       - spring.mail.username=
       - spring.mail.password=
       - spring.mail.properties.mail.smtp.auth=false
       - spring.mail.properties.mail.smtp.starttls.enable=false
       - tara.admin.sso-mode=true
+      - server.port=443
+      - server.ssl.enabled=true
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=/var/certs/admin.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+      - server.ssl.protocol=TLS
+      - server.ssl.enabled-protocols=TLSv1.3
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
+    networks:
+      default:
+        aliases:
+          - admin.localhost
     ports:
       - '17000:8000'
-      - '17080:8080'
+      - '17443:443'
     restart: unless-stopped
+    volumes:
+      - ./local/tls/admin/admin.localhost.truststore.p12:/var/certs/admin.localhost.truststore.p12:ro
+      - ./local/tls/admin/admin.localhost.keystore.p12:/var/certs/admin.localhost.keystore.p12:ro
 
   smtp: # Map to host ports 18xxx.
     image: mailhog/mailhog:v1.0.1
+    networks:
+      default:
+        aliases:
+          - smtp.localhost
     ports:
       - '18025:1025'
       - '18080:8025'
     restart: unless-stopped
 
   hydra-db: # Map to host ports 19xxx.
-    image: postgres:13
+    build: local/hydra-db
+    command: >
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/server.crt
+      -c ssl_key_file=/etc/ssl/private/server.key
     deploy:
       resources:
         limits:
@@ -206,6 +271,10 @@ services:
       - POSTGRES_DB=hydra-db
       - POSTGRES_USER=hydra
       - POSTGRES_PASSWORD=changeme
+    networks:
+      default:
+        aliases:
+          - hydra-db.localhost
     ports:
       - '19432:5432'
     restart: unless-stopped
@@ -213,7 +282,11 @@ services:
       - hydra-db-data:/var/lib/postgresql/data
 
   admin-db: # Map to host ports 20xxx.
-    image: postgres:13
+    build: local/admin-db
+    command: >
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/server.crt
+      -c ssl_key_file=/etc/ssl/private/server.key
     deploy:
       resources:
         limits:
@@ -222,6 +295,10 @@ services:
       - POSTGRES_DB=admin-db
       - POSTGRES_USER=taraadmin
       - POSTGRES_PASSWORD=changeme
+    networks:
+      default:
+        aliases:
+          - admin-db.localhost
     ports:
       - '20432:5432'
     restart: unless-stopped

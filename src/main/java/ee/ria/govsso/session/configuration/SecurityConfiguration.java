@@ -31,11 +31,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .xssProtection().xssProtectionEnabled(false)
                 .and()
                 .frameOptions().deny()
-                .contentSecurityPolicy(securityConfigurationProperties.getContentSecurityPolicy());
-//               TODO: after HTTPS implementation
-//                .and()
-//                .httpStrictTransportSecurity()
-//                .includeSubDomains(true)
-//                .maxAgeInSeconds(186 * 24 * 60 * 60);
+                .contentSecurityPolicy(securityConfigurationProperties.getContentSecurityPolicy())
+                .and()
+                .httpStrictTransportSecurity()
+                .includeSubDomains(true)
+                .maxAgeInSeconds(186 * 24 * 60 * 60);
     }
 }

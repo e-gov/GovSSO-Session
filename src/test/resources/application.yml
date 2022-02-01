@@ -13,7 +13,7 @@ spring:
     banner-mode: off
 
 govsso:
-  base-url: http://localhost:9877/
+  base-url: https://localhost:9877/
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 1000000
   hydra:

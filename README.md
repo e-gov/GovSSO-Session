@@ -12,7 +12,12 @@ TODO What this application does.
 
 1. Follow TARA2-Admin/README.md to build it's Docker image
 2. Follow GOVSSO-Client/README.md to build it's Docker image
-3. ```shell
+3. Generate TLS certificates. Stored locally in local/tls folder.
+   ```shell
+   cd local/tls
+   .\generate-certificates.sh
+   ```
+4. ```shell
    docker compose build
    ```
 
@@ -56,24 +61,24 @@ TODO What this application does.
 * Dozzle (log viewer)
     * http://localhost:9080/ - UI
 * Example Client A
-    * https://localhost:11443/ - UI
+    * https://clienta.localhost:11443/ - UI
 * Example Client B
-    * https://localhost:12443/ - UI
+    * https://clientb.localhost:12443/ - UI
 * Ory Hydra
-    * http://localhost:14444/ - public API
-        * http://localhost:14444/health/ready
-        * http://localhost:14444/.well-known/openid-configuration
-        * http://localhost:14444/.well-known/jwks.json
-        * http://localhost:14444/oauth2/auth
-        * http://localhost:14444/oauth2/token
-    * http://localhost:14445/ - admin API
-        * http://localhost:14445/health/alive
-        * http://localhost:14445/version
+    * https://hydra.localhost:14443/ - public API
+        * https://hydra.localhost:14443/health/ready
+        * https://hydra.localhost:14443/.well-known/openid-configuration
+        * https://hydra.localhost:14443/.well-known/jwks.json
+        * https://hydra.localhost:14443/oauth2/auth
+        * https://hydra.localhost:14443/oauth2/token
+    * https://hydra.localhost:14445/ - admin API
+        * https://hydra.localhost:14445/health/alive
+        * https://hydra.localhost:14445/version
         * https://www.ory.sh/hydra/docs/reference/api/#tag/admin
 * Session Service
-    * http://localhost:15080/actuator/health
-    * http://localhost:15080/actuator/health/readiness
-    * http://localhost:15080/actuator/info
+    * https://session.localhost:15443/actuator/health
+    * https://session.localhost:15443/actuator/health/readiness
+    * https://session.localhost:15443/actuator/info
 * TARA Mock
     * https://tara.localhost:16443/health
     * https://tara.localhost:16443/.well-known/openid-configuration
@@ -81,10 +86,10 @@ TODO What this application does.
     * https://tara.localhost:16443/oidc/authorize
     * https://tara.localhost:16443/oidc/token
 * Admin Service
-    * http://localhost:17080/ - UI (username admin, password admin)
-    * http://localhost:17080/actuator/health
+    * https://admin.localhost:17443/ - UI (username admin, password admin)
+    * https://admin.localhost:17443/actuator/health
 * MailHog
-    * http://localhost:17080/ - UI
+    * http://localhost:18080/ - UI
 
 ## Configuration
 
@@ -96,7 +101,7 @@ TODO
 
 | Parameter        | Mandatory | Default value | Description, example |
 | :---------------- | :---------- | :---------- | :---------------- |
-| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: http://localhost:15080/ |
+| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: https://session.localhost:15443/ |
 | `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
 
