@@ -19,7 +19,7 @@ server:
   ssl:
     enabled: true
     key-store-type: PKCS12
-    key-store: local/tls/session/session.localhost.keystore.p12
+    key-store: classpath:session.localhost.keystore.p12
     key-store-password: changeit
     protocol: TLS
     enabled-protocols: TLSv1.3
@@ -31,10 +31,16 @@ govsso:
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 12
   hydra:
-    admin-url: https://hydra.localhost:4445/
+    admin-url: https://hydra.localhost:14445/
+    tls:
+      trust-store-location: classpath:session.localhost.hydra.truststore.p12
+      trust-store-password: changeit
   tara:
     issuer-url: https://tara.localhost:16443
     client-id: govsso
     client-secret: changeme
+    tls:
+      trust-store-location: classpath:session.localhost.tara.truststore.p12
+      trust-store-password: changeit
   security:
     cookie-signing-secret: changeme

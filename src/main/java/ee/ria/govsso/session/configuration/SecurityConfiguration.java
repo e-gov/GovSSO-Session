@@ -2,7 +2,6 @@ package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,7 +16,6 @@ import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTI
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static org.springframework.http.HttpHeaders.ORIGIN;
 
-@Slf4j
 @EnableWebSecurity
 @Configuration
 @RequiredArgsConstructor

@@ -34,6 +34,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -55,10 +56,11 @@ public class TaraService {
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final TaraMetadataService taraMetadataService;
+    @Qualifier("taraTrustContext")
     private final SSLContext trustContext;
 
     public AuthenticationRequest createAuthenticationRequest(String acrValue) {
-        ClientID clientID = new ClientID(taraConfigurationProperties.getClientId());
+        ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
         URI callback = ssoConfigurationProperties.getCallbackUri();
         State state = new State();
         Nonce nonce = new Nonce();
@@ -123,8 +125,8 @@ public class TaraService {
         AuthorizationCode authorizationCode = new AuthorizationCode(code);
         URI callback = ssoConfigurationProperties.getCallbackUri();
         AuthorizationGrant codeGrant = new AuthorizationCodeGrant(authorizationCode, callback);
-        ClientID clientID = new ClientID(taraConfigurationProperties.getClientId());
-        Secret clientSecret = new Secret(taraConfigurationProperties.getClientSecret());
+        ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
+        Secret clientSecret = new Secret(taraConfigurationProperties.clientSecret());
         ClientAuthentication clientAuth = new ClientSecretBasic(clientID, clientSecret);
         OIDCProviderMetadata metadata = taraMetadataService.getMetadata();
         URI tokenEndpoint = metadata.getTokenEndpointURI();

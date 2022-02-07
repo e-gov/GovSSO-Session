@@ -150,8 +150,12 @@ services:
       - govsso.tara.issuer-url=https://tara.localhost:16443
       - govsso.security.cookie-signing-secret=exampleCookieSigningSecret123456
       - server.ssl.key-store-type=PKCS12
-      - server.ssl.key-store=/var/certs/session.localhost.keystore.p12
+      - server.ssl.key-store=file:/var/certs/session.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
+      - govsso.hydra.tls.trust-store-location=file:/var/certs/session.localhost.hydra.truststore.p12
+      - govsso.hydra.tls.trust-store-password=changeit
+      - govsso.tara.tls.trust-store-location=file:/var/certs/session.localhost.tara.truststore.p12
+      - govsso.tara.tls.trust-store-password=changeit
     networks:
       default:
         aliases:
@@ -195,6 +199,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./local/tara/config.json:/service/config.json:ro
+      - ./local/tls/tara:/var/certs:ro
 
   admin: # Map to host ports 17xxx.
     # First follow TARA2-Admin README.md to build this Docker image.

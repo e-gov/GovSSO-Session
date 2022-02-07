@@ -55,19 +55,19 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody(tokenResponse.toJSONObject().toJSONString())));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -90,13 +90,13 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_substantial_acr.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -119,19 +119,19 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody(tokenResponse.toJSONObject().toJSONString())));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -154,13 +154,13 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -391,13 +391,13 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenRequestIdTokenRespondsWith500_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -420,13 +420,13 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenRequestIdTokenRespondsWith400_ThrowsUserInputOrExpiredError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -449,19 +449,19 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenAcceptLoginRespondsWith500_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge"))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -487,19 +487,19 @@ class AuthCallbackControllerTest extends BaseTest {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody(tokenResponse.toJSONObject().toJSONString())));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -530,19 +530,19 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @SneakyThrows
     private OIDCTokenResponse getTaraOidcTokenResponse(SsoCookie ssoCookie, String acr) {
-        JWSSigner signer = new RSASSASigner(taraJWK);
+        JWSSigner signer = new RSASSASigner(TARA_JWK);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", ssoCookie.getTaraAuthenticationRequestNonce())
                 .claim("state", ssoCookie.getTaraAuthenticationRequestState())
                 .claim("acr", acr)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
 
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(TARA_JWK.getKeyID()).build(), claimsSet);
         jwt.sign(signer);
 
         BearerAccessToken accessToken = new BearerAccessToken();

@@ -3,10 +3,11 @@
 
 # But not these files...
 !.gitignore
+!add-ca-certificate-to-truststore.sh
+!generate-ca-certificate.sh
 !generate-certificate.sh
 !generate-certificates.sh
-!generate-admin-truststore.sh
-!generate-clients-truststore.sh
+!generate-truststore.sh
 !openssl.cnf
 
 # ...even if they are in subdirectories

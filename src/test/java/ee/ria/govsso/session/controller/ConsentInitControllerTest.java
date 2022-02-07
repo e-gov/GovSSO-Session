@@ -65,13 +65,13 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenAcceptConsentIsSuccessful_Redirects() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -90,7 +90,7 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenGetConsentRequestInfoRespondswith404_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
@@ -108,7 +108,7 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenGetConsentRequestInfoRespondswith410_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(410)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
@@ -126,7 +126,7 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenGetConsentRequestInfoRespondswith500_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
@@ -144,13 +144,13 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenAcceptConsentRespondsWith500_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
@@ -168,13 +168,13 @@ class ConsentInitControllerTest extends BaseTest {
     @Test
     void consentInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")

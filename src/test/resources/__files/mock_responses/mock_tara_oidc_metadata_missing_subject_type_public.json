@@ -1,9 +1,9 @@
 {
-  "issuer": "https://localhost:9877",
-  "authorization_endpoint": "https://localhost:9877/oidc/authorize",
-  "token_endpoint": "https://localhost:9877/oidc/token",
-  "jwks_uri": "https://localhost:9877/oidc/jwks",
-  "userinfo_endpoint": "https://localhost:9877/oidc/profile",
+  "issuer": "https://tara.localhost:10000",
+  "authorization_endpoint": "https://tara.localhost:10000/oidc/authorize",
+  "token_endpoint": "https://tara.localhost:10000/oidc/token",
+  "jwks_uri": "https://tara.localhost:10000/oidc/jwks",
+  "userinfo_endpoint": "https://tara.localhost:10000/oidc/profile",
   "subject_types_supported": [
     "pairwise"
   ],

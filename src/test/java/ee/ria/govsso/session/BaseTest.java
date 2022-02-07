@@ -5,10 +5,8 @@ import ch.qos.logback.classic.LoggerContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import io.restassured.RestAssured;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.filter.log.ResponseLoggingFilter;
@@ -23,28 +21,14 @@ import org.springframework.boot.web.server.LocalServerPort;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.config.RedirectConfig.redirectConfig;
-import static java.util.List.of;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseTest {
 
-    protected static final WireMockServer wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig()
-            .httpDisabled(true)
-            .httpsPort(9877)
-            .keystorePath("src/test/resources/session.localhost.keystore.p12")
-            .keystorePassword("changeit")
-            .keyManagerPassword("changeit")
-            .notifier(new ConsoleNotifier(true))
-    );
-    protected static final RSAKey taraJWK = setUpTaraJwk();
     protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
     private static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
@@ -58,22 +42,37 @@ public abstract class BaseTest {
 //        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
     }};
 
+    protected static final String GATEWAY_MOCK_URL = "https://gateway.localhost:8000";
+    protected static final String HYDRA_MOCK_URL = "https://hydra.localhost:9000";
+    protected static final String TARA_MOCK_URL = "https://tara.localhost:10000";
+
+    protected static final WireMockServer HYDRA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
+            .httpsPort(9000)
+            .keystorePath("src/test/resources/hydra.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
+            .notifier(new ConsoleNotifier(true))
+    );
+
+    protected static final WireMockServer TARA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
+            .httpsPort(10000)
+            .keystorePath("src/test/resources/tara.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
+            .notifier(new ConsoleNotifier(true))
+    );
+
+    protected static final RSAKey TARA_JWK = TaraTestSetup.generateJWK();
     @LocalServerPort
     protected int port;
-
-    @SneakyThrows
-    static RSAKey setUpTaraJwk() {
-        return new RSAKeyGenerator(4096)
-                .keyUse(KeyUse.SIGNATURE)
-                .keyID(UUID.randomUUID().toString())
-                .generate();
-    }
 
     @BeforeAll
     static void setUpAll() {
         configureRestAssured();
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("wiremock").setLevel(Level.OFF);
-        wireMockServer.start();
+        HYDRA_MOCK_SERVER.start();
         setUpTaraMetadataMocks();
     }
 
@@ -83,24 +82,13 @@ public abstract class BaseTest {
     }
 
     protected static void setUpTaraMetadataMocks() {
+        TARA_MOCK_SERVER.start();
         setUpTaraMetadataMocks("mock_tara_oidc_metadata.json");
     }
 
     @SneakyThrows
     protected static void setUpTaraMetadataMocks(String metadataBodyFile) {
-        JWKSet jwkSet = new JWKSet(of(taraJWK));
-
-        wireMockServer.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/" + metadataBodyFile)));
-
-        wireMockServer.stubFor(get(urlEqualTo("/oidc/jwks"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBody(jwkSet.toPublicJWKSet().toString())));
+        TaraTestSetup.setUpMetadataMocks(TARA_MOCK_SERVER, metadataBodyFile, TARA_JWK);
     }
 
     @BeforeEach
@@ -108,7 +96,7 @@ public abstract class BaseTest {
         // TODO GSSO-245 Consider using custom RequestSpecification/ResponseSpecification for common CORS header assertion
         RestAssured.responseSpecification = new ResponseSpecBuilder().expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
         RestAssured.port = port;
-        wireMockServer.resetAll();
+        HYDRA_MOCK_SERVER.resetAll();
     }
 
     protected String decodeCookieFromBase64(String cookie) {

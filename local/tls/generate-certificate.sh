@@ -1,58 +1,69 @@
 #!/bin/sh
 
-applicationName=$1
-if [ -z "$applicationName" ]
-then
+ca=$1
+if [ -z "$ca" ]; then
+  echo "\$ca is empty"
+  exit 1
+fi
+
+applicationName=$2
+if [ -z "$applicationName" ]; then
   echo "\$applicationName is empty"
-  exit 1;
+  exit 1
 fi
 
 host=$applicationName.localhost # ex. admin.localhost
 
-echo "---------------------------------- Generating certificates for '$host' ----------------------------------"
+echo "--------------------------- Generating certificate for '$host'"
 
+# Create application TLS folder if does not exist
 mkdir -p "$applicationName"
-cd "$applicationName" || { echo "Failed to enter directory"; exit 1; }
 
 # Generate ECDSA key
 openssl ecparam \
   -name prime256v1 \
   -genkey \
-  -out "$host".key
+  -out "$applicationName/$host.key"
 
 # Generate CSR from key
 # MSYS_NO_PATHCOW=1 needed for Git Bash on Windows users - unable to handle "/"-s in -subj parameter.
 MSYS_NO_PATHCONV=1 \
-openssl req \
+  openssl req \
   -new \
   -sha512 \
   -nodes \
-  -key "$host".key \
+  -key "$applicationName/$host.key" \
   -subj "/CN=$host" \
-  -out "$host".csr
+  -out "$applicationName/$host.csr"
 
-# Configure subject alternate names, passed to openssl.cnf and openssl-ext.cnf
+# Configure subject alternate names. Passed to openssl.cnf
 export SAN="DNS:$host"
 
 # Generate CA signed certificate
 openssl x509 \
   -req \
   -sha512 \
-  -in "$host".csr \
-  -CA ../ca/ca.localhost.crt \
-  -CAkey ../ca/ca.localhost.key \
+  -in "$applicationName/$host.csr" \
+  -CA "$ca/$ca.localhost.crt" \
+  -CAkey "$ca/$ca.localhost.key" \
   -CAcreateserial \
   -days 363 \
-  -extfile ../openssl.cnf \
-  -out "$host".crt
+  -extfile "openssl.cnf" \
+  -out "$applicationName/$host.crt"
 
-# Generate PKCS12 file from application cert and key
-# TODO: include CA certificate
+# Generate keystore from application cert and key
 openssl pkcs12 \
   -export \
-  -in "$host".crt \
-  -inkey "$host".key \
+  -name "$host" \
+  -in "$applicationName/$host.crt" \
+  -inkey "$applicationName/$host.key" \
   -passout pass:changeit \
-  -out "$host".keystore.p12
+  -out "$applicationName/$host.keystore.p12"
 
-cd .. || { echo "Failed to exit directory"; exit 1; }
+# Add CA certificate to application keystore
+keytool -noprompt \
+  -importcert \
+  -alias "$ca.localhost" \
+  -file "$ca/$ca.localhost.crt" \
+  -storepass changeit \
+  -keystore "$applicationName/$host.keystore.p12"

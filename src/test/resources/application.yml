@@ -13,14 +13,20 @@ spring:
     banner-mode: off
 
 govsso:
-  base-url: https://localhost:9877/
+  base-url: https://gateway.localhost:8000
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 1000000
   hydra:
-    admin-url: https://localhost:9877/
+    admin-url: https://hydra.localhost:9000
+    tls:
+      trust-store-location: classpath:session.localhost.hydra.truststore.p12
+      trust-store-password: changeit
   tara:
-    issuer-url: https://localhost:9877
+    issuer-url: https://tara.localhost:10000
     client-id: testclient123
     client-secret: testsecret123
+    tls:
+      trust-store-location: classpath:session.localhost.tara.truststore.p12
+      trust-store-password: changeit
   security:
     cookie-signing-secret: fec1e8ee45b84f7f66824f7797f759f191c696020f5187744a1a3532935bd5ec

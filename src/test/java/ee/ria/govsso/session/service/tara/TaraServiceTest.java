@@ -55,13 +55,13 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         ClientID clientID = authenticationRequest.getClientID();
 
-        assertThat(clientID.getValue(), equalTo(taraConfigurationProperties.getClientId()));
+        assertThat(clientID.getValue(), equalTo(taraConfigurationProperties.clientId()));
         assertThat(authenticationRequest.getState(), notNullValue());
         assertThat(authenticationRequest.getNonce(), notNullValue());
         assertThat(authenticationRequest.getState().getValue(), hasLength(43));
         assertThat(authenticationRequest.getNonce().getValue(), hasLength(43));
-        assertThat(authenticationRequest.getEndpointURI().toString(), equalTo("https://localhost:9877/oidc/authorize"));
-        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo("https://localhost:9877/login/taracallback"));
+        assertThat(authenticationRequest.getEndpointURI().toString(), equalTo(TARA_MOCK_URL + "/oidc/authorize"));
+        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo(GATEWAY_MOCK_URL + "/login/taracallback"));
         List<String> scopes = authenticationRequest.getScope().toStringList();
         assertThat(authenticationRequest.getResponseType().toString(), equalTo("code"));
         assertThat(scopes, contains("openid"));
@@ -72,7 +72,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse unsignedTokenResponse = getTokenResponse(claimsSet, false);
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -89,7 +89,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse unsignedTokenResponse = getTokenResponse(claimsSet, false);
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -102,7 +102,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenTokenEndpointStatus404_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(404)));
 
@@ -113,7 +113,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenTokenEndpointStatus400_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(400)));
 
@@ -128,7 +128,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
 
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -144,7 +144,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenMissingTokenType_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -159,7 +159,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenInvalidTokenType_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -174,7 +174,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenMissingAccessToken_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -189,7 +189,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenInvalidTokenEndpointResponseBody_ThrowsSsoException() {
-        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -234,9 +234,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -259,9 +259,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -283,9 +283,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -308,9 +308,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", "abc123")
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -335,7 +335,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
                 .claim("state", state)
                 .audience("unknownclient123")
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -359,7 +359,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
                 .claim("nonce", nonce)
                 .claim("state", state)
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -382,8 +382,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
-                .issuer("https://localhost:9877")
+                .audience(taraConfigurationProperties.clientId())
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -406,7 +406,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer("https://unknownissuer:9877")
                 .issueTime(new Date())
@@ -431,7 +431,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
@@ -449,16 +449,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenIssueTimeAheadOfCurrentTime_ThrowsSsoException() {
-        Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
+        Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(Date.from(Instant.now().plusSeconds(maxClockSkew).plusSeconds(1)))
                 .expirationTime(Date.from(Instant.now().plusSeconds(maxClockSkew).plusSeconds(10)))
                 .build();
@@ -475,16 +475,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenIssueTimeMissing_ThrowsSsoException() {
-        Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
+        Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .expirationTime(Date.from(Instant.now().plusSeconds(maxClockSkew).plusSeconds(10)))
                 .build();
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
@@ -501,13 +501,13 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     @Test
     void verifyIdToken_WhenIssueTimeAheadOfCurrentTimeWithinAcceptableSkew_TokenValid() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
-        Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
+        Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(Date.from(Instant.now().plusSeconds(maxClockSkew)))
                 .expirationTime(Date.from(Instant.now().plusSeconds(maxClockSkew).plusSeconds(10)))
                 .build();
@@ -519,16 +519,16 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenExpired_ThrowsSsoException() {
-        Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
+        Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(Date.from(Instant.now().minusSeconds(60)))
                 .expirationTime(Date.from(Instant.now().minusSeconds(maxClockSkew)))
                 .build();
@@ -551,9 +551,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(Date.from(Instant.now().minusSeconds(60)))
                 .build();
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
@@ -570,13 +570,13 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     @Test
     void verifyIdToken_WhenExpirationTimeWithinAcceptableSkew_TokenValid() {
         AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
-        Integer maxClockSkew = taraConfigurationProperties.getMaxClockSkewSeconds();
+        Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().minusSeconds(maxClockSkew).plusMillis(50)))
                 .build();
@@ -590,9 +590,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         return new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
-                .audience(taraConfigurationProperties.getClientId())
+                .audience(taraConfigurationProperties.clientId())
                 .subject("test")
-                .issuer("https://localhost:9877")
+                .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(10)))
                 .build();
@@ -600,12 +600,12 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @SneakyThrows
     private OIDCTokenResponse getTokenResponse(JWTClaimsSet claimsSet, boolean isSigned) {
-        return createTokenResponse(claimsSet, isSigned, RS256, taraJWK);
+        return createTokenResponse(claimsSet, isSigned, RS256, TARA_JWK);
     }
 
     @SneakyThrows
     private OIDCTokenResponse getTokenResponseWithIncorrectJWSAlgorithm(JWTClaimsSet claimsSet) {
-        return createTokenResponse(claimsSet, true, RS384, taraJWK);
+        return createTokenResponse(claimsSet, true, RS384, TARA_JWK);
     }
 
     @SneakyThrows
@@ -619,7 +619,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     }
 
     private OIDCTokenResponse createTokenResponse(JWTClaimsSet claimsSet, boolean isSigned, JWSAlgorithm algorithm, RSAKey rsaKey) throws JOSEException {
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(algorithm).keyID(taraJWK.getKeyID()).build(), claimsSet);
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(algorithm).keyID(TARA_JWK.getKeyID()).build(), claimsSet);
         BearerAccessToken accessToken = new BearerAccessToken();
         RefreshToken refreshToken = new RefreshToken();
         OIDCTokens oidcTokens = new OIDCTokens(jwt, accessToken, refreshToken);

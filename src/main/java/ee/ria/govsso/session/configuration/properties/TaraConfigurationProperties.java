@@ -1,28 +1,40 @@
 package ee.ria.govsso.session.configuration.properties;
 
-import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.core.io.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.net.URL;
 
-@Value
 @Validated
 @ConstructorBinding
 @ConfigurationProperties(prefix = "govsso.tara")
-public class TaraConfigurationProperties {
+public record TaraConfigurationProperties(
+        @NotNull
+        URL issuerUrl,
+        @NotBlank
+        String clientId,
+        @NotBlank
+        String clientSecret,
+        @DefaultValue("10")
+        Integer maxClockSkewSeconds,
+        TlsConfigurationProperties tls) {
 
-    @NotNull
-    URL issuerUrl;
-
-    @NotBlank
-    String clientId;
-
-    @NotBlank
-    String clientSecret;
-
-    Integer maxClockSkewSeconds = 10;
+    @Validated
+    @ConstructorBinding
+    @ConfigurationProperties(prefix = "govsso.tara.tls")
+    public record TlsConfigurationProperties(
+            @NotNull
+            Resource trustStoreLocation,
+            @NotBlank
+            String trustStorePassword,
+            @DefaultValue("PKCS12")
+            @NotNull
+            String trustStoreType,
+            String defaultProtocol) {
+    }
 }

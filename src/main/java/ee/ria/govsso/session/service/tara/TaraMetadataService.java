@@ -18,6 +18,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +27,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -49,6 +51,7 @@ import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
 public class TaraMetadataService {
 
     private final TaraConfigurationProperties taraConfigurationProperties;
+    @Qualifier("taraTrustContext")
     private final SSLContext trustContext;
     private volatile Tuple2<OIDCProviderMetadata, IDTokenValidator> providerMetadata;
 
@@ -88,7 +91,7 @@ public class TaraMetadataService {
     }
 
     OIDCProviderMetadata requestMetadata() throws IOException, ParseException {
-        String issuerUrl = taraConfigurationProperties.getIssuerUrl().toString();
+        String issuerUrl = taraConfigurationProperties.issuerUrl().toString();
         Issuer issuer = new Issuer(issuerUrl);
         WellKnownPathComposeStrategy strategy = issuerUrl.endsWith("/") ? POSTFIX : INFIX;
         OIDCProviderConfigurationRequest request = new OIDCProviderConfigurationRequest(issuer, strategy);
@@ -145,10 +148,10 @@ public class TaraMetadataService {
 
     IDTokenValidator createIdTokenValidator(OIDCProviderMetadata metadata, JWKSet jwkSet) {
         Issuer issuer = metadata.getIssuer();
-        ClientID clientID = new ClientID(taraConfigurationProperties.getClientId());
+        ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
         JWSAlgorithm jwsAlg = RS256;
         IDTokenValidator idTokenValidator = new IDTokenValidator(issuer, clientID, jwsAlg, jwkSet);
-        idTokenValidator.setMaxClockSkew(taraConfigurationProperties.getMaxClockSkewSeconds());
+        idTokenValidator.setMaxClockSkew(taraConfigurationProperties.maxClockSkewSeconds());
         return idTokenValidator;
     }
 }

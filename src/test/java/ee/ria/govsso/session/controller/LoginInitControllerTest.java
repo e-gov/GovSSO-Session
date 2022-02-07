@@ -59,7 +59,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -72,7 +72,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -82,7 +82,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenFetchLoginRequestInfoAcrIsSubstantial_CreatesSessionAndRedirects() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -95,7 +95,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=substantial&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?scope=openid&acr_values=substantial&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -109,13 +109,13 @@ public class LoginInitControllerTest extends BaseTest {
             "mock_sso_oidc_login_request_with_subject_without_acr.json"})
     void loginInit_WhenFetchLoginRequestInfoWithSubjectIsSuccessful_CreatesSessionAndOpensView(String loginRequestMockFile) {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/" + loginRequestMockFile)));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -138,13 +138,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenConsentsAreNotIdentical_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -163,13 +163,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -188,13 +188,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenConsentsHaveUnrecognizedLoginSessionIds_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -213,13 +213,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenConsentsAreMissing_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -238,13 +238,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenConsentsRequestRespondsWith500_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(500)));
 
@@ -301,7 +301,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoRespondsWith404_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -320,7 +320,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoRespondsWith410_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(410)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -338,8 +338,8 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenFetchLoginRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+    void loginInit_WhenFetchLoginRequestInfoRespondsWith500_ThrowsTechincalGeneralError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -359,7 +359,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestUrlDoesntContainPromptConsent_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -378,7 +378,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestScopeWithoutOpenid_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -397,7 +397,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestScopeWithMoreThanOpenid_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -416,7 +416,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestIdTokenHintClaimIsNonEmpty_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -435,7 +435,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestSubjectIsEmptyAndSkipIsTrue_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -454,7 +454,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestSubjectIsNotEmptyAndSkipIsFalse_ThrowsTechnicalGeneralError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -473,7 +473,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestHasMoreThanOneAcrValue_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -493,7 +493,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestHasOneIncorrectAcrValue_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -513,7 +513,7 @@ public class LoginInitControllerTest extends BaseTest {
     @Test
     void loginInit_WhenLoginResponseRequestHasOneCapitalizedAcrValue_ThrowsUserInputError() {
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -532,8 +532,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -547,15 +546,14 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
                 .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
     }
 
     @Test
     void loginInit_WhenNoCSRFCookieIsSet_SetsCSRFCookie() {
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -570,7 +568,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .cookie(COOKIE_NAME_XSRF_TOKEN, detailedCookieMatcher
                         .httpOnly(true)
                         .secured(true)
@@ -581,19 +579,19 @@ public class LoginInitControllerTest extends BaseTest {
     // TODO This test will stop working on 2038-xx-xx. Change it to be independent of current time.
     @Test
     void loginInit_WhenPromptNone_ExtendSession() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -612,7 +610,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_SubjectEmpty_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -631,7 +629,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_OidcContextMissing_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -650,7 +648,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_TokenMissing_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -669,7 +667,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_AudienceDoesNotMatchRequestClientId_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -688,7 +686,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_TokenSessionIdDoesNotMatchWithRequestSessionId_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -707,7 +705,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_TokenExpired_ThrowsUserInputError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -726,13 +724,13 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenPromptNone_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -760,13 +758,13 @@ public class LoginInitControllerTest extends BaseTest {
             SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
             String responseBody = createConsentsResponseBodyWithIdToken(jwt);
 
-            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
                             .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -789,13 +787,13 @@ public class LoginInitControllerTest extends BaseTest {
             SignedJWT jwt = createIdTokenWithAgeInSeconds(3590);
             String responseBody = createConsentsResponseBodyWithIdToken(jwt);
 
-            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
                             .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
 
-            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -833,8 +831,8 @@ public class LoginInitControllerTest extends BaseTest {
                     .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
                     .claim("acr", "high")
                     .build();
-            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
-            JWSSigner signer = new RSASSASigner(taraJWK);
+            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(TARA_JWK.getKeyID()).build(), claimsSet);
+            JWSSigner signer = new RSASSASigner(TARA_JWK);
             jwt.sign(signer);
             return jwt;
         }

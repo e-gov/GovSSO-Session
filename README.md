@@ -26,7 +26,7 @@ TODO What this application does.
 1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from
    session-service when it's running locally (not in Docker Compose). It's not needed for web browsers as popular
    browsers already have built-in support for resolving `*.localhost` subdomains.
-   NB! Also have to change 'session' proxy_pass hosts to 'host.docker.internal' in local/gateway/nginx.conf.
+   **NB! Also have to change 'session' proxy_pass hosts to 'host.docker.internal' in local/gateway/nginx.conf.**
 2. ```shell
    docker compose up
    docker compose stop session
@@ -105,6 +105,24 @@ TODO
 | `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
 
+<a name="hydra_integration_conf"></a>
+
+### Integration with Hydra OIDC service
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.hydra.admin-url` | Yes | | Point to ORY Hydra Administrative API |
+
+<a name="hydra_tls_conf"></a>
+
+### TLS configuration for outbound connections
+
+| Parameter        | Mandatory | Description, example |
+| :---------------- | :---------- | :----------------|
+| `govsso.hydra.tls.trust-store-location` | Yes | Location of the truststore containing trusted CA certificates. |
+| `govsso.hydra.tls.trust-store-password` | Yes | Truststore password |
+| `govsso.hydra.tls.trust-store-type` | No | Truststore type (jks, pkcs12). Defaults to PKCS12 if not specified |
+
 <a name="tara_integration_conf"></a>
 
 ### Integration with TARA OIDC service
@@ -120,6 +138,17 @@ TODO
 | `govsso.tara.metadata-backoff-delay-milliseconds` | No | 1000 | Initial delay time in milliseconds between retries. |
 | `govsso.tara.metadata-backoff-max-delay-milliseconds` | No | 60000 | Maximum delay time in milliseconds between retries after applying backoff multiplier to initial delay time. |
 | `govsso.tara.metadata-backoff-multiplier` | No | 1.1 | Multiplier for generating the next delay for backoff. |
+
+<a name="tara_tls_conf"></a>
+
+### TLS configuration for outbound connections
+
+| Parameter        | Mandatory | Description, example |
+| :---------------- | :---------- | :----------------|
+| `tara.tls.trust-store-location` | Yes | Location of the truststore containing trusted CA certificates. |
+| `tara.tls.trust-store-password` | Yes | Truststore password |
+| `tara.tls.trust-store-type` | No | Truststore type (jks, pkcs12). Defaults to PKCS12 if not specified |
+| `tara.tls.default-protocol` | No | Default protocol (see the list of supported [values](https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#sslcontext-algorithms)). Defaults to `TLS` if not specified |
 
 <a name="sec_conf"></a>
 

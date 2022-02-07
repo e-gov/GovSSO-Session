@@ -11,6 +11,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,11 @@ class TaraMetadataServiceTest extends BaseTest {
 
     @Value("${govsso.tara.metadata-max-attempts}")
     private Integer metadataUpdateMaxAttempts;
+
+    @BeforeAll
+    static void setUpTaraMetadataNotAvailable() {
+        TARA_MOCK_SERVER.resetAll();
+    }
 
     @Test
     @Order(1)
@@ -126,10 +132,10 @@ class TaraMetadataServiceTest extends BaseTest {
         verify(taraMetadataService, atLeast(1)).requestJWKSet(any());
         verify(taraMetadataService, atLeast(1)).createIdTokenValidator(any(), any());
         OIDCProviderMetadata metadata = taraMetadataService.getMetadata();
-        assertThat(metadata.getIssuer().getValue(), equalTo(taraConfigurationProperties.getIssuerUrl().toString()));
-        assertThat(metadata.getTokenEndpointURI().toString(), equalTo("https://localhost:9877/oidc/token"));
-        assertThat(metadata.getAuthorizationEndpointURI().toString(), equalTo("https://localhost:9877/oidc/authorize"));
-        assertThat(metadata.getJWKSetURI().toString(), equalTo("https://localhost:9877/oidc/jwks"));
+        assertThat(metadata.getIssuer().getValue(), equalTo(taraConfigurationProperties.issuerUrl().toString()));
+        assertThat(metadata.getTokenEndpointURI().toString(), equalTo(TARA_MOCK_URL + "/oidc/token"));
+        assertThat(metadata.getAuthorizationEndpointURI().toString(), equalTo(TARA_MOCK_URL + "/oidc/authorize"));
+        assertThat(metadata.getJWKSetURI().toString(), equalTo(TARA_MOCK_URL + "/oidc/jwks"));
         assertThat(metadata.getTokenEndpointAuthMethods(), equalTo(of(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)));
         assertThat(metadata.getSubjectTypes(), contains(PUBLIC));
         assertThat(metadata.getResponseTypes(), contains(CODE));
@@ -171,16 +177,16 @@ class TaraMetadataServiceTest extends BaseTest {
                 "eidas:country:sk",
                 "eidas:country:pl"));
         IDTokenValidator idTokenValidator = taraMetadataService.getIDTokenValidator();
-        assertThat(idTokenValidator.getClientID().getValue(), equalTo(taraConfigurationProperties.getClientId()));
-        assertThat(idTokenValidator.getExpectedIssuer().getValue(), equalTo(taraConfigurationProperties.getIssuerUrl().toString()));
-        assertThat(idTokenValidator.getMaxClockSkew(), equalTo(taraConfigurationProperties.getMaxClockSkewSeconds()));
+        assertThat(idTokenValidator.getClientID().getValue(), equalTo(taraConfigurationProperties.clientId()));
+        assertThat(idTokenValidator.getExpectedIssuer().getValue(), equalTo(taraConfigurationProperties.issuerUrl().toString()));
+        assertThat(idTokenValidator.getMaxClockSkew(), equalTo(taraConfigurationProperties.maxClockSkewSeconds()));
     }
 
     @Test
     void updateMetadata_WhenInvalidIssuer_ThrowsSsoException() {
         setUpTaraMetadataMocks("mock_tara_oidc_metadata_invalid_issuer.json");
 
-        assertCauseMessage("Expected OIDC Issuer 'https://localhost:9877' does not match published issuer 'https://localhost:9877/'");
+        assertCauseMessage("Expected OIDC Issuer 'https://tara.localhost:10000' does not match published issuer 'https://tara.localhost:10000/'");
     }
 
     @Test
@@ -366,25 +372,25 @@ class TaraMetadataServiceTest extends BaseTest {
     }
 
     private void setUpMetadataWithoutJwkSet() {
-        wireMockServer.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
+        TARA_MOCK_SERVER.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_tara_oidc_metadata.json")));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oidc/jwks"))
+        TARA_MOCK_SERVER.stubFor(get(urlEqualTo("/oidc/jwks"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withStatus(404)));
     }
 
     private void setUpMetadataNotAvailable() {
-        wireMockServer.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
+        TARA_MOCK_SERVER.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withStatus(404)));
 
-        wireMockServer.stubFor(get(urlEqualTo("/oidc/jwks"))
+        TARA_MOCK_SERVER.stubFor(get(urlEqualTo("/oidc/jwks"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withStatus(404)));
