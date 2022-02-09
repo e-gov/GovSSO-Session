@@ -3,6 +3,7 @@ package ee.ria.govsso.session.error;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.MessageSource;
@@ -13,12 +14,15 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.Locale;
 import java.util.Map;
 
+import static ee.ria.govsso.session.configuration.RequestCorrelationFilter.MDC_ATTRIBUTE_TRACE_ID;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ErrorAttributes extends DefaultErrorAttributes {
     public static final String ERROR_ATTR_MESSAGE = "message";
     public static final String ERROR_ATTR_ERROR_CODE = "error";
+    public static final String ERROR_ATTR_INCIDENT_NR = "incident_nr";
 
     private final MessageSource messageSource;
 
@@ -45,6 +49,7 @@ public class ErrorAttributes extends DefaultErrorAttributes {
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode) {
         Locale locale = new Locale("en"); //TODO
         attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(), null, locale));
+        attr.put(ERROR_ATTR_INCIDENT_NR, MDC.get(MDC_ATTRIBUTE_TRACE_ID));
         attr.put(ERROR_ATTR_ERROR_CODE, errorCode.name());
     }
 

@@ -828,3 +828,56 @@ input[type=number]::-webkit-outer-spin-button {
 	-webkit-appearance: none;
 	margin: 0
 }
+
+.alert {
+	 padding: 20px;
+	 border-radius: 8px;
+	 position: relative;
+	 color: #34394c;
+}
+ @media (max-width: 800px) {
+	 .alert {
+		 margin-top: 15px;
+		 padding: 15px;
+		 border-radius: 0;
+	}
+}
+ .alert h2 {
+	 margin-bottom: 15px;
+	 font-size: 30px;
+	 color: #003168;
+	 font-weight: 400;
+}
+ @media (max-width: 800px) {
+	 .alert h2 {
+		 margin-bottom: 10px;
+		 font-size: 22px;
+	}
+}
+ .alert p {
+	 margin-top: 5px;
+	 color: #34394c;
+}
+ .alert p:first-child {
+	 margin-top: 0;
+}
+ .alert a {
+	 color: #34394c;
+}
+ .alert table th, .alert table td {
+	 padding: 5px;
+}
+ .alert table th {
+	 font-weight: 400;
+	 text-align: right;
+}
+ .alert-error {
+	 background-color: #ffb9b6;
+	 border: 4px solid #fc7376;
+}
+ @media (max-width: 800px) {
+	 .alert-error {
+		 border-width: 2px;
+	}
+}
+
