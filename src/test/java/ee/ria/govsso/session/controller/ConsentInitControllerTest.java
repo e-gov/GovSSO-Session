@@ -15,6 +15,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -160,5 +163,33 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
+
+    @Test
+    void consentInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request.json")));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .header(ORIGIN, "https://clienta.localhost:11443")
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"))
+                .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
+                .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
     }
 }

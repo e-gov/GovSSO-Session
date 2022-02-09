@@ -104,6 +104,7 @@ public abstract class BaseTest {
 
     @BeforeEach
     public void beforeEachTest() {
+        // TODO GSSO-245 Consider using custom RequestSpecification/ResponseSpecification for common CORS header assertion
         RestAssured.responseSpecification = new ResponseSpecBuilder().expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
         RestAssured.port = port;
         wireMockServer.resetAll();

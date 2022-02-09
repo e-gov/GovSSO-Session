@@ -35,7 +35,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.Matchers.equalTo;
+import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -477,6 +479,44 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
+
+    @Test
+    void authCallback_WhenOriginHeaderIsSet_NoCorsResponseHeadersAreSet() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        wireMockServer.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .header(ORIGIN, "https://clienta.localhost:11443")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .headers(emptyMap())
+                .header("Location", Matchers.containsString("auth/login/test"));
     }
 
     private SsoCookie createSsoCookie() {

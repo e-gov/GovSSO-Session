@@ -22,7 +22,6 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,19 +44,11 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests under appropriate *Controller tests
     private final TaraService taraService;
-    private final TaraMetadataService taraMetadataService;
     private final TaraConfigurationProperties taraConfigurationProperties;
-
-    @BeforeEach
-    void thisShouldNotBeNeededFixMe() { // FIXME:
-        setUpTaraMetadataMocks();
-        taraMetadataService.updateMetadata();
-    }
 
     @Test
     void createAuthenticationRequest_WhenCreated_ContainsValidRequestParameters() {

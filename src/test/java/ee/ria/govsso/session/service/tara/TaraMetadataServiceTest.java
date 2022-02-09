@@ -11,7 +11,6 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -19,6 +18,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -51,6 +51,7 @@ import static org.mockito.Mockito.verify;
         "govsso.tara.metadata-backoff-delay-milliseconds=100",
         "govsso.tara.metadata-backoff-multiplier=1.0"})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class TaraMetadataServiceTest extends BaseTest {
 
     private final TaraConfigurationProperties taraConfigurationProperties;
@@ -60,11 +61,6 @@ class TaraMetadataServiceTest extends BaseTest {
 
     @Value("${govsso.tara.metadata-max-attempts}")
     private Integer metadataUpdateMaxAttempts;
-
-    @BeforeAll
-    static void setUpTaraMetadataNotAvailable() {
-        wireMockServer.resetAll();
-    }
 
     @Test
     @Order(1)
@@ -88,6 +84,7 @@ class TaraMetadataServiceTest extends BaseTest {
     @Order(3)
     @SneakyThrows
     void updateMetadata_WhenTaraMetadataNotAvailable_RetriesMetadataRequest() {
+        setUpMetadataNotAvailable();
         int nextScheduledInvocationCall = metadataUpdateMaxAttempts + 1;
 
         await().atMost(FIVE_SECONDS)
@@ -377,6 +374,19 @@ class TaraMetadataServiceTest extends BaseTest {
 
         wireMockServer.stubFor(get(urlEqualTo("/oidc/jwks"))
                 .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withStatus(404)));
+    }
+
+    private void setUpMetadataNotAvailable() {
+        wireMockServer.stubFor(get(urlEqualTo("/.well-known/openid-configuration"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withStatus(404)));
+
+        wireMockServer.stubFor(get(urlEqualTo("/oidc/jwks"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withStatus(404)));
     }
 }

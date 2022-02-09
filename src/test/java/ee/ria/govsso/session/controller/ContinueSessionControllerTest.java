@@ -15,7 +15,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.ContinueSessionController.AUTH_VIEW_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.Matchers.equalTo;
+import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -109,6 +111,41 @@ class ContinueSessionControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void continueSession_WhenOriginHeaderIsSet_NoCorsResponseHeadersAreSet() {
+
+        SsoCookie ssoCookie = createSsoCookie();
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .header(ORIGIN, "https://clienta.localhost:11443")
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .headers(emptyMap())
+                .header("Location", Matchers.containsString("/auth/login/test"));
     }
 
     private SsoCookie createSsoCookie() {

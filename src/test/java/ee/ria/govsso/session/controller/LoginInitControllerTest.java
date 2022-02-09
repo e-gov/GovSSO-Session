@@ -7,20 +7,21 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.NestedTestConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.Instant;
 import java.util.Date;
@@ -37,6 +38,10 @@ import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static org.springframework.http.HttpHeaders.ORIGIN;
+import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -44,9 +49,6 @@ public class LoginInitControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private final SsoCookieSigner ssoCookieSigner;
-
-    @Autowired
-    private SsoConfigurationProperties ssoConfigurationProperties;
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
@@ -226,72 +228,6 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
-    }
-
-    @Test
-    @DirtiesContext
-    @SneakyThrows
-    void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsTechnicalGeneralError() {
-        ssoConfigurationProperties.setSessionMaxDurationHours(1);
-
-        SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
-        String responseBody = createConsentsResponseBodyWithIdToken(jwt);
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBody(responseBody)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap())
-                .body("error", equalTo("TECHNICAL_GENERAL"));
-    }
-
-    @Test
-    @DirtiesContext
-    @SneakyThrows
-    void loginInit_WhenConsentIdTokenLasts10MoreSeconds_Returns200() {
-        ssoConfigurationProperties.setSessionMaxDurationHours(1);
-
-        SignedJWT jwt = createIdTokenWithAgeInSeconds(3590);
-        String responseBody = createConsentsResponseBodyWithIdToken(jwt);
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBody(responseBody)));
-
-        String ssoCookieValue = given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .extract().cookie(COOKIE_NAME_GOVSSO);
-
-        SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
-        assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
     }
 
     @Test
@@ -607,32 +543,116 @@ public class LoginInitControllerTest extends BaseTest {
                 .body("error", equalTo("USER_INPUT"));
     }
 
-    private String createConsentsResponseBodyWithIdToken(SignedJWT jwt) {
-        String consentsResponseBody = """
-                [
-                  {
-                    "consent_request": {
-                      "context": {
-                        "tara_id_token": "%s"
-                      },
-                      "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
-                    }
-                  }
-                ]
-                """;
+    @Test
+    void loginInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
 
-        return String.format(consentsResponseBody, jwt.serialize());
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .header(ORIGIN, "https://clienta.localhost:11443")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.matchesRegex("https:\\/\\/localhost:9877\\/oidc\\/authorize\\?scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A9877%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
+                .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
     }
 
-    private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
-        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .notBeforeTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
-                .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
-                .claim("acr", "high")
-                .build();
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
-        JWSSigner signer = new RSASSASigner(taraJWK);
-        jwt.sign(signer);
-        return jwt;
+    @Nested
+    @NestedTestConfiguration(OVERRIDE)
+    @TestPropertySource(properties = {"govsso.session-max-duration-hours=1"})
+    class MaxSessionDurationOneHourTests extends BaseTest {
+
+        @Test
+        @SneakyThrows
+        void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsTechnicalGeneralError() {
+            SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
+            String responseBody = createConsentsResponseBodyWithIdToken(jwt);
+
+            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBody(responseBody)));
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get("/login/init")
+                    .then()
+                    .assertThat()
+                    .statusCode(500)
+                    .body("error", equalTo("TECHNICAL_GENERAL"));
+        }
+
+        @Test
+        @SneakyThrows
+        void loginInit_WhenConsentIdTokenLasts10MoreSeconds_Returns200() {
+
+            SignedJWT jwt = createIdTokenWithAgeInSeconds(3590);
+            String responseBody = createConsentsResponseBodyWithIdToken(jwt);
+
+            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+            wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBody(responseBody)));
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get("/login/init")
+                    .then()
+                    .assertThat()
+                    .statusCode(200);
+        }
+
+        private String createConsentsResponseBodyWithIdToken(SignedJWT jwt) {
+            String consentsResponseBody = """
+                    [
+                      {
+                        "consent_request": {
+                          "context": {
+                            "tara_id_token": "%s"
+                          },
+                          "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
+                        }
+                      }
+                    ]
+                    """;
+
+            return String.format(consentsResponseBody, jwt.serialize());
+        }
+
+        private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .notBeforeTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
+                    .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
+                    .claim("acr", "high")
+                    .build();
+            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(taraJWK.getKeyID()).build(), claimsSet);
+            JWSSigner signer = new RSASSASigner(taraJWK);
+            jwt.sign(signer);
+            return jwt;
+        }
     }
 }
