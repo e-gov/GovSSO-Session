@@ -138,6 +138,7 @@ services:
         limits:
           memory: 650M
     environment:
+      - management.endpoints.web.exposure.include=*
       - server.port=15443
       - govsso.hydra.base-url=https://gateway.localhost:13443/
       # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
