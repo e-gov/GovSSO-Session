@@ -9,6 +9,8 @@ management:
         include: '*'
 
 spring:
+  application:
+    name: govsso-session
   main:
     banner-mode: off
 

@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 
+import static net.logstash.logback.marker.Markers.append;
+
 @Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -19,27 +21,36 @@ public class ErrorHandler {
     // These are considered as USER_INPUT errors.
     @ExceptionHandler({ConstraintViolationException.class, MissingServletRequestParameterException.class})
     public void handleBindException(Exception ex, HttpServletResponse response) throws IOException {
-        if (log.isDebugEnabled())
-            log.error("User input exception: {}", ex.getMessage(), ex);
-        else
-            log.error("User input exception: {}", ex.getMessage());
+        if (log.isDebugEnabled()) {
+            logErrorWithStacktrace(ex, ErrorCode.USER_INPUT, "User input exception: {}");
+        } else {
+            logError(ex, ErrorCode.USER_INPUT, "User input exception: {}");
+        }
         response.sendError(400);
     }
 
     @ExceptionHandler({SsoException.class})
     public void handleSsoException(SsoException ex, HttpServletResponse response) throws IOException {
-        if (ex.getErrorCode().isLogStackTrace() || log.isDebugEnabled())
-            log.error("Server encountered an SsoException: {}", ex.getMessage(), ex);
-        else
-            log.error("Server encountered an SsoException: {}", ex.getMessage());
+        if (ex.getErrorCode().isLogStackTrace() || log.isDebugEnabled()) {
+            logErrorWithStacktrace(ex, ex.getErrorCode(), "Server encountered an SsoException: {}");
+        } else {
+            logError(ex, ex.getErrorCode(), "Server encountered an SsoException: {}");
+        }
         response.sendError(ex.getErrorCode().getHttpStatusCode());
     }
 
     // These are considered as TECHNICAL_GENERAL errors.
     @ExceptionHandler({Exception.class})
     public void handleAll(Exception ex, HttpServletResponse response) throws IOException {
-        log.error("Server encountered an unexpected error: {}", ex.getMessage(), ex);
+        logErrorWithStacktrace(ex, ErrorCode.TECHNICAL_GENERAL, "Server encountered an unexpected error: {}");
         response.sendError(500);
     }
 
+    private void logErrorWithStacktrace(Exception ex, ErrorCode errorCode, String messageFormat) {
+        log.error(append("error.code", errorCode.name()), messageFormat, ex.getMessage(), ex);
+    }
+
+    private void logError(Exception ex, ErrorCode errorCode, String messageFormat) {
+        log.error(append("error.code", errorCode.name()), messageFormat, ex.getMessage());
+    }
 }

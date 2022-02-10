@@ -9,6 +9,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 import static ee.ria.govsso.session.session.SsoCookie.COOKIE_NAME_GOVSSO;
@@ -27,7 +28,7 @@ class SsoCookieArgumentResolverTest {
     private static final MethodParameter mockMethodParameter = mock(MethodParameter.class);
     private static final NativeWebRequest mockNativeWebRequest = mock(NativeWebRequest.class);
     private static final HttpServletRequest mockHttpServletRequest = mock(HttpServletRequest.class);
-    private static final SecurityConfigurationProperties securityProperties = new SecurityConfigurationProperties("", SSO_COOKIE_SIGNING_SECRET, 3600);
+    private static final SecurityConfigurationProperties securityProperties = new SecurityConfigurationProperties("", SSO_COOKIE_SIGNING_SECRET, 3600, Collections.emptySet());
     private static final SsoCookieArgumentResolver resolver = new SsoCookieArgumentResolver(null, new SsoCookieSigner(securityProperties));
 
     @BeforeAll

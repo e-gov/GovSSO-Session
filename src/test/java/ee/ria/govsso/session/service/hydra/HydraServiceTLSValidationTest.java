@@ -7,13 +7,16 @@ import lombok.RequiredArgsConstructor;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(properties = "govsso.hydra.admin-url=https://hydra.localhost:9001")
+@Import({BuildProperties.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class HydraServiceTLSValidationTest {
 

@@ -15,10 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@Import({BuildProperties.class})
 public abstract class BaseTest {
 
     protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
@@ -97,10 +99,5 @@ public abstract class BaseTest {
         RestAssured.responseSpecification = new ResponseSpecBuilder().expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
         RestAssured.port = port;
         HYDRA_MOCK_SERVER.resetAll();
-    }
-
-    protected String decodeCookieFromBase64(String cookie) {
-        byte[] decodedBytes = Base64.getDecoder().decode(cookie);
-        return new String(decodedBytes);
     }
 }

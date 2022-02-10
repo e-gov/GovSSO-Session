@@ -16,8 +16,8 @@ import java.security.KeyStore;
 @Configuration
 public class HydraConfiguration {
 
-    @Bean("hydraWebClient")
-    public WebClient createHydraWebClient(HydraConfigurationProperties configurationProperties) {
+    @Bean
+    public WebClient hydraWebClient(HydraConfigurationProperties configurationProperties) {
         SslContext sslContext = initSslContext(configurationProperties.tls());
 
         HttpClient httpClient = HttpClient.create()

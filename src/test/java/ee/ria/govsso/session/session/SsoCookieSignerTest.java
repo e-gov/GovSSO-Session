@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -122,7 +123,7 @@ class SsoCookieSignerTest extends BaseTest {
     @Test
     void constructorSsoCookieSigner_WhenInvalidSigningKeyLength_ThrowsTechnicalGeneralError() {
 
-        var securityProperties = new SecurityConfigurationProperties("", "x".repeat(31), 3600);
+        var securityProperties = new SecurityConfigurationProperties("", "x".repeat(31), 3600, Collections.emptySet());
 
 
         SsoException ex = assertThrows(SsoException.class,
@@ -138,7 +139,7 @@ class SsoCookieSignerTest extends BaseTest {
     @Test
     void constructorSsoCookieSigner_WhenNullSigningKey_ThrowsTechnicalGeneralError() {
 
-        var securityProperties = new SecurityConfigurationProperties("", null, 3600);
+        var securityProperties = new SecurityConfigurationProperties("", null, 3600, Collections.emptySet());
 
         SsoException ex = assertThrows(SsoException.class,
                 () -> new SsoCookieSigner(securityProperties));

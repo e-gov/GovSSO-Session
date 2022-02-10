@@ -27,7 +27,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.URL;
 

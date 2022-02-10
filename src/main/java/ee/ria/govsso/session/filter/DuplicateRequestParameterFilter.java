@@ -1,6 +1,5 @@
-package ee.ria.govsso.session.configuration;
+package ee.ria.govsso.session.filter;
 
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-@Component
 public class DuplicateRequestParameterFilter extends OncePerRequestFilter {
 
     @Override
