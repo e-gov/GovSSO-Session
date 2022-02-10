@@ -59,6 +59,10 @@ public class LoginInitController {
         }
         validateLoginRequestInfo(loginRequestInfo);
 
+        if (loginRequestInfo.getOidcContext() != null && ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())) {
+            loginRequestInfo.getOidcContext().setAcrValues(new String[]{"high"});
+        }
+
         if (subject != null && !subject.isEmpty()) {
             if (!loginRequestInfo.isSkip()) {
                 throw new SsoException(TECHNICAL_GENERAL, "Subject exists, therefore login response skip value can not be false");
@@ -83,9 +87,6 @@ public class LoginInitController {
         } else {
             if (loginRequestInfo.isSkip()) {
                 throw new SsoException(TECHNICAL_GENERAL, "Subject is null, therefore login response skip value can not be true");
-            }
-            if (loginRequestInfo.getOidcContext() != null && ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())) {
-                loginRequestInfo.getOidcContext().setAcrValues(new String[]{"high"});
             }
 
             AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(loginRequestInfo.getOidcContext().getAcrValues()[0]);

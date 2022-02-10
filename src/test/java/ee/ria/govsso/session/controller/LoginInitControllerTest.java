@@ -92,14 +92,17 @@ public class LoginInitControllerTest extends BaseTest {
         assertThat(ssoSession.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
     }
 
-    @Test
-    void loginInit_WhenFetchLoginRequestInfoWithSubjectIsSuccessful_CreatesSessionAndOpensView() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "mock_sso_oidc_login_request_with_subject.json",
+            "mock_sso_oidc_login_request_with_subject_without_acr.json"})
+    void loginInit_WhenFetchLoginRequestInfoWithSubjectIsSuccessful_CreatesSessionAndOpensView(String loginRequestMockFile) {
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+                        .withBodyFile("mock_responses/" + loginRequestMockFile)));
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
