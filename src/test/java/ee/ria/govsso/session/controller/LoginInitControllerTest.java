@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
@@ -356,25 +357,6 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLoginResponseRequestUrlContainsPromptNone_ThrowsTechnicalGeneralError() {
-
-        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_url_with_prompt_none.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap());
-    }
-
-    @Test
     void loginInit_WhenLoginResponseRequestUrlDoesntContainPromptConsent_ThrowsUserInputError() {
 
         wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -594,6 +576,177 @@ public class LoginInitControllerTest extends BaseTest {
                         .secured(true)
                         .path("/")
                         .maxAge(securityConfigurationProperties.getCookieMaxAgeSeconds()));
+    }
+
+    // TODO This test will stop working on 2038-xx-xx. Change it to be independent of current time.
+    @Test
+    void loginInit_WhenPromptNone_ExtendSession() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        wireMockServer.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .cookies(emptyMap())
+                .header("Location", Matchers.matchesRegex("https://clienta.localhost:11443/auth/login/test"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_SubjectEmpty_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_subject_empty.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_OidcContextMissing_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_oidc_context_missing.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_TokenMissing_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_token_missing.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_AudienceDoesNotMatchRequestClientId_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_mismatching_client_id.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_TokenSessionIdDoesNotMatchWithRequestSessionId_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_mismatching_token_session_id.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_TokenExpired_ThrowsUserInputError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_token_expired.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginInit_WhenPromptNone_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
+
+        wireMockServer.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .cookies(emptyMap())
+                .body("error", equalTo("TECHNICAL_GENERAL"));
     }
 
     @Nested

@@ -15,7 +15,7 @@ spring:
 
 server:
   # Use same port as docker-compose-all.yml.
-  port: 15080
+  port: 15443
   ssl:
     enabled: true
     key-store-type: PKCS12

@@ -9,5 +9,6 @@ import lombok.Data;
 public class Client {
 
     private String[] redirectUris;
+    private String clientId;
     private String clientName;
 }
