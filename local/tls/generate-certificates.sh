@@ -44,6 +44,7 @@ cp session/*.p12 ../../src/main/resources
 
 # Remove all existing PKCS12 files and copy required PKCS12 files to test resources
 rm -f ../../src/test/resources/*.p12
+cp './session/session.localhost.keystore.p12' '../../src/test/resources'
 cp './session/session.localhost.tara.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.hydra.truststore.p12' '../../src/test/resources'
 cp './hydra/hydra.localhost.keystore.p12' '../../src/test/resources'

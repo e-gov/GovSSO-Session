@@ -3,6 +3,7 @@ package ee.ria.govsso.session.service.tara;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.util.DefaultResourceRetriever;
+import com.nimbusds.jose.util.Resource;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.WellKnownPathComposeStrategy;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -15,10 +16,13 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.logging.ClientRequestLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -49,6 +53,7 @@ import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
 @RequiredArgsConstructor
 public class TaraMetadataService {
 
+    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), "TARA");
     private final TaraConfigurationProperties taraConfigurationProperties;
     @Qualifier("taraTrustContext")
     private final SSLContext trustContext;
@@ -94,12 +99,15 @@ public class TaraMetadataService {
         Issuer issuer = new Issuer(issuerUrl);
         WellKnownPathComposeStrategy strategy = issuerUrl.endsWith("/") ? POSTFIX : INFIX;
         OIDCProviderConfigurationRequest request = new OIDCProviderConfigurationRequest(issuer, strategy);
-        log.info(request.getEndpointURI().toString());
         HTTPRequest httpRequest = request.toHTTPRequest();
         httpRequest.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT); // TODO: Configurable
         httpRequest.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT); // TODO: Configurable
         httpRequest.setSSLSocketFactory(trustContext.getSocketFactory());
+
+        requestLogger.logRequest(request.getEndpointURI().toString(), httpRequest.getMethod().toString());
         HTTPResponse httpResponse = httpRequest.send();
+        requestLogger.logResponse(httpResponse.getStatusCode(), httpResponse.getContent());
+
         JSONObject contentAsJSONObject = httpResponse.getContentAsJSONObject();
         OIDCProviderMetadata metadata = OIDCProviderMetadata.parse(contentAsJSONObject);
 
@@ -142,7 +150,18 @@ public class TaraMetadataService {
                 true,
                 trustContext.getSocketFactory());
         URL jwkSetUri = metadata.getJWKSetURI().toURL();
-        return JWKSet.parse(rr.retrieveResource(jwkSetUri).getContent());
+
+        requestLogger.logRequest(jwkSetUri.toString(), HttpMethod.GET.name());
+        Resource resource;
+        try {
+            resource = rr.retrieveResource(jwkSetUri);
+            requestLogger.logResponse(HttpStatus.OK.value(), resource.getContent());
+        } catch (IOException e) {
+            requestLogger.logResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+            throw e;
+        }
+
+        return JWKSet.parse(resource.getContent());
     }
 
     IDTokenValidator createIdTokenValidator(OIDCProviderMetadata metadata, JWKSet jwkSet) {

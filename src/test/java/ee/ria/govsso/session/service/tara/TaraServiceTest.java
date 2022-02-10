@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.service.tara;
 
+import ch.qos.logback.classic.Level;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -98,6 +99,11 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SsoException ssoException = assertThrows(SsoException.class, () -> taraService.requestIdToken("code"));
 
         assertThat(ssoException.getMessage(), equalTo("Unsigned ID Token"));
+
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+                "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+                "http.response.status_code=200, http.response.body.content=\"{\\\"access_token\\\":\\\"");
     }
 
     @Test
@@ -109,6 +115,11 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SsoException ssoException = assertThrows(SsoException.class, () -> taraService.requestIdToken("code"));
 
         assertThat(ssoException.getMessage(), equalTo("ErrorCode:null, Error description:null, Status Code:404"));
+
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+                "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+                "http.response.status_code=404");
     }
 
     @Test
@@ -120,6 +131,11 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SsoException ssoException = assertThrows(SsoException.class, () -> taraService.requestIdToken("code"));
 
         assertThat(ssoException.getMessage(), equalTo("ErrorCode:null, Error description:null, Status Code:400"));
+
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+                "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+                "http.response.status_code=400");
     }
 
     @Test

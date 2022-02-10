@@ -117,6 +117,8 @@ public class LoginInitController {
         if (idTokenHintClaims == null || idTokenHintClaims.isEmpty()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Id token cannot be empty for session update");
         }
+
+        @SuppressWarnings("unchecked")
         List<String> audiences = (List<String>) idTokenHintClaims.get("aud");
         if (!audiences.contains(loginRequestInfo.getClient().getClientId())) {
             throw new SsoException(ErrorCode.USER_INPUT, "Id token audiences must contain request client id");

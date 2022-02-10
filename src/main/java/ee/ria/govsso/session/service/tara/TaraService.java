@@ -31,6 +31,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.logging.ClientRequestLogger;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
 @RequiredArgsConstructor
 public class TaraService {
 
+    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), "TARA");
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final TaraMetadataService taraMetadataService;
@@ -82,7 +84,10 @@ public class TaraService {
             httpRequest.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT); // TODO: Configurable
             httpRequest.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT); // TODO: Configurable
             httpRequest.setSSLSocketFactory(trustContext.getSocketFactory());
+
+            requestLogger.logRequest(httpRequest.getURL().toString(), httpRequest.getMethod().name());
             HTTPResponse response = httpRequest.send();
+            requestLogger.logResponse(response.getStatusCode(), response.getContent());
 
             TokenResponse tokenResponse = OIDCTokenResponseParser.parse(response);
             if (!tokenResponse.indicatesSuccess()) {

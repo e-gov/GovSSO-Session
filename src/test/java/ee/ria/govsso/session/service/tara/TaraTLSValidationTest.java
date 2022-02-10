@@ -12,7 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.net.ssl.SSLHandshakeException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -41,8 +42,8 @@ public class TaraTLSValidationTest {
             fail("Exception expected");
         } catch (SsoException ex) {
             assertTrue(ex.getCause() instanceof SSLHandshakeException);
-            assertEquals("unable to find valid certification path to requested target",
-                    ex.getCause().getCause().getCause().getCause().getMessage());
+            assertThat("unable to find valid certification path to requested target",
+                    equalTo(ex.getCause().getCause().getCause().getCause().getMessage()));
         } catch (Exception ex) {
             fail("Unexpected exception thrown");
         }
