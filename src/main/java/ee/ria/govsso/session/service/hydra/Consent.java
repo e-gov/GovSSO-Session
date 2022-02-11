@@ -16,5 +16,6 @@ public class Consent {
 
         private String loginSessionId;
         private Context context;
+        private Client client;
     }
 }

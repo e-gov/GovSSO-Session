@@ -18,9 +18,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -63,6 +63,30 @@ public class HydraService {
         }
     }
 
+    public LogoutRequestInfo fetchLogoutRequestInfo(String logoutChallenge) {
+        String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("logout_challenge", logoutChallenge);
+
+        try {
+            LogoutRequestInfo logoutRequestInfo = webclient.get()
+                    .uri(builder.toUriString())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(LogoutRequestInfo.class)
+                    .blockOptional().orElseThrow();
+
+            if (!logoutRequestInfo.getChallenge().equals(logoutChallenge))
+                throw new IllegalStateException("Invalid hydra response");
+            return logoutRequestInfo;
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND || ex.getStatusCode() == HttpStatus.GONE)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
+    }
+
     public ConsentRequestInfo fetchConsentRequestInfo(String consentChallenge) {
         String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/consent";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
@@ -89,40 +113,47 @@ public class HydraService {
         }
     }
 
-    @SneakyThrows
-    public JWT getConsents(String subject, String sessionId) {
-
+    public List<Consent> getConsents(String subject, String sessionId) {
         String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent";
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("subject", subject);
 
-        Consent[] consents = webclient.get()
-                .uri(builder.toUriString())
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(Consent[].class)
-                .blockOptional().orElseThrow();
+        try {
+            List<Consent> validConsents = webclient.get()
+                    .uri(builder.toUriString())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToFlux(Consent.class)
+                    .filter(c -> c.getConsentRequest().getLoginSessionId().equals(sessionId))
+                    .collectList()
+                    .blockOptional().orElseThrow();
 
-        List<Consent> validConsents = new ArrayList<>();
+            if (validConsents.isEmpty()) {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
+            }
 
-        for (Consent consent : consents) {
-            if (consent.getConsentRequest().getLoginSessionId().equals(sessionId))
-                validConsents.add(consent);
+            var taraIdtoken = validConsents.get(0).getConsentRequest().getContext().getTaraIdToken();
+            if (!validConsents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(taraIdtoken))) {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
+            }
+
+            return validConsents;
+        } catch (WebClientResponseException ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
         }
+    }
 
-        if (validConsents.isEmpty()) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
-        } else if (!validConsents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken()))) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
+    public JWT getTaraIdTokenFromConsentContext(String subject, String sessionId) {
+        List<Consent> validConsents = getConsents(subject, sessionId);
+        try {
+            JWT idToken = SignedJWT.parse(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken());
+            if (!isNbfValid(idToken)) {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
+            }
+            return idToken;
+        } catch (ParseException ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Unable to parse ID token", ex);
         }
-
-        JWT idToken = SignedJWT.parse(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken());
-
-        if (!isNbfValid(idToken)) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
-        }
-
-        return idToken;
     }
 
     @SneakyThrows
@@ -155,6 +186,48 @@ public class HydraService {
                 .blockOptional().orElseThrow();
 
         return acceptResponseBody.getRedirectTo();
+    }
+
+    public LogoutAcceptResponseBody acceptLogout(String logoutChallenge) {
+        String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout/accept";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("logout_challenge", logoutChallenge);
+
+        try {
+            return webclient.put()
+                    .uri(builder.toUriString())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(LogoutAcceptResponseBody.class)
+                    .blockOptional().orElseThrow();
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
+    }
+
+    public void rejectLogout(String logoutChallenge) {
+        String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout/reject";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("logout_challenge", logoutChallenge);
+
+        try {
+            webclient.put()
+                    .uri(builder.toUriString())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .blockOptional().orElseThrow();
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+        }
     }
 
     @SneakyThrows
@@ -193,17 +266,31 @@ public class HydraService {
         return consentResponseBody.getRedirectTo();
     }
 
-    public void deleteConsent(String subject, String loginSessionId) {
+    public void deleteConsentByClientSession(String clientId, String subject, String loginSessionId) {
         String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent";
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uri)
+        UriComponentsBuilder query = UriComponentsBuilder.fromUriString(uri)
+                .queryParam("client", clientId)
+                .queryParam("subject", subject)
+                .queryParam("login_session_id", loginSessionId)
+                .queryParam("all", false)
+                .queryParam("trigger_backchannel_logout", true);
+        deleteConsent(query);
+    }
+
+    public void deleteConsentBySubjectSession(String subject, String loginSessionId) {
+        String uri = hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent";
+        UriComponentsBuilder query = UriComponentsBuilder.fromUriString(uri)
                 .queryParam("subject", subject)
                 .queryParam("login_session_id", loginSessionId)
                 .queryParam("all", true)
                 .queryParam("trigger_backchannel_logout", true);
+        deleteConsent(query);
+    }
 
+    private void deleteConsent(UriComponentsBuilder query) {
         try {
             webclient.delete()
-                    .uri(builder.toUriString())
+                    .uri(query.toUriString())
                     .retrieve()
                     .toBodilessEntity()
                     .blockOptional().orElseThrow();

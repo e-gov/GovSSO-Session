@@ -35,7 +35,7 @@ public class LoginReauthenticateController {
         if (loginRequestInfo.getSubject().isEmpty())
             throw new SsoException(ErrorCode.USER_INPUT, "Hydra login request subject must not be empty.");
 
-        hydraService.deleteConsent(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
 
         deleteHydraSessionCookie(request, response);

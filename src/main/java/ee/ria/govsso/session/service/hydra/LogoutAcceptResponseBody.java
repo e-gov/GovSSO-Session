@@ -6,9 +6,7 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class Client {
+public class LogoutAcceptResponseBody {
 
-    private String clientId;
-    private String clientName;
-    private String[] redirectUris;
+    private String redirectTo;
 }

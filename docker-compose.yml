@@ -116,7 +116,7 @@ services:
       # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
       - URLS_LOGIN=https://gateway.localhost:13443/login/init
       - URLS_CONSENT=https://gateway.localhost:13443/consent/init
-      - URLS_LOGOUT=https://gateway.localhost:13443/logout
+      - URLS_LOGOUT=https://gateway.localhost:13443/logout/init
       - URLS_ERROR=https://gateway.localhost:13443/error
       - SERVE_PUBLIC_PORT=8443
       - SERVE_TLS_KEY_PATH=/var/certs/hydra.localhost.key

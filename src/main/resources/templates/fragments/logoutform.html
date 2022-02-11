@@ -1,0 +1,78 @@
+<div class="container" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml">
+    <noscript>
+        <div class="alert alert-error" role="alert">
+            <p><strong th:utext="#{message.warning.noscript}"></strong></p>
+        </div>
+        <br>
+    </noscript>
+
+    <div class="c-tab-login">
+        <main class="c-tab-login__main" role="main">
+            <div aria-labelledby="id-card">
+                <div class="c-tab-login__content">
+                    <div class="c-tab-login__content-wrap">
+                        <div class="c-tab-login__content-icon">
+                            <svg aria-label="" role="img" th:class="'icon icon-id-card'">
+                                <use th:attr="'xlink:href'='#icon-id-card'"></use>
+                            </svg>
+                        </div>
+                        <div class="c-tab-login__content-text">
+                            <div aria-level="2" role="heading">
+                                <h2 th:text="#{label.sso.logout.title(${clientName})}"></h2>
+                            </div>
+                            <p th:text="#{label.sso.logout.active_sessions}"></p>
+                            <p>
+                            <ul>
+                                <li th:each="sessionName : ${activeSessions}">
+                                    <strong th:text="${sessionName}"></strong>
+                                </li>
+                            </ul>
+                            </p>
+                            <p th:text="#{label.sso.logout.choice}"></p>
+                            <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
+                                  role="form">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input th:name="logoutChallenge" th:value="${logoutChallenge}" type="hidden"/>
+                                <button class="c-btn c-btn--primary" formaction="/logout/endsession" role="button"
+                                        th:text="#{label.sso.logout.end_session}"
+                                        type="submit">
+                                    Login
+                                </button>
+                                <button class="c-btn c-btn--cancel" formaction="/logout/continuesession" role="button"
+                                        th:text="#{label.sso.logout.continue_session}"
+                                        type="submit">
+                                    Cancel
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="c-tab-login__footer">
+                        <p><a th:href="@{http://www.thymeleaf/documentation.html}"
+                              th:text="#{label.common.home}">Home</a>
+                        </p>
+                        <p>
+                            <a rel="noopener"
+                               target="_blank" th:href="${#messages.msg('link.sso.help')}"
+                               th:text="${#messages.msg('label.sso.help')}">Help</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
+    <a th:href="@{http://www.thymeleaf/documentation.html}" th:text="#{label.common.home}">Home</a>
+</p>
+<svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns="http://www.w3.org/2000/svg"
+     xmlns:th="http://www.w3.org/1999/xhtml">
+    <defs>
+        <symbol id="icon-id-card"
+                viewBox="0 0 48 32">
+            <title>id-card</title>
+            <path d="M43.080 30.853h-38.173c-2.71 0-4.907-2.197-4.907-4.907v0-21.040c0.008-2.707 2.2-4.899 4.906-4.907h38.174c0.004 0 0.009-0 0.013-0 2.71 0 4.907 2.197 4.907 4.907 0 0 0 0 0 0v0 21.040c0 0 0 0 0 0 0 2.71-2.197 4.907-4.907 4.907-0.005 0-0.009 0-0.014-0h0.001zM4.907 1.68c-1.779 0.008-3.219 1.448-3.227 3.226v21.054c0.008 1.779 1.448 3.219 3.226 3.227h38.174c0 0 0 0 0 0 1.785 0 3.232-1.443 3.24-3.226v-21.067c-0.008-1.784-1.455-3.227-3.24-3.227 0 0-0 0-0 0v0zM25.773 27.2h-1.68v-8.88c0-0.907-0.747-1.653-1.667-1.653h-12.213c-0.933 0-1.667 0.747-1.68 1.653v4.907h-1.667v-4.907c0-1.841 1.492-3.333 3.333-3.333v0h12.227c1.841 0 3.333 1.492 3.333 3.333v0zM16.307 13.52c-2.491-0.008-4.507-2.028-4.507-4.52 0-2.496 2.024-4.52 4.52-4.52s4.52 2.024 4.52 4.52c0 0.005 0 0.009-0 0.014v-0.001c-0.015 2.492-2.039 4.507-4.533 4.507-0 0-0 0-0 0v0zM16.307 6.173c-1.569 0-2.84 1.272-2.84 2.84s1.271 2.84 2.84 2.84v0c1.569 0 2.84-1.271 2.84-2.84s-1.271-2.84-2.84-2.84v0zM28.693 7.24h12.24v1.68h-12.24zM28.693 11.653h12.24v1.68h-12.24z"></path>
+        </symbol>
+    </defs>
+</svg>
+<script defer th:src="@{/scripts/jquery-3.6.0.min.js}"></script>
+<script defer th:src="@{/scripts/main.js}"></script>

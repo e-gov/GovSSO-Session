@@ -31,7 +31,7 @@ public class ContinueSessionController {
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         validateLoginRequestInfo(loginRequestInfo);
 
-        JWT idToken = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         String redirectUrl = hydraService.acceptLogin(loginChallenge, idToken);
 
         return new RedirectView(redirectUrl);

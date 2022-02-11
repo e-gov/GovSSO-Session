@@ -187,7 +187,7 @@ public class LoginInitController {
     }
 
     private JWT getAndValidateIdToken(LoginRequestInfo loginRequestInfo) {
-        JWT idToken = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         try {
             JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
             String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
