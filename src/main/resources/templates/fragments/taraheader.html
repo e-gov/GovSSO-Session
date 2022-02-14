@@ -4,6 +4,22 @@
             <header role="banner">
                 <p th:text="#{label.header.title}"/>
             </header>
+            <nav role="navigation" th:aria-label="#{label.aria.language-selection.navigation}">
+                <ul class="c-lang-list">
+                    <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('et', #locale)}">
+                        <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('et')}"
+                           th:hreflang="et" th:lang="et" th:text="#{label.header.et}">EESTI</a>
+                    </li>
+                    <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('en', #locale)}">
+                        <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('en')}"
+                           th:hreflang="en" th:lang="en" th:text="#{label.header.en}">ENGLISH</a>
+                    </li>
+                    <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('ru', #locale)}">
+                        <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('ru')}"
+                           th:hreflang="ru" th:lang="ru" th:text="#{label.header.ru}">РУССКИЙ</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>

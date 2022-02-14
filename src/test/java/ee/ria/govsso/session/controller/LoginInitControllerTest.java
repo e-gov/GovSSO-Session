@@ -129,11 +129,131 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Authentication service is using a single sign-on (SSO) solution. By continuing, you are confirming your identity"))
+                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
         assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
+    }
+
+    @Test
+    void loginInit_WhenLocaleIsSetToRussian_OpensViewInRussian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("lang", "ru")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Служба аутентификации использует решение единого входа (SSO)."));
+    }
+
+    @Test
+    void loginInit_WhenLocaleIsSetToUnknown_OpensViewInEstonian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("lang", "unknown")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."));
+    }
+
+    @Test
+    void loginInit_WhenLocaleIsSetToUnknown_ThrowsErrorInEstonian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("lang", "fr")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .body("message", equalTo("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+    }
+
+    @Test
+    void loginInit_WhenLocaleIsSetToRussian_ErrorMessageIsInRussian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("lang", "ru")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .body("message", equalTo("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+    }
+
+    @Test
+    void loginInit_WhenLocaleIsLangParameterIsUnknown_ErrorMessageIsInEstonian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .param("lang", "unknown")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .body("message", equalTo("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+    }
+
+    @Test
+    void loginInit_WhenLocaleCookieIsRuLangParameterIsUndefined_ErrorMessageIsInRussian() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie("__Host-LOCALE", "ru")
+                .when()
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .body("message", equalTo("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
     }
 
     @Test

@@ -881,6 +881,40 @@ input[type=number]::-webkit-outer-spin-button {
 	}
 }
 
+.c-lang-list {
+    display: flex;
+}
+@media (max-width: 800px) {
+    .c-lang-list {
+        padding-left: 20px;
+    }
+}
+.c-lang-list__link {
+    display: block;
+    padding: 0 17px;
+    color: #344255;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+.c-lang-list__link:hover {
+    color: #000;
+    text-decoration: underline;
+}
+@media (max-width: 800px) {
+    .c-lang-list__link {
+        padding: 0 10px;
+        font-size: 14px;
+    }
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-center {
+    align-items: center;
+}
 button.link {
   background: none!important;
   border: none;

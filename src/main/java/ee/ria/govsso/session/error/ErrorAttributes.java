@@ -9,8 +9,13 @@ import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
 import java.util.Map;
 
@@ -47,10 +52,16 @@ public class ErrorAttributes extends DefaultErrorAttributes {
     }
 
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode) {
-        Locale locale = new Locale("en"); //TODO
+        Locale locale = getLocale();
         attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(), null, locale));
         attr.put(ERROR_ATTR_INCIDENT_NR, MDC.get(MDC_ATTRIBUTE_TRACE_ID));
         attr.put(ERROR_ATTR_ERROR_CODE, errorCode.name());
+    }
+
+    public Locale getLocale() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
+        return localeResolver.resolveLocale(request);
     }
 
 }

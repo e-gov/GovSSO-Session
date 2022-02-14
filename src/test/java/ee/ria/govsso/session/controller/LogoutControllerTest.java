@@ -104,8 +104,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out of Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*You still have active sessions in the following applications:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){5}Do you want to log out of all applications(?:.*\\r*\\n*)*"));
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on aktiivseid sessioone veel järgmistes rakendustes:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
     }
 
     @Test
@@ -137,8 +137,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out of Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*You still have active sessions in the following applications:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){4}Teenusenimi C(?:.*\\r*\\n*){5}Do you want to log out of all applications(?:.*\\r*\\n*)*"));
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on aktiivseid sessioone veel järgmistes rakendustes:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){4}Teenusenimi C(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
         // For some reason <ul>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi B[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi C[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<\/ul> does not work
     }
 
