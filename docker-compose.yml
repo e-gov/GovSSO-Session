@@ -117,7 +117,7 @@ services:
       - URLS_LOGIN=https://gateway.localhost:13443/login/init
       - URLS_CONSENT=https://gateway.localhost:13443/consent/init
       - URLS_LOGOUT=https://gateway.localhost:13443/logout/init
-      - URLS_ERROR=https://gateway.localhost:13443/error
+      - URLS_ERROR=https://gateway.localhost:13443/error/oidc
       - SERVE_PUBLIC_PORT=8443
       - SERVE_TLS_KEY_PATH=/var/certs/hydra.localhost.key
       - SERVE_TLS_CERT_PATH=/var/certs/hydra.localhost.crt
