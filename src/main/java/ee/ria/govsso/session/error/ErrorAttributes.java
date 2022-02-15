@@ -14,7 +14,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.Locale;
 import java.util.Map;
 
-import static ee.ria.govsso.session.configuration.RequestCorrelationFilter.MDC_ATTRIBUTE_TRACE_ID;
+import static ee.ria.govsso.session.filter.RequestCorrelationFilter.MDC_ATTRIBUTE_TRACE_ID;
 
 @Slf4j
 @Component
