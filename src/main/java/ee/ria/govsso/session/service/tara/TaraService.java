@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.langtag.LangTag;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -32,8 +33,10 @@ import ee.ria.govsso.session.configuration.properties.TaraConfigurationPropertie
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -61,6 +64,7 @@ public class TaraService {
     @Qualifier("taraTrustContext")
     private final SSLContext trustContext;
 
+    @SneakyThrows
     public AuthenticationRequest createAuthenticationRequest(String acrValue) {
         ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
         URI callback = ssoConfigurationProperties.getCallbackUri();
@@ -74,6 +78,7 @@ public class TaraService {
                 .state(state)
                 .nonce(nonce)
                 .acrValues(List.of(new ACR(acrValue)))
+                .uiLocales(List.of(new LangTag(RequestUtil.getLocale().getLanguage())))
                 .build();
     }
 
