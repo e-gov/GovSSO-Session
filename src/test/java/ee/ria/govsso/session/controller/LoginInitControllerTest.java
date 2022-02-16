@@ -121,7 +121,7 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        String ssoCookieValue = given()
+        given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
@@ -129,11 +129,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."))
-                .extract().cookie(COOKIE_NAME_GOVSSO);
-
-        SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
-        assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
+                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."));
     }
 
     @Test

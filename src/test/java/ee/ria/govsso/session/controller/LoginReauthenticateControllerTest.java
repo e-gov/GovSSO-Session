@@ -1,8 +1,6 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.session.SsoCookie;
-import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.matcher.RestAssuredMatchers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +26,9 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 class LoginReauthenticateControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
-    private final SsoCookieSigner ssoCookieSigner;
 
     @Test
     void loginReauthenticate_WhenLoginReauthenticateIsSuccessful_Redirects() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -51,7 +46,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -62,11 +57,9 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_WhenCsrfTokenFormParameterMissing_ThrowsUserInputError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -77,11 +70,9 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_WhenCsrfTokenCookieMissing_ThrowsUserInputError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         given()
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -91,8 +82,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
     }
 
     @Test
-    void loginReauthenticate_WhenSsoCookieMissing_ThrowsUserInputError() {
-
+    void loginReauthenticate_WhenLoginChallengeFormParamIsMissing_ThrowsUserInputError() {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
@@ -101,13 +91,25 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("error", equalTo("USER_COOKIE_MISSING"));
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginReauthenticate_WhenLoginChallengeIncorrectFormat_ThrowsUserInputError() {
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", "incorrect_format_login_challenge_#%")
+                .when()
+                .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
     void loginReauthenticate_WhenDeleteConsentReturns400_ThrowsTechnicalGeneralError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -121,7 +123,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -132,8 +134,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_WhenLoginRequestInfoSubjectEmpty_ThrowsTechnicalGeneralError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -143,7 +143,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -154,8 +154,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_WhenDeleteLoginReturns400_ThrowsTechnicalGeneralError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -173,7 +171,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -184,8 +182,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_IfHydraSessionCookieExists_HydraSessionCookieIsDeleted() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -203,8 +199,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .cookie("oauth2_authentication_session_insecure", "test1234")
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -214,8 +210,6 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
     @Test
     void loginReauthenticate_WhenOriginHeaderIsSet_NoCorsResponseHeadersAreSet() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -233,7 +227,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .header(ORIGIN, "https://clienta.localhost:11443")
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -242,11 +236,5 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .statusCode(302)
                 .headers(emptyMap())
                 .header("Location", Matchers.equalTo("https://hydra.localhost:9000/oauth2/auth?scope=openid&prompt=consent&response_type=code&client_id=openIdDemo&redirect_uri=https://hydra.localhost:9000/oauth/response&state=049d71ea-30cd-4a74-8dcd-47156055d364&nonce=5210b42a-2362-420b-bb81-54796da8c814&ui_locales=et"));
-    }
-
-    private SsoCookie createSsoCookie() {
-        return SsoCookie.builder()
-                .loginChallenge(TEST_LOGIN_CHALLENGE)
-                .build();
     }
 }

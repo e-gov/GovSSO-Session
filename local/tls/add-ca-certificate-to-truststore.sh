@@ -16,4 +16,5 @@ keytool -noprompt \
   -alias "$alias" \
   -file "$certPath" \
   -storepass changeit \
+  -storetype pkcs12 \
   -keystore "$application/$application.localhost.truststore.p12"

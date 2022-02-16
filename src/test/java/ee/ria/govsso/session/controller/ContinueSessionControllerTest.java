@@ -25,13 +25,9 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 class ContinueSessionControllerTest extends BaseTest {
 
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
-    private final SsoCookieSigner ssoCookieSigner;
 
     @Test
     void continueSession_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
-
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -53,7 +49,7 @@ class ContinueSessionControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -64,11 +60,9 @@ class ContinueSessionControllerTest extends BaseTest {
 
     @Test
     void continueSession_WhenCsrfTokenFormParameterMissing_ThrowsUserInputError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -79,11 +73,9 @@ class ContinueSessionControllerTest extends BaseTest {
 
     @Test
     void continueSession_WhenCsrfTokenCookieMissing_ThrowsUserInputError() {
-        SsoCookie ssoCookie = createSsoCookie();
-
         given()
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -93,8 +85,7 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
-    void continueSession_WhenSsoCookieMissing_ThrowsUserInputError() {
-
+    void continueSession_WhenLoginChallengeFormParamIsMissing_ThrowsUserInputError() {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
@@ -103,14 +94,25 @@ class ContinueSessionControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .body("error", equalTo("USER_COOKIE_MISSING"));
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void continueSession_WhenLoginChallengeIncorrectFormat_ThrowsUserInputError() {
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", "incorrect_format_login_challenge_#%")
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
     }
 
     @Test
     void continueSession_WhenFetchLoginRequestInfoSubjectIsEmpty_ThrowsUserInputError() {
-
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -120,7 +122,7 @@ class ContinueSessionControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -131,9 +133,6 @@ class ContinueSessionControllerTest extends BaseTest {
 
     @Test
     void continueSession_WhenFetchLoginRequestInfoIdTokenHintClaimIsNonEmpty_ThrowsUserInputError() {
-
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -143,7 +142,7 @@ class ContinueSessionControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
                 .then()
@@ -154,9 +153,6 @@ class ContinueSessionControllerTest extends BaseTest {
 
     @Test
     void continueSession_WhenOriginHeaderIsSet_NoCorsResponseHeadersAreSet() {
-
-        SsoCookie ssoCookie = createSsoCookie();
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -178,7 +174,7 @@ class ContinueSessionControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .header(ORIGIN, "https://clienta.localhost:11443")
                 .when()
                 .post(AUTH_VIEW_REQUEST_MAPPING)
@@ -187,11 +183,5 @@ class ContinueSessionControllerTest extends BaseTest {
                 .statusCode(302)
                 .headers(emptyMap())
                 .header("Location", Matchers.containsString("/auth/login/test"));
-    }
-
-    private SsoCookie createSsoCookie() {
-        return SsoCookie.builder()
-                .loginChallenge(TEST_LOGIN_CHALLENGE)
-                .build();
     }
 }

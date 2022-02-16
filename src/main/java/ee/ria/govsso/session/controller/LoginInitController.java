@@ -173,11 +173,6 @@ public class LoginInitController {
             model.addObject("clientName", loginRequestInfo.getClient().getClientName());
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
         }
-
-        SsoCookie ssoCookie = SsoCookie.builder()
-                .loginChallenge(loginRequestInfo.getChallenge())
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, ssoCookieSigner.getSignedCookieValue(ssoCookie));
         return model;
     }
 

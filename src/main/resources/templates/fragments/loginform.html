@@ -24,6 +24,7 @@
                             <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
                                   role="form">
                                 <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
+                                <input th:name="loginChallenge" th:value="${loginChallenge}" type="hidden"/>
                                 <button class="c-btn c-btn--primary" formaction="/login/continuesession" role="button"
                                         th:text="#{label.sso.continue}"
                                         type="submit">

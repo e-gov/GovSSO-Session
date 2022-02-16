@@ -11,6 +11,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
+import static ee.ria.govsso.session.controller.LoginReauthenticateController.LOGIN_REAUTHENTICATE_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.LoginRejectController.LOGIN_REJECT_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -42,12 +43,26 @@ class LoginRejectControllerTest extends BaseTest {
     }
 
     @Test
-    void loginReject_WhenLoginChallengeFormParamIsMissing_ThrowsUserInputOrExpiredError() {
+    void loginReject_WhenLoginChallengeFormParamIsMissing_ThrowsUserInputError() {
 
         given()
                 .when()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .post(LOGIN_REJECT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+    }
+
+    @Test
+    void loginReject_WhenLoginChallengeIncorrectFormat_ThrowsUserInputError() {
+        given()
+                .when()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", "incorrect_format_login_challenge_#%")
                 .post(LOGIN_REJECT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
