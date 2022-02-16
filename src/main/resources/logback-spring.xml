@@ -28,12 +28,12 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log.files.dir}/GovssoSessionService.%d{yyyy-MM-dd,GMT}.log</file>
+        <file>${log.files.dir}/GovssoSession.%d{yyyy-MM-dd,GMT}.log</file>
         <!-- Support multiple-JVM writing to the same log file -->
         <prudent>true</prudent>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.files.dir}/GovssoSessionService.%d{yyyy-MM-dd,GMT}.log</fileNamePattern>
+            <fileNamePattern>${log.files.dir}/GovssoSession.%d{yyyy-MM-dd,GMT}.log</fileNamePattern>
             <maxHistory>${log.files.max.count}</maxHistory>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
