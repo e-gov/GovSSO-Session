@@ -24,7 +24,7 @@
   "post_logout_redirect_uris": [
     "https://clientb.localhost:12443"
   ],
-  "backchannel_logout_uri": "https://clientb.localhost:12443/oauth/logout",
+  "backchannel_logout_uri": "https://clientb.localhost:12443/session/logout",
   "scope": [
     "openid"
   ],
