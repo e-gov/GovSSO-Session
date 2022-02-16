@@ -3,6 +3,11 @@ serve:
     access_log:
       disable_for_health: true
     port: 4445
+  tls:
+    cert:
+      path: /var/certs/hydra.localhost.crt
+    key:
+      path: /var/certs/hydra.localhost.key
   cookies:
     same_site_mode: None
   public:
@@ -27,6 +32,26 @@ webfinger:
       - given_name
       - sid
       - sub
+urls:
+  login: https://gateway.localhost:13443/login/init
+  consent: https://gateway.localhost:13443/consent/init
+  logout: https://gateway.localhost:13443/logout/init
+  error: https://gateway.localhost:13443/error/oidc
+  self:
+    issuer: https://gateway.localhost:13443/
+client.tls:
+  min_version: tls12
+  max_version: tls13
+  cipher_suites:
+    - TLS_AES_128_GCM_SHA256
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_AES_256_GCM_SHA384
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+    - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
 strategies:
   scope: exact
 ttl:

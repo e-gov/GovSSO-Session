@@ -28,4 +28,5 @@ keytool -noprompt \
   -alias "$ca.localhost" \
   -file "$ca/$ca.localhost.crt" \
   -storepass changeit \
+  -storetype pkcs12 \
   -keystore "$application/$filename"
