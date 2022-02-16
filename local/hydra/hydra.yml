@@ -1,10 +1,14 @@
-log:
-  leak_sensitive_values: true
-secrets:
-  system:
-    - youReallyNeedToChangeThis
-sqa:
-  opt_out: true
+serve:
+  admin:
+    access_log:
+      disable_for_health: true
+    port: 4445
+  cookies:
+    same_site_mode: None
+  public:
+    access_log:
+      disable_for_health: true
+    port: 8443
 webfinger:
   oidc_discovery:
     supported_claims:
@@ -23,3 +27,20 @@ webfinger:
       - given_name
       - sid
       - sub
+strategies:
+  scope: exact
+ttl:
+  access_token: 1s
+  refresh_token: 1s
+  id_token: 15m
+  auth_code: 30s
+  login_consent_request: 1h
+secrets:
+  cookie:
+    - youReallyNeedToChangeThis
+  system:
+    - youReallyNeedToChangeThis
+sqa:
+  opt_out: true
+log:
+  format: json

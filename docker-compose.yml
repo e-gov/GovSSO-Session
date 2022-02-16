@@ -111,16 +111,14 @@ services:
         limits:
           memory: 250M
     environment:
+      - SERVE_TLS_CERT_PATH=/var/certs/hydra.localhost.crt
+      - SERVE_TLS_KEY_PATH=/var/certs/hydra.localhost.key
       - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
-      - URLS_SELF_ISSUER=https://gateway.localhost:13443/
-      # Configure Ory Hydra to redirect to session-service endpoints by hostname that browser running on host machine can access ("localhost").
       - URLS_LOGIN=https://gateway.localhost:13443/login/init
       - URLS_CONSENT=https://gateway.localhost:13443/consent/init
       - URLS_LOGOUT=https://gateway.localhost:13443/logout/init
       - URLS_ERROR=https://gateway.localhost:13443/error/oidc
-      - SERVE_PUBLIC_PORT=8443
-      - SERVE_TLS_KEY_PATH=/var/certs/hydra.localhost.key
-      - SERVE_TLS_CERT_PATH=/var/certs/hydra.localhost.crt
+      - URLS_SELF_ISSUER=https://gateway.localhost:13443/
     networks:
       default:
         aliases:
