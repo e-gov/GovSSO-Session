@@ -52,8 +52,7 @@ public class LoginInitController {
     public ModelAndView loginInit(
             @RequestParam(name = "login_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
-            @RequestParam(name = "lang", required = false)
-            @Pattern(regexp = "(et|en|ru)", message = "supported values are: 'et', 'en', 'ru'") String language,
+            @RequestParam(name = "lang", required = false) String language,
             HttpServletResponse response) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
@@ -81,6 +80,9 @@ public class LoginInitController {
     }
 
     private String getDefaultOrRequestedLocale(LoginRequestInfo loginRequestInfo) {
+        if (loginRequestInfo.getOidcContext() == null) {
+            return "et";
+        }
         return loginRequestInfo.getOidcContext().getUiLocales()
                 .stream()
                 .filter(SUPPORTED_LANGUAGES)

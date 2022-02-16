@@ -23,8 +23,12 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.util.Date;
@@ -50,6 +54,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests under appropriate *Controller tests
     private final TaraService taraService;
     private final TaraConfigurationProperties taraConfigurationProperties;
+
+    @BeforeAll
+    static void setUp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
 
     @Test
     void createAuthenticationRequest_WhenCreated_ContainsValidRequestParameters() {

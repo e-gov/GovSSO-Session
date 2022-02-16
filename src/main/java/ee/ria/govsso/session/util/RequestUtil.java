@@ -17,6 +17,9 @@ public class RequestUtil {
     public Locale getLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
+        if (localeResolver == null) {
+            return null;
+        }
         return localeResolver.resolveLocale(request);
     }
 

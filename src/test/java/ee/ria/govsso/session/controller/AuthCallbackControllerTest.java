@@ -19,10 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.util.Date;
@@ -49,6 +53,12 @@ class AuthCallbackControllerTest extends BaseTest {
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final TaraService taraService;
     private final SsoCookieSigner ssoCookieSigner;
+
+    @BeforeAll
+    static void setUp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
 
     @Test
     void authCallback_WhenTokenRequestAndAcceptRequestAreSuccessful_Redirects() {

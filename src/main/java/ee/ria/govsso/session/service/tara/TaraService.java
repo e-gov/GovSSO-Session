@@ -5,6 +5,7 @@ import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.langtag.LangTag;
+import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -46,6 +47,7 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
@@ -78,7 +80,7 @@ public class TaraService {
                 .state(state)
                 .nonce(nonce)
                 .acrValues(List.of(new ACR(acrValue)))
-                .uiLocales(List.of(new LangTag(RequestUtil.getLocale().getLanguage())))
+                .uiLocales(getUiLocales())
                 .build();
     }
 
@@ -129,6 +131,15 @@ public class TaraService {
         } catch (JOSEException ex) {
             throw new SsoException("Unable to parse ID Token", ex);
         }
+    }
+
+    private List<LangTag> getUiLocales() throws LangTagException {
+        List<LangTag> uiLocales = null;
+        Locale locale = RequestUtil.getLocale();
+        if (locale != null) {
+            uiLocales = List.of(new LangTag(locale.getLanguage()));
+        }
+        return uiLocales;
     }
 
     private TokenRequest createTokenRequest(String code) {
