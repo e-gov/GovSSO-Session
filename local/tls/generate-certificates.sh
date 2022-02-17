@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Recursively remove all directories from current path
 cd "$(command dirname -- "${0}")" || exit
@@ -52,4 +52,5 @@ cp './tara/tara.localhost.keystore.p12' '../../src/test/resources'
 
 echo "--------------------------- Process finished"
 # Prevents script window to be closed after completion
+echo -e "\nPress any key to exit the script."
 read -rn1

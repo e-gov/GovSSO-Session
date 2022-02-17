@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 caName=$1
 if [ -z "$caName" ]; then

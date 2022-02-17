@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ca=$1
 if [ -z "$ca" ]; then
@@ -67,3 +67,8 @@ keytool -noprompt \
   -file "$ca/$ca.localhost.crt" \
   -storepass changeit \
   -keystore "$applicationName/$host.keystore.p12"
+
+# TODO: Find a better solution than making the keys readable by everyone.
+# Make the files readable by all users inside containers. Required for 'ory' user in hydra container.
+chmod 644 "$applicationName"/*
+chmod 644 "$ca"/*
