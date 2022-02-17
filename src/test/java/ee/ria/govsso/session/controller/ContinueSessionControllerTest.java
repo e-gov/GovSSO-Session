@@ -1,8 +1,6 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.session.SsoCookie;
-import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
