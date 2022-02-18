@@ -9,6 +9,7 @@ import ee.ria.govsso.session.service.hydra.LogoutAcceptResponseBody;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.constraints.Pattern;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Validated
@@ -39,27 +41,33 @@ public class LogoutController {
                                    @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
 
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
+        validateLogoutRequestInfo(logoutRequestInfo);
 
-        if (logoutRequestInfo.getRpInitiated()) {
-            List<Consent> consents = hydraService.getConsents(logoutRequestInfo.getSubject(), logoutRequestInfo.getSessionId());
+        String subject = logoutRequestInfo.getSubject();
+        String sessionId = logoutRequestInfo.getSessionId();
+        String requestClientId = logoutRequestInfo.getClient().getClientId();
+        List<Consent> consents = hydraService.getConsents(subject, sessionId);
 
-            boolean isValidForAutoLogout = consents.size() <= 1;
-            if (isValidForAutoLogout) {
-                LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
-                return new ModelAndView("redirect:" + logoutAcceptResponse.getRedirectTo());
-            } else {
-                hydraService.deleteConsentByClientSession(logoutRequestInfo.getClient().getClientId(),
-                        logoutRequestInfo.getSubject(), logoutRequestInfo.getSessionId());
-                return getLogoutView(logoutRequestInfo, consents);
-            }
-        } else {
-            throw new SsoException(ErrorCode.USER_INPUT, "Logout not initiated by relying party");
+        if (consents.isEmpty() || consentExistsOnlyForRequestClient(consents, requestClientId)) {
+            LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
+            return new ModelAndView("redirect:" + logoutAcceptResponse.getRedirectTo());
         }
+
+        Optional<Consent> clientConsent = consents.stream()
+                .filter(c -> c.getConsentRequest().getClient().getClientId().equals(requestClientId))
+                .findFirst();
+        if (clientConsent.isPresent()) {
+            hydraService.deleteConsentByClientSession(requestClientId, subject, sessionId);
+        }
+        return getLogoutView(logoutRequestInfo, consents);
     }
 
     @PostMapping(value = LOGOUT_END_SESSION_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView endSession(@ModelAttribute("logoutChallenge")
                                    @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
+
+        LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
+        validateLogoutRequestInfo(logoutRequestInfo);
 
         LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
         return new RedirectView(logoutAcceptResponse.getRedirectTo());
@@ -70,14 +78,37 @@ public class LogoutController {
                                         @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
 
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(logoutRequestInfo.getRequestUrl());
-        String postLogoutRedirectUri = builder.build().getQueryParams().getFirst("post_logout_redirect_uri");
-        if (postLogoutRedirectUri == null || postLogoutRedirectUri.isBlank()) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Invalid post logout redirect URI");
-        }
+        validateLogoutRequestInfo(logoutRequestInfo);
 
         hydraService.rejectLogout(logoutChallenge);
+        String postLogoutRedirectUri = getPostLogoutRedirectUriFromRequestUrl(logoutRequestInfo.getRequestUrl());
         return new RedirectView(postLogoutRedirectUri);
+    }
+
+    private void validateLogoutRequestInfo(LogoutRequestInfo logoutRequestInfo) {
+        if (!logoutRequestInfo.getRpInitiated()) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Logout not initiated by relying party");
+        }
+
+        String postLogoutRedirectUri = getPostLogoutRedirectUriFromRequestUrl(logoutRequestInfo.getRequestUrl());
+        if (StringUtils.isBlank(postLogoutRedirectUri)) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Invalid post logout redirect URI");
+        }
+    }
+
+    private String getPostLogoutRedirectUriFromRequestUrl(String requestUrl) {
+        return UriComponentsBuilder.fromUriString(requestUrl)
+                .build()
+                .getQueryParams()
+                .getFirst("post_logout_redirect_uri");
+    }
+
+    private boolean consentExistsOnlyForRequestClient(List<Consent> consents, String requestClientId) {
+        if (consents.size() == 1) {
+            String consentClientId = consents.get(0).getConsentRequest().getClient().getClientId();
+            return consentClientId.equals(requestClientId);
+        }
+        return false;
     }
 
     private ModelAndView getLogoutView(LogoutRequestInfo logoutRequestInfo, List<Consent> consents) {

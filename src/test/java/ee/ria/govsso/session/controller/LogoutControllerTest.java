@@ -17,9 +17,12 @@ import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.LogoutController.LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.LogoutController.LOGOUT_END_SESSION_REQUEST_MAPPING;
@@ -73,6 +76,38 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", "https://clienta.localhost:11443");
+    }
+
+    @Test
+    void logoutInit_WhenClientLogoutRequestButSingleConsentIsNotForRequestClient_ReturnsLogoutView() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_client_b.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-b&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on aktiivseid sessioone veel järgmistes rakendustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
     }
 
     @Test
@@ -162,6 +197,28 @@ class LogoutControllerTest extends BaseTest {
         verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
         assertThat(exceptionCaptor.getValue().getMessage(),
                 equalTo("Logout not initiated by relying party"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"missing", "blank"})
+    void logoutInit_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_%s_post_logout_redirect_uri.json".formatted(postLogoutRedirectUri))));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
+        assertThat(exceptionCaptor.getValue().getMessage(), startsWith("Invalid post logout redirect URI"));
     }
 
     @ParameterizedTest
@@ -301,6 +358,61 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
+    void logoutInit_WhenGetConsentsReturnsNoRequestClientConsent_PerformsNoDeleteConsentRequest() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_client_b.json")));
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on aktiivseid sessioone veel järgmistes rakendustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+
+        HYDRA_MOCK_SERVER.verify(exactly(0), deleteRequestedFor(urlPathMatching("/oauth2/auth/sessions/consent")));
+    }
+
+    @Test
+    void logoutInit_WhenGetConsentsReturnsRequestClientConsent_PerformsDeleteConsentRequest() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_client_b.json")));
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-b&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on aktiivseid sessioone veel järgmistes rakendustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+    }
+
+    @Test
     void logoutInit_WhenGetConsentsRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
@@ -392,6 +504,12 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void endSession_WhenLogoutAccepted_ReturnsRedirect() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -431,7 +549,60 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
+    void endSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_rp_initiated_false.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
+        assertThat(exceptionCaptor.getValue().getMessage(), equalTo("Logout not initiated by relying party"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"missing", "blank"})
+    void endSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_%s_post_logout_redirect_uri.json".formatted(postLogoutRedirectUri))));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
+        assertThat(exceptionCaptor.getValue().getMessage(), startsWith("Invalid post logout redirect URI"));
+    }
+
+    @Test
     void endSession_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)));
@@ -454,6 +625,12 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void endSession_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)));
@@ -519,6 +696,29 @@ class LogoutControllerTest extends BaseTest {
                 equalTo("continueSession.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""));
     }
 
+    @Test
+    void continueSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_rp_initiated_false.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
+        assertThat(exceptionCaptor.getValue().getMessage(), equalTo("Logout not initiated by relying party"));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"missing", "blank"})
     void continueSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) throws IOException {
@@ -536,8 +736,8 @@ class LogoutControllerTest extends BaseTest {
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .body("error", equalTo("TECHNICAL_GENERAL"));
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
 
         verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
         assertThat(exceptionCaptor.getValue().getMessage(),

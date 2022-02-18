@@ -4,6 +4,10 @@
       "context": {
         "tara_id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRhcmFtb2NrIiwidHlwIjoiSldUIn0.eyJqdGkiOiIwMDEiLCJpc3MiOiJodHRwczovL3RhcmEubG9jYWxob3N0OjE1NDQzIiwiYXVkIjoiZ292c3NvIiwiZXhwIjoxNjM5NTUxMTQ1LCJpYXQiOjE2Mzk1NTEwODUsIm5iZiI6MTYzOTU1MTA4NSwic3ViIjoiSXNpa3Vrb29kMyIsInByb2ZpbGVfYXR0cmlidXRlcyI6eyJkYXRlX29mX2JpcnRoIjoiMTk2MS0wNy0xMiIsImdpdmVuX25hbWUiOiJFZXNuaW1pMyIsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMifSwiYW1yIjpbIm1JRCJdLCJzdGF0ZSI6InRvOEJYYlFsS0MxMWhBamlUdmxkWUlCSWhzVHNEN0tsZEg4Y0RaYkpfSUkiLCJub25jZSI6ImNQalJkSEVUSzhTZG45UEdtdlpjVEdaWG5MQVpwMEhPYlhoVjBDM2c3ZTQiLCJhY3IiOiJoaWdoIn0.irzFM-GHglKW378pOgT97y6Qul-WHAX6SKD9aBrP3yjZ_nvAmiH5_uJ4jAfd13chtPe8jlmhb6WHxciQJF8LszfIzp6U4E3J4F-R7HJT9QkbHKYiRfSJlmJNpBaGniTfKtdT0d7qsTz2_FX1xN01nrvuIUa84UvH__jbAfXJAE2WoIytNSCL8sxBPZSdfih2nEBGu0qrfHCHl8tdM-UbgIS-Km_Y8udI1Fva6wH99cVFcOPHBcujVmsGHhk6Q3agqt0V6sK50K-eQR1RzV0-qyIJLThJb3dEgkO4vQE1WY2n3fM9xSI18ei7J5XtkLUhF1-4GtKn5Qxaiz3vm1EyHw"
       },
+      "client": {
+        "client_id": "client-a",
+        "client_name": "Teenusenimi A"
+      },
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
     }
   }

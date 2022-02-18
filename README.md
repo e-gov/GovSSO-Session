@@ -26,7 +26,11 @@ TODO What this application does.
 1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from
    session-service when it's running locally (not in Docker Compose). It's not needed for web browsers as popular
    browsers already have built-in support for resolving `*.localhost` subdomains.
-   **NB! Also have to change 'session' proxy_pass hosts to 'host.docker.internal' in local/gateway/nginx.conf.**
+   **NB! Also add given lines to docker-compose.yml gateway configuration with your local ip address.**
+   ```shell
+   extra_hosts:
+     - "session:<your-local-ip-address>"
+   ```
 2. ```shell
    docker compose up
    docker compose stop session
@@ -101,7 +105,7 @@ TODO
 
 | Parameter        | Mandatory | Default value | Description, example |
 | :---------------- | :---------- | :---------- | :---------------- |
-| `govsso.base-url` | Yes | | Base URL of the SSO Session service, for example: https://session.localhost:15443/ |
+| `govsso.base-url` | Yes | | Base URL of the SSO gateway service, for example: https://gateway.localhost:13443/ |
 | `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
 
