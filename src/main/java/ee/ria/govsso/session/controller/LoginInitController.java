@@ -12,7 +12,7 @@ import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
-import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -33,7 +34,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 
@@ -44,7 +44,6 @@ import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 public class LoginInitController {
 
     public static final String LOGIN_INIT_REQUEST_MAPPING = "/login/init";
-    private static final Predicate<String> SUPPORTED_LANGUAGES = java.util.regex.Pattern.compile("(?i)(et|en|ru)").asMatchPredicate();
 
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
@@ -55,19 +54,21 @@ public class LoginInitController {
             @RequestParam(name = "login_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
             @RequestParam(name = "lang", required = false) String language,
+            @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
             HttpServletRequest request,
             HttpServletResponse response) {
 
+
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
+        if (language == null && localeCookie == null) {
+            //Set locale as early as possible so it could be used by error messages as much as possible.
+            LocaleUtil.setLocale(loginRequestInfo);
+        }
         validateLoginRequestInfo(loginRequestInfo);
 
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
             oidcContext.setAcrValues(new String[]{"high"});
-        }
-
-        if (language == null) {
-            RequestUtil.setLocale(getDefaultOrRequestedLocale(loginRequestInfo));
         }
 
         if (loginRequestInfo.getRequestUrl().contains("prompt=none")) {
@@ -85,17 +86,6 @@ public class LoginInitController {
                 return sessionContinuationView(loginRequestInfo, idToken);
             }
         }
-    }
-
-    private String getDefaultOrRequestedLocale(LoginRequestInfo loginRequestInfo) {
-        if (loginRequestInfo.getOidcContext() == null) {
-            return "et";
-        }
-        return loginRequestInfo.getOidcContext().getUiLocales()
-                .stream()
-                .filter(SUPPORTED_LANGUAGES)
-                .findFirst()
-                .orElse("et");
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {

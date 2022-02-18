@@ -3,6 +3,8 @@ package ee.ria.govsso.session.controller;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.error.ErrorHandler;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.session.SsoCookie;
+import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,9 @@ import static org.mockito.Mockito.verify;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class LogoutControllerTest extends BaseTest {
     public static final String TEST_LOGOUT_CHALLENGE = "3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931";
+    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
+
+    private final SsoCookieSigner ssoCookieSigner;
 
     @SpyBean
     private ErrorHandler errorHandler; // TODO GSSO-265 Must check but SpyBean creates new application context, so maybe create mock log appender instead for detailed exception message assertions.
@@ -49,6 +54,7 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenValidSingleClientLogoutRequest_ReturnsRedirect() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
@@ -71,6 +77,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -107,11 +114,12 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
     }
 
     @Test
     void logoutInit_WhenValidMultipleClientLogoutRequest_ReturnsLogoutView() {
+        SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
@@ -135,17 +143,186 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
                 .statusCode(200)
                 .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+    }
+
+    @Test
+    void logoutInit_WhenLocaleIsSetToRussian_ReturnsLogoutViewInRussian() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .param("lang", "ru")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Вы вышли из Teenusenimi A"));
+    }
+
+    @Test
+    void logoutInit_WhenLocaleFromHydraIsRussian_ReturnsLogoutViewInRussian() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_russian_locale.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Вы вышли из Teenusenimi A"));
+    }
+
+    @Test
+    void logoutInit_WhenMultipleLocalesFromHydra_ReturnsLogoutViewInRussian() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_multiple_locales.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Вы вышли из Teenusenimi A"));
+    }
+
+    @Test
+    void logoutInit_WhenLocaleFromHydraIsRussianAndLocaleFromRequestParamIsEstonian_ReturnsLogoutViewInEstonian() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .param("lang", "et")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"));
+    }
+
+
+    @Test
+    void logoutInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEstonian_ReturnsLogoutViewInEstonian() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .cookie("__Host-LOCALE", "et")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"));
     }
 
     @Test
     void logoutInit_WhenUnorderedDuplicateListOfConsents_ReturnsLogoutViewWithOrderedSessionNames() {
-
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -173,12 +350,14 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>2</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*){5}Teenusenimi B(?:.*\\r*\\n*){4}Teenusenimi C(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>2</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Teenusenimi C(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
         // For some reason <ul>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi B[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi C[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<\/ul> does not work
     }
 
     @Test
     void logoutInit_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -188,6 +367,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -224,10 +404,12 @@ class LogoutControllerTest extends BaseTest {
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "00000000-1111-2222-3333-4444444444445", "00000000-1111-2222-3333444444444444", "3C3EF85A-3D8B-4EA2-BB53-B66BC5BD1931"})
     void logoutInit_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
 
         given()
                 .param("logout_challenge", logoutChallenge)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -269,6 +451,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenFetchLogoutRequestInfoRespondsWith404_ThrowsUserInputError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)));
@@ -276,6 +460,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -289,6 +474,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenFetchLogoutRequestInfoRespondsWith410_ThrowsUserInputError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(410)));
@@ -296,6 +483,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -309,6 +497,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenFetchLogoutRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)));
@@ -316,6 +506,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -329,6 +520,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenGetConsentsReturnsEmptyList_ReturnsRedirect() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -350,6 +543,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -378,7 +572,7 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
 
         HYDRA_MOCK_SERVER.verify(exactly(0), deleteRequestedFor(urlPathMatching("/oauth2/auth/sessions/consent")));
     }
@@ -409,11 +603,13 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*){5}Teenusenimi A(?:.*\\r*\\n*){5}Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
     }
 
     @Test
     void logoutInit_WhenGetConsentsRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -427,6 +623,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -440,6 +637,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -459,6 +658,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -472,6 +672,8 @@ class LogoutControllerTest extends BaseTest {
 
     @Test
     void logoutInit_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+        SsoCookie ssoCookie = createSsoCookie();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -491,6 +693,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
@@ -866,5 +1069,11 @@ class LogoutControllerTest extends BaseTest {
         verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
         assertThat(exceptionCaptor.getValue().getMessage(),
                 equalTo("500 Internal Server Error from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/reject?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+    }
+
+    private SsoCookie createSsoCookie() {
+        return SsoCookie.builder()
+                .loginChallenge(TEST_LOGIN_CHALLENGE)
+                .build();
     }
 }

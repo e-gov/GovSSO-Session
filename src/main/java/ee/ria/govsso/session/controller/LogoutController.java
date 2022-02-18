@@ -7,12 +7,17 @@ import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LogoutAcceptResponseBody;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
+import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +30,9 @@ import javax.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Optional;
 
+import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LOCALE;
+import static ee.ria.govsso.session.util.LocaleUtil.SUPPORTED_LANGUAGES;
+
 @Slf4j
 @Validated
 @Controller
@@ -34,14 +42,32 @@ public class LogoutController {
     public static final String LOGOUT_END_SESSION_REQUEST_MAPPING = "/logout/endsession";
     public static final String LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING = "/logout/continuesession";
     public static final String REGEXP_LOGOUT_CHALLENGE = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
+
     private final HydraService hydraService;
 
     @GetMapping(value = LOGOUT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
+    @SneakyThrows
     public ModelAndView logoutInit(@RequestParam(name = "logout_challenge")
-                                   @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
+                                   @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge,
+                                   @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
+                                   @RequestParam(name = "lang", required = false) String language) {
 
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
         validateLogoutRequestInfo(logoutRequestInfo);
+
+        String requestUrl = logoutRequestInfo.getRequestUrl();
+        NameValuePair localeParameter = new URIBuilder(requestUrl).getQueryParams()
+                .stream()
+                .filter(x -> x.getName().equals("ui_locales"))
+                .findFirst()
+                .orElse(null);
+
+        if (language == null && localeCookie == null && localeParameter != null) {
+            //Set locale as early as possible so it could be used by error messages as much as possible.
+            List<String> locales = List.of(localeParameter.getValue().split(" "));
+            String locale = locales.stream().filter(SUPPORTED_LANGUAGES).findFirst().orElse(DEFAULT_LOCALE);
+            LocaleUtil.setLocale(locale);
+        }
 
         String subject = logoutRequestInfo.getSubject();
         String sessionId = logoutRequestInfo.getSessionId();

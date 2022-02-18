@@ -34,7 +34,7 @@ import ee.ria.govsso.session.configuration.properties.TaraConfigurationPropertie
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
-import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -135,7 +135,7 @@ public class TaraService {
 
     private List<LangTag> getUiLocales() throws LangTagException {
         List<LangTag> uiLocales = null;
-        Locale locale = RequestUtil.getLocale();
+        Locale locale = LocaleUtil.getLocale();
         if (locale != null) {
             uiLocales = List.of(new LangTag(locale.getLanguage()));
         }

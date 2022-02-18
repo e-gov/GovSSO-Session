@@ -1,7 +1,7 @@
 package ee.ria.govsso.session.error;
 
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -48,7 +48,7 @@ public class ErrorAttributes extends DefaultErrorAttributes {
     }
 
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode) {
-        Locale locale = RequestUtil.getLocale();
+        Locale locale = LocaleUtil.getLocale();
         attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(), null, locale));
         attr.put(ERROR_ATTR_INCIDENT_NR, MDC.get(MDC_ATTRIBUTE_TRACE_ID));
         attr.put(ERROR_ATTR_ERROR_CODE, errorCode.name());
