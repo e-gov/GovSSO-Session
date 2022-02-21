@@ -129,7 +129,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."))
+                .body(containsString("Eesnimi3 Perekonnanimi3 test1***"));
     }
 
     @Test
