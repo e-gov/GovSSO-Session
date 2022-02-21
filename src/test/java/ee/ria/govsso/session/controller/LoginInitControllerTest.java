@@ -129,7 +129,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Служба аутентификации использует решение единого входа (SSO)."));
+                .body(containsString("аутентификации использует решение единого входа (SSO)."));
     }
 
     @Test
@@ -181,7 +181,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust."));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."));
     }
 
     @Test
