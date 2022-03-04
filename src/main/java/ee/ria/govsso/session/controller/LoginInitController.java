@@ -11,6 +11,7 @@ import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
+import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.thymeleaf.util.ArrayUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.text.ParseException;
@@ -53,6 +55,7 @@ public class LoginInitController {
             @RequestParam(name = "login_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
             @RequestParam(name = "lang", required = false) String language,
+            HttpServletRequest request,
             HttpServletResponse response) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
@@ -68,14 +71,19 @@ public class LoginInitController {
         }
 
         if (loginRequestInfo.getRequestUrl().contains("prompt=none")) {
-            return updateSession(loginRequestInfo);
+            return updateSession(loginRequestInfo, request, response);
         }
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             return authenticateWithTara(loginRequestInfo, response);
         } else {
-            return renderSessionContinuationForm(loginRequestInfo, response);
+            JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+            if (idToken == null) {
+                return reauthenticate(loginRequestInfo, request, response);
+            } else {
+                return sessionContinuationView(loginRequestInfo, idToken);
+            }
         }
     }
 
@@ -118,11 +126,16 @@ public class LoginInitController {
         }
     }
 
-    private ModelAndView updateSession(LoginRequestInfo loginRequestInfo) {
+    private ModelAndView updateSession(LoginRequestInfo loginRequestInfo, HttpServletRequest request, HttpServletResponse response) {
         validateLoginRequestInfoAgainstToken(loginRequestInfo);
-        JWT idToken = getAndValidateIdToken(loginRequestInfo);
-        String redirectUrl = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
-        return new ModelAndView("redirect:" + redirectUrl);
+        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        if (idToken == null) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
+        } else {
+            validateIdToken(loginRequestInfo, idToken);
+            String redirectUrl = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
+            return new ModelAndView("redirect:" + redirectUrl);
+        }
     }
 
     private void validateLoginRequestInfoAgainstToken(LoginRequestInfo loginRequestInfo) {
@@ -144,7 +157,7 @@ public class LoginInitController {
             throw new SsoException(ErrorCode.USER_INPUT, "Id token audiences must contain request client id");
         }
         if (!idTokenHintClaims.get("sid").equals(loginRequestInfo.getSessionId())) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Id token session id must equal request session id");
+            throw new SsoException(ErrorCode.USER_INPUT, "Id token session id must equal request session id"); // TODO: Re-Authenticate?
         }
 
         Integer tokenExpirationDateInSeconds = (Integer) idTokenHintClaims.get("exp");
@@ -177,8 +190,8 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + authenticationRequest.toURI().toString());
     }
 
-    private ModelAndView renderSessionContinuationForm(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
-        JWT idToken = getAndValidateIdToken(loginRequestInfo);
+    private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
+        validateIdToken(loginRequestInfo, idToken);
         ModelAndView model = new ModelAndView("authView");
         JWTClaimsSet claimsSet;
         try {
@@ -196,6 +209,13 @@ public class LoginInitController {
         return model;
     }
 
+    private ModelAndView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest request, HttpServletResponse response) {
+        hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
+        CookieUtil.deleteHydraSessionCookie(request, response);
+        return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
+    }
+
     private String hideCharactersExceptFirstFive(String subject) {
         if (subject.length() > 5) {
             String visibleCharacters = subject.substring(0, 5);
@@ -204,8 +224,7 @@ public class LoginInitController {
         return subject;
     }
 
-    private JWT getAndValidateIdToken(LoginRequestInfo loginRequestInfo) {
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+    private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {
         try {
             JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
             String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
@@ -215,7 +234,6 @@ public class LoginInitController {
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
-        return idToken;
     }
 
     private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {

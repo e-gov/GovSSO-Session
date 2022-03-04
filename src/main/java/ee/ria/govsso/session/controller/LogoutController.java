@@ -43,7 +43,7 @@ public class LogoutController {
         if (logoutRequestInfo.getRpInitiated()) {
             List<Consent> consents = hydraService.getConsents(logoutRequestInfo.getSubject(), logoutRequestInfo.getSessionId());
 
-            boolean isValidForAutoLogout = consents.size() == 1;
+            boolean isValidForAutoLogout = consents.size() <= 1;
             if (isValidForAutoLogout) {
                 LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
                 return new ModelAndView("redirect:" + logoutAcceptResponse.getRedirectTo());

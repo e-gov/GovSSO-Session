@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 
 @Slf4j
@@ -26,16 +28,20 @@ public class ContinueSessionController {
     private final HydraService hydraService;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
-    public RedirectView continueSession(@ModelAttribute("loginChallenge")
-                                        @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge) {
+    public RedirectView continueSession(
+            @ModelAttribute("loginChallenge")
+            @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         validateLoginRequestInfo(loginRequestInfo);
 
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
-        String redirectUrl = hydraService.acceptLogin(loginChallenge, idToken);
-
-        return new RedirectView(redirectUrl);
+        if (idToken == null) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
+        } else {
+            String redirectUrl = hydraService.acceptLogin(loginChallenge, idToken);
+            return new RedirectView(redirectUrl);
+        }
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {

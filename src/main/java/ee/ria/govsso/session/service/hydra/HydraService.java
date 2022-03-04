@@ -23,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +147,7 @@ public class HydraService {
 
             requestLogger.logResponse(HttpStatus.OK.value(), validConsents);
             if (validConsents.isEmpty()) {
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
+                return Collections.emptyList();
             }
 
             var taraIdToken = validConsents.get(0).getConsentRequest().getContext().getTaraIdToken();
@@ -162,6 +163,9 @@ public class HydraService {
 
     public JWT getTaraIdTokenFromConsentContext(String subject, String sessionId) {
         List<Consent> validConsents = getConsents(subject, sessionId);
+        if (validConsents.isEmpty()) {
+            return null;
+        }
         try {
             JWT idToken = SignedJWT.parse(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken());
             if (!isNbfValid(idToken)) {

@@ -271,7 +271,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenGetConsentsReturnsEmptyList_ThrowsTechnicalGeneralError() throws IOException {
+    void logoutInit_WhenGetConsentsReturnsEmptyList_ReturnsRedirect() throws IOException {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -284,17 +284,20 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_missing.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .body("error", equalTo("TECHNICAL_GENERAL"));
-
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(), equalTo("No valid consent requests found"));
+                .statusCode(302)
+                .header("Location", "https://clienta.localhost:11443");
     }
 
     @Test

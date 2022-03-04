@@ -182,4 +182,30 @@ class ContinueSessionControllerTest extends BaseTest {
                 .headers(emptyMap())
                 .header("Location", Matchers.containsString("/auth/login/test"));
     }
+
+    @Test
+    void continueSession_WhenConsentsAreMissing_Reauthenticate() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_missing.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .cookies(emptyMap())
+                .body("error", equalTo("TECHNICAL_GENERAL"));
+    }
 }
