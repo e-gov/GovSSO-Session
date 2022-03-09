@@ -24,7 +24,7 @@
   "post_logout_redirect_uris": [
     "https://clienta.localhost:11443"
   ],
-  "backchannel_logout_uri": "https://clienta.localhost:11443/session/logout",
+  "backchannel_logout_uri": "https://clienta.localhost:11443/backchannellogout",
   "scope": [
     "openid"
   ],
