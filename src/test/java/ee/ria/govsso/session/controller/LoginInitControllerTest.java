@@ -162,7 +162,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("аутентификации использует решение единого входа (SSO)."));
+                .body(containsString("использует решение единого входа (SSO)."));
     }
 
     @Test
@@ -207,7 +207,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Служба аутентификации использует решение единого входа (SSO)."));
+                .body(containsString("использует решение единого входа (SSO)."));
     }
 
     @Test
@@ -308,7 +308,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Служба аутентификации использует решение единого входа (SSO)."));
+                .body(containsString("использует решение единого входа (SSO)."));
     }
 
     @Test
@@ -361,7 +361,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Authentication service is using a single sign-on (SSO) solution."));
+                .body(containsString("service is using a single sign-on (SSO) solution."));
     }
 
     @Test
@@ -414,7 +414,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"));
     }
 
     @Test
