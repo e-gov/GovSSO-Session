@@ -20,25 +20,57 @@
                             <div aria-level="2" role="heading">
                                 <h2 th:text="#{label.sso.logout.title(${clientName})}"></h2>
                             </div>
-                            <p th:text="#{label.sso.logout.active_sessions}"></p>
-                            <p>
-                            <ul>
-                                <li th:each="sessionName : ${activeSessions}">
-                                    <strong th:text="${sessionName}"></strong>
-                                </li>
-                            </ul>
-                            </p>
+
+                            <div class="service-list" id="service-list">
+                                <p th:utext="#{label.sso.logout.active_sessions(${#lists.size(activeSessions)})}"></p>
+                                <ul>
+                                    <li>
+                                        <div class="service-name"
+                                             th:text="${activeSessions[0]}">
+                                        </div>
+                                        <div class="service-name" th:if="${#lists.size(activeSessions)} > 1"
+                                             th:text="${activeSessions[1]}">
+                                        </div>
+                                        <div class="service-name" th:if="${#lists.size(activeSessions)} > 2"
+                                             th:text="${activeSessions[2]}">
+                                        </div>
+                                        <div class="service-name" th:if="${#lists.size(activeSessions)} > 3"
+                                             th:text="${activeSessions[3]}">
+                                        </div>
+                                        <div class="service-name" th:if="${#lists.size(activeSessions)} > 4"
+                                             th:text="${activeSessions[4]}">
+                                        </div>
+                                    </li>
+                                </ul>
+                                <div class="list_link" id="expand-service-list"
+                                     th:if="${#lists.size(activeSessions)} > 5"
+                                     th:text="#{label.sso.logout.expand_service_list}">
+                                </div>
+
+                            </div>
+
+                            <div aria-hidden="true" class="service-list hidden" id="expanded-service-list">
+                                <p th:utext="#{label.sso.logout.active_sessions(${#lists.size(activeSessions)})}"></p>
+                                <ul>
+                                    <li th:each="sessionName : ${activeSessions}">
+                                        <div class="service-name" th:text="${sessionName}"></div>
+                                    </li>
+                                </ul>
+                            </div>
+
                             <p th:text="#{label.sso.logout.choice}"></p>
-                            <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
+                            <form class="c-form" id="continueForm" layout:fragment="login-form-content"
+                                  method="post"
                                   role="form">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
                                 <input th:name="logoutChallenge" th:value="${logoutChallenge}" type="hidden"/>
                                 <button class="c-btn c-btn--primary" formaction="/logout/endsession" role="button"
                                         th:text="#{label.sso.logout.end_session}"
                                         type="submit">
                                     Login
                                 </button>
-                                <button class="c-btn c-btn--cancel" formaction="/logout/continuesession" role="button"
+                                <button class="c-btn c-btn--cancel" formaction="/logout/continuesession"
+                                        role="button"
                                         th:text="#{label.sso.logout.continue_session}"
                                         type="submit">
                                     Cancel

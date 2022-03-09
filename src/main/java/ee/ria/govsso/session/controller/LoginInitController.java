@@ -202,7 +202,8 @@ public class LoginInitController {
         if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
             model.addObject("givenName", profileAttributes.get("given_name"));
             model.addObject("familyName", profileAttributes.get("family_name"));
-            model.addObject("subject", hideCharactersExceptFirstFive(loginRequestInfo.getSubject()));
+            model.addObject("dateOfBirth", profileAttributes.get("date_of_birth"));
+            model.addObject("subject", loginRequestInfo.getSubject());
             model.addObject("clientName", loginRequestInfo.getClient().getClientName());
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
         }
@@ -214,14 +215,6 @@ public class LoginInitController {
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
         CookieUtil.deleteHydraSessionCookie(request, response);
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
-    }
-
-    private String hideCharactersExceptFirstFive(String subject) {
-        if (subject.length() > 5) {
-            String visibleCharacters = subject.substring(0, 5);
-            return visibleCharacters + "*".repeat(subject.length() - 5);
-        }
-        return subject;
     }
 
     private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {

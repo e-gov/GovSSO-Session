@@ -600,12 +600,12 @@ body {
 	display: -ms-flexbox;
 	display: flex;
 	background-color: #fff;
-	border-radius: 8px
+	border-radius: 8px;
+	margin-bottom: 20px;
 }
 
 @media (max-width: 800px) {
 	.c-tab-login__content-wrap {
-		display: block;
 		margin-left: -15px;
 		margin-right: -15px;
 		border-radius: 0
@@ -640,31 +640,31 @@ body {
 	-ms-flex: 1 1 auto;
 	flex: 1 1 auto;
 	max-width: 100%;
-	padding: 40px 40px 40px 0
+	padding: 40px 40px 33px 0;
+	line-height: 24px;
 }
 
 @media (max-width: 800px) {
 	.c-tab-login__content-text {
-		padding: 20px 15px 0 15px
+		padding: 20px 16px 0 16px
 	}
 }
 
 .c-tab-login__content-text h2 {
-	margin-bottom: 25px;
+	margin-bottom: 16px;
 	font-size: 30px;
-	color: #34394c;
+	color: #003168;
 	font-weight: 400
 }
 
 @media (max-width: 800px) {
 	.c-tab-login__content-text h2 {
-		display: none
+		font-size: 18px;
 	}
 }
 
 .c-tab-login__content-text p {
 	margin-bottom: 25px;
-	color: #5d6071
 }
 
 @media (max-width: 800px) {
@@ -699,6 +699,8 @@ body {
 	border-radius: 8px;
 	border: 0;
 	cursor: pointer
+	padding: 10px 32px;
+    margin-right: 16px;
 }
 
 @media (max-width: 800px) {
@@ -706,7 +708,7 @@ body {
 		display: block;
 		width: 100%;
 		padding: 12px 35px;
-		margin: 20px 0px;
+		margin: 24px 0px;
 		font-size: 18px
 	}
 }
@@ -927,4 +929,79 @@ button.link {
 
 button.link:hover{
     text-decoration:none;
+}
+
+.personal-info-value {
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.personal-info-label {
+    font-size: 14px;
+    line-height: 16px;
+    color: #5D6071;
+}
+
+.detailed-instruction {
+    line-height: 24px;
+    margin: 17px 190px 36px;
+    color: #5d6071;
+}
+
+@media (max-width: 800px) {
+    .detailed-instruction {
+        line-height: 24px;
+        margin: 0px;
+        color: #5d6071;
+        padding: 16px;
+    }
+}
+
+.data-table {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.personal-info {
+    width: 50%;
+}
+
+@media (max-width: 800px) {
+    .test3 {
+        width: 100%;
+    }
+}
+
+.service-list {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.service-name {
+    font-size: 18px;
+    line-height: 24px;
+    color: #5D6071;
+}
+
+.list_link {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  font-family: arial, sans-serif;
+  color: #069;
+  cursor: pointer;
+  text-decoration:underline;
+  margin-top: 8px;
+}
+
+.list_link:hover{
+    text-decoration:none;
+}
+
+.hidden {
+  display: none;
 }

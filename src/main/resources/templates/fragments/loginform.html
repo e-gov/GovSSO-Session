@@ -20,13 +20,42 @@
                             <div aria-level="2" role="heading">
                                 <h2 th:utext="#{label.sso.title(${clientName})}"></h2>
                             </div>
-                            <p th:utext="#{label.sso.personal_info(${givenName}, ${familyName}, ${subject})}"></p>
                             <p th:utext="#{label.sso.instruction(${clientName})}"></p>
-                            <form class="c-form" id="continueForm" layout:fragment="login-form-content" method="post"
+
+                            <div class="row data-table">
+                                <div class="personal-info">
+                                    <div class="personal-info-label" th:utext="#{label.sso.first_name}"></div>
+                                    <div class="personal-info-value" th:text="${givenName}"></div>
+                                </div>
+                                <div class="personal-info">
+                                    <div class="personal-info-label" th:utext="#{label.sso.personal_code}"></div>
+                                    <div class="personal-info-value" th:text="${subject}"></div>
+                                </div>
+                                <div class="personal-info">
+                                    <div class="personal-info-label" th:utext="#{label.sso.last_name}"></div>
+                                    <div class="personal-info-value" th:text="${familyName}"></div>
+                                </div>
+                                <div class="personal-info">
+                                    <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
+                                    <div class="personal-info-value" th:text="${dateOfBirth}"></div>
+                                </div>
+                                <div class="personal-info" th:if="${email != null}">
+                                    <div class="personal-info-label" th:utext="#{label.sso.email}"></div>
+                                    <div class="personal-info-value" th:text="${email}"></div>
+                                </div>
+                                <div class="personal-info" th:if="${phoneNumber != null}">
+                                    <div class="personal-info-label" th:utext="#{label.sso.phone_number}"></div>
+                                    <div class="personal-info-value" th:text="${phoneNumber}"></div>
+                                </div>
+                            </div>
+
+                            <form class="c-form" id="continueForm" layout:fragment="login-form-content"
+                                  method="post"
                                   role="form">
                                 <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
                                 <input th:name="loginChallenge" th:value="${loginChallenge}" type="hidden"/>
-                                <button class="c-btn c-btn--primary" formaction="/login/continuesession" role="button"
+                                <button class="c-btn c-btn--primary" formaction="/login/continuesession"
+                                        role="button"
                                         th:text="#{label.sso.continue}"
                                         type="submit">
                                     Login
@@ -38,6 +67,13 @@
                                 </button>
                             </form>
                         </div>
+
+
+                    </div>
+                    <div class="c-tab-login__content-wrap">
+                        <p class="detailed-instruction"
+                           th:utext="#{label.sso.detailed-instruction(${clientName})}">
+                        </p>
                     </div>
                     <div class="c-tab-login__footer">
                         <form class="c-form" id="rejectForm" layout:fragment="login-form-content" method="post"
