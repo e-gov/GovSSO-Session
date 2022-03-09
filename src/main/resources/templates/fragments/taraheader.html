@@ -14,10 +14,6 @@
                         <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('en')}"
                            th:hreflang="en" th:lang="en" th:text="#{label.header.en}">ENGLISH</a>
                     </li>
-                    <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('ru', #locale)}">
-                        <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('ru')}"
-                           th:hreflang="ru" th:lang="ru" th:text="#{label.header.ru}">РУССКИЙ</a>
-                    </li>
                 </ul>
             </nav>
         </div>

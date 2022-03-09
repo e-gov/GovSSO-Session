@@ -113,8 +113,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"));
     }
 
     @Test
@@ -148,8 +148,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
     }
 
     @Test
@@ -177,7 +177,7 @@ class LogoutControllerTest extends BaseTest {
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
                 .when()
-                .param("lang", "ru")
+                .param("lang", "fr")
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
                 .then()
@@ -283,7 +283,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"));
+                .body(containsString("Olete välja logitud Teenusenimi A teenusest"));
     }
 
 
@@ -318,7 +318,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"));
+                .body(containsString("Olete välja logitud Teenusenimi A teenusest"));
     }
 
     @Test
@@ -349,8 +349,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>2</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Teenusenimi C(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Teenusenimi C(?:.*\\r*\\n*)*"));
         // For some reason <ul>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi B[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi C[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<\/ul> does not work
     }
 
@@ -571,8 +571,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"));
 
         HYDRA_MOCK_SERVER.verify(exactly(0), deleteRequestedFor(urlPathMatching("/oauth2/auth/sessions/consent")));
     }
@@ -602,8 +602,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Teid on välja logitud teenusest Teenusenimi B"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Teil on <strong>1</strong> aktiivset seanssi järgmistes teenustes:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*Kas te tahate kõikidest rakendustest välja logida(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"));
     }
 
     @Test

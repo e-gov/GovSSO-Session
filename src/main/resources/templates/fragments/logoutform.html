@@ -22,7 +22,10 @@
                             </div>
 
                             <div class="service-list" id="service-list">
-                                <p th:utext="#{label.sso.logout.active_sessions(${#lists.size(activeSessions)})}"></p>
+                                <p th:if="${#lists.size(activeSessions)} > 5"
+                                   th:utext="#{label.sso.logout.active_sessions(${#lists.size(activeSessions)})}"></p>
+                                <p th:if="${#lists.size(activeSessions)} <= 5"
+                                   th:utext="#{label.sso.logout.active_sessions_short(${#lists.size(activeSessions)})}"></p>
                                 <ul>
                                     <li>
                                         <div class="service-name"
@@ -58,7 +61,6 @@
                                 </ul>
                             </div>
 
-                            <p th:text="#{label.sso.logout.choice}"></p>
                             <form class="c-form" id="continueForm" layout:fragment="login-form-content"
                                   method="post"
                                   role="form">
@@ -69,7 +71,7 @@
                                         type="submit">
                                     Login
                                 </button>
-                                <button class="c-btn c-btn--cancel" formaction="/logout/continuesession"
+                                <button class="c-btn c-btn--primary" formaction="/logout/continuesession"
                                         role="button"
                                         th:text="#{label.sso.logout.continue_session}"
                                         type="submit">
@@ -77,6 +79,11 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
+                    <div class="c-tab-login__content-wrap">
+                        <p class="detailed-instruction"
+                           th:utext="#{label.sso.logout.detailed_instruction}">
+                        </p>
                     </div>
                     <div class="c-tab-logout__footer">
                         <p>

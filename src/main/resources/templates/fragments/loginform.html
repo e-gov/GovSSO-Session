@@ -60,7 +60,7 @@
                                         type="submit">
                                     Login
                                 </button>
-                                <button class="c-btn c-btn--primary" formaction="/login/reauthenticate" role="button"
+                                <button class="c-btn c-btn--cancel" formaction="/login/reauthenticate" role="button"
                                         th:text="#{label.sso.reauthenticate}"
                                         type="submit">
                                     Cancel
@@ -72,7 +72,7 @@
                     </div>
                     <div class="c-tab-login__content-wrap">
                         <p class="detailed-instruction"
-                           th:utext="#{label.sso.detailed-instruction(${clientName})}">
+                           th:utext="#{label.sso.detailed_instruction(${clientName})}">
                         </p>
                     </div>
                     <div class="c-tab-login__footer">

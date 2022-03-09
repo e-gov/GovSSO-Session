@@ -132,7 +132,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"))
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
                 .body(containsString("Perekonnanimi3"))
@@ -155,7 +155,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "ru")
+                .param("lang", "fr")
                 .when()
                 .get("/login/init")
                 .then()
@@ -173,7 +173,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "ru")
+                .param("lang", "fr")
                 .when()
                 .header(HttpHeaders.ACCEPT, ContentType.HTML)
                 .get("/login/init")
@@ -201,7 +201,7 @@ public class LoginInitControllerTest extends BaseTest {
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
-                .cookie("__Host-LOCALE", "ru")
+                .cookie("__Host-LOCALE", "fr")
                 .get("/login/init")
                 .then()
                 .assertThat()
@@ -226,7 +226,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .cookie("__Host-LOCALE", "ru")
+                .cookie("__Host-LOCALE", "fr")
                 .get("/login/init")
                 .then()
                 .assertThat()
@@ -258,7 +258,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"));
     }
 
     @Test
@@ -361,7 +361,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("service is using a single sign-on (SSO) solution."));
+                .body(containsString("service uses a single sign-on (SSO) solution"));
     }
 
     @Test
@@ -414,7 +414,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"));
     }
 
     @Test
@@ -466,7 +466,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"));
     }
 
     @Test
@@ -517,7 +517,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"));
     }
 
     @Test
@@ -570,7 +570,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Autentimisteenus kasutab ühekordse sisselogimise (SSO) lahendust"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO - single sign-on) lahendust"));
     }
 
     @Test
@@ -600,7 +600,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .cookie("__Host-LOCALE", "ru")
+                .cookie("__Host-LOCALE", "fr")
                 .header(HttpHeaders.ACCEPT, ContentType.HTML)
                 .when()
                 .get("/login/init")

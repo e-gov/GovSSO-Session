@@ -21,7 +21,7 @@ import static java.util.regex.Pattern.compile;
 @UtilityClass
 public class LocaleUtil {
 
-    public static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|ru)").asMatchPredicate();
+    public static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|ru|fr)").asMatchPredicate();
     public static final String DEFAULT_LOCALE = "et";
 
     public Locale getLocale() {
