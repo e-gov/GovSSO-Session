@@ -131,8 +131,11 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."))
-                .body(containsString("Eesnimi3 Perekonnanimi3 test1***"));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"))
+                .body(containsString("Eesnimi3"))
+                .body(containsString("test1234"))
+                .body(containsString("Perekonnanimi3"))
+                .body(containsString("1961-07-12"));
     }
 
     @Test
@@ -184,7 +187,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust."));
+                .body(containsString("kasutab ühekordse sisselogimise (SSO) lahendust"));
     }
 
     @Test
