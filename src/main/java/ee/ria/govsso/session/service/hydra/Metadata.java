@@ -6,9 +6,6 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class Client {
-
-    private String clientId;
-    private String clientName;
-    private Metadata metadata = new Metadata();
+public class Metadata {
+    private OidcClient oidcClient = new OidcClient();
 }

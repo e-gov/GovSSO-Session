@@ -1,8 +1,12 @@
 package ee.ria.govsso.session.util;
 
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -12,7 +16,13 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
+import java.time.chrono.IsoChronology;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.FormatStyle;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import static java.util.regex.Pattern.compile;
@@ -57,5 +67,41 @@ public class LocaleUtil {
                 .filter(SUPPORTED_LANGUAGES)
                 .findFirst()
                 .orElse(DEFAULT_LOCALE);
+    }
+
+    public String getTranslatedClientName(Client client) {
+        Locale locale = LocaleUtil.getLocale();
+
+        Map<String, String> nameTranslations = client.getMetadata().getOidcClient().getNameTranslations();
+        String translatedName = nameTranslations.get(DEFAULT_LOCALE);
+        if (nameTranslations.containsKey(locale.getLanguage()))
+            translatedName = nameTranslations.get(locale.getLanguage());
+        return translatedName;
+    }
+
+    public String formatDateWithLocale(String dateString) {
+        LocalDate localDate = LocalDate.parse(dateString);
+
+        String formatPattern = DateTimeFormatterBuilder.getLocalizedDateTimePattern(
+                FormatStyle.SHORT,
+                null,
+                IsoChronology.INSTANCE,
+                LocaleUtil.getLocale());
+        //Let other date components use short style, but year must use long style.
+        formatPattern = formatPattern.replaceAll("\\byy\\b", "yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern, LocaleUtil.getLocale());
+
+        return localDate.format(formatter);
+    }
+
+    @SneakyThrows
+    public NameValuePair getHydraRequestUrlLocaleParameter(String requestUrl) {
+        NameValuePair localeParameter = new URIBuilder(requestUrl).getQueryParams()
+                .stream()
+                .filter(x -> x.getName().equals("ui_locales"))
+                .findFirst()
+                .orElse(null);
+
+        return localeParameter;
     }
 }

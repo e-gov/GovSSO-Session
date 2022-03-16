@@ -132,158 +132,12 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
                 .body(containsString("Perekonnanimi3"))
-                .body(containsString("1961-07-12"));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromParameterIsRussian_OpensViewInRussian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "fr")
-                .when()
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("использует решение единого входа (SSO)."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleIsSetToRussian_ErrorMessageIsInRussian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "fr")
-                .when()
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromCookieIsRussian_OpensViewInRussian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .cookie("__Host-LOCALE", "fr")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("использует решение единого входа (SSO)."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromCookieIsRussian_ErrorMessageIsInRussian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .cookie("__Host-LOCALE", "fr")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromCookieIsUnknown_OpensViewInEstonian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .cookie("__Host-LOCALE", "unknown")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise"));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromCookieIsUnknown_ErrorMessageIsInEstonian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .cookie("__Host-LOCALE", "unknown")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+                .body(containsString("12.07.1961"));
     }
 
     @Test
@@ -308,7 +162,9 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("использует решение единого входа (SSO)."));
+                .body(containsString("вход в Название службы A электронную услугу"))
+                .body(containsString("использует решение единого входа (SSO)."))
+                .body(containsString("12/07/1961"));
     }
 
     @Test
@@ -361,7 +217,9 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("service uses a single sign-on (SSO) solution"));
+                .body(containsString("Logging in to Service name A"))
+                .body(containsString("service uses a single sign-on (SSO) solution"))
+                .body(containsString("7/12/1961"));
     }
 
     @Test
@@ -396,7 +254,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_unknown_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
@@ -423,7 +281,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_unknown_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
@@ -444,7 +302,7 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromParameterIsEstonian_OpensViewInEstonian() {
+    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInEnglish() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -460,68 +318,17 @@ public class LoginInitControllerTest extends BaseTest {
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
-                .param("lang", "et")
+                .cookie("__Host-LOCALE", "en")
                 .get("/login/init")
                 .then()
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise"));
+                .body(containsString("service uses a single sign-on (SSO) solution"));
     }
 
     @Test
-    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromParameterIsEstonian_ErrorMessageIsInEstonian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .param("lang", "et")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEstonian_OpensViewInEstonian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .cookie("__Host-LOCALE", "et")
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise"));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEstonian_ErrorMessageIsInEstonian() {
+    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEnglish_ErrorMessageIsInEnglish() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -538,22 +345,22 @@ public class LoginInitControllerTest extends BaseTest {
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .cookie("__Host-LOCALE", "et")
+                .cookie("__Host-LOCALE", "en")
                 .get("/login/init")
                 .then()
                 .assertThat()
                 .statusCode(500)
-                .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+                .body(containsString("Authentication error."))
+                .body(containsString("An unexpected error occurred. Please try again later."));
     }
 
     @Test
-    void loginInit_WhenLocaleFromParameterIsUnknown_OpensViewInEstonian() {
+    void loginInit_WhenMultipleLocalesFromHydra_ReturnsLogoutViewInRussian() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_multiple_locales.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
@@ -563,52 +370,15 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "unknown")
                 .when()
                 .get("/login/init")
                 .then()
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise"));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromParameterIsUnknown_ErrorMessageIsInEstonian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .param("lang", "unknown")
-                .when()
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
-    }
-
-    @Test
-    void loginInit_WhenLocaleFromCookieIsRussianAndLocaleFromParameterIsUndefined_ErrorMessageIsInRussian() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(500)));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .cookie("__Host-LOCALE", "fr")
-                .header(HttpHeaders.ACCEPT, ContentType.HTML)
-                .when()
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+                .body(containsString("вход в Название службы A электронную услугу"))
+                .body(containsString("использует решение единого входа (SSO)."))
+                .body(containsString("12/07/1961"));
     }
 
     @Test

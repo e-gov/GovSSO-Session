@@ -22,6 +22,8 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import java.util.List;
 import java.util.Locale;
 
+import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LOCALE;
+
 @Slf4j
 @EnableRetry
 @EnableScheduling
@@ -42,7 +44,7 @@ public class WebConfiguration implements WebMvcConfigurer {
         CookieLocaleResolver resolver = new CookieLocaleResolver();
         resolver.setCookieName("__Host-LOCALE");
         resolver.setCookieSecure(true);
-        resolver.setDefaultLocale(new Locale("et"));
+        resolver.setDefaultLocale(new Locale(DEFAULT_LOCALE));
         return resolver;
     }
 
@@ -58,7 +60,7 @@ public class WebConfiguration implements WebMvcConfigurer {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasename("messages");
         messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setDefaultLocale(new Locale("et"));
+        messageSource.setDefaultLocale(new Locale(DEFAULT_LOCALE));
         return messageSource;
     }
 

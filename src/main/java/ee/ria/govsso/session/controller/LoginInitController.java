@@ -15,6 +15,7 @@ import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
@@ -60,6 +61,7 @@ public class LoginInitController {
             HttpServletResponse response) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
+
         if (language == null && localeCookie == null) {
             //Set locale as early as possible so it could be used by error messages as much as possible.
             LocaleUtil.setLocale(loginRequestInfo);
@@ -180,6 +182,7 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + authenticationRequest.toURI().toString());
     }
 
+    @SneakyThrows
     private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
         validateIdToken(loginRequestInfo, idToken);
         ModelAndView model = new ModelAndView("authView");
@@ -193,8 +196,10 @@ public class LoginInitController {
             model.addObject("givenName", profileAttributes.get("given_name"));
             model.addObject("familyName", profileAttributes.get("family_name"));
             model.addObject("dateOfBirth", profileAttributes.get("date_of_birth"));
+            if (profileAttributes.get("date_of_birth") != null)
+                model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
             model.addObject("subject", loginRequestInfo.getSubject());
-            model.addObject("clientName", loginRequestInfo.getClient().getClientName());
+            model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
         }
         return model;

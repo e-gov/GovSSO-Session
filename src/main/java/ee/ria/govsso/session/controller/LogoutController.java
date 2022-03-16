@@ -9,11 +9,9 @@ import ee.ria.govsso.session.service.hydra.LogoutAcceptResponseBody;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -46,28 +44,22 @@ public class LogoutController {
     private final HydraService hydraService;
 
     @GetMapping(value = LOGOUT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
-    @SneakyThrows
     public ModelAndView logoutInit(@RequestParam(name = "logout_challenge")
                                    @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge,
                                    @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
                                    @RequestParam(name = "lang", required = false) String language) {
 
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
-        validateLogoutRequestInfo(logoutRequestInfo);
 
-        String requestUrl = logoutRequestInfo.getRequestUrl();
-        NameValuePair localeParameter = new URIBuilder(requestUrl).getQueryParams()
-                .stream()
-                .filter(x -> x.getName().equals("ui_locales"))
-                .findFirst()
-                .orElse(null);
-
+        //Set locale as early as possible so it could be used by error messages as much as possible.
+        NameValuePair localeParameter = LocaleUtil.getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
         if (language == null && localeCookie == null && localeParameter != null) {
-            //Set locale as early as possible so it could be used by error messages as much as possible.
             List<String> locales = List.of(localeParameter.getValue().split(" "));
             String locale = locales.stream().filter(SUPPORTED_LANGUAGES).findFirst().orElse(DEFAULT_LOCALE);
             LocaleUtil.setLocale(locale);
         }
+
+        validateLogoutRequestInfo(logoutRequestInfo);
 
         String subject = logoutRequestInfo.getSubject();
         String sessionId = logoutRequestInfo.getSessionId();
@@ -140,7 +132,7 @@ public class LogoutController {
     private ModelAndView getLogoutView(LogoutRequestInfo logoutRequestInfo, List<Consent> consents) {
         String logoutChallenge = logoutRequestInfo.getChallenge();
         String clientId = logoutRequestInfo.getClient().getClientId();
-        String clientName = logoutRequestInfo.getClient().getClientName();
+        String clientName = LocaleUtil.getTranslatedClientName(logoutRequestInfo.getClient());
 
         List<String> activeSessions = consents.stream()
                 .map(c -> c.getConsentRequest().getClient())

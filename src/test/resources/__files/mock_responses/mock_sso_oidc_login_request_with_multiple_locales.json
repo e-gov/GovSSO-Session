@@ -9,7 +9,9 @@
   "subject": "test1234",
   "oidc_context": {
     "ui_locales": [
-      "fr"
+      "fr",
+      "ru",
+      "en"
     ],
     "acr_values": [
       "substantial"
