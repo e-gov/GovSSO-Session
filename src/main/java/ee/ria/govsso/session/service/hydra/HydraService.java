@@ -178,7 +178,7 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public String acceptLogin(String loginChallenge, JWT idToken) {
+    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login/accept")
                 .queryParam("login_challenge", loginChallenge)
@@ -189,30 +189,30 @@ public class HydraService {
         Context context = new Context();
         context.setTaraIdToken(idToken.getParsedString());
 
-        LoginAcceptRequestBody requestBody = new LoginAcceptRequestBody();
-        requestBody.setRemember(true);
-        requestBody.setAcr(jwtClaimsSet.getStringClaim("acr"));
-        requestBody.setSubject(jwtClaimsSet.getSubject());
-        requestBody.setContext(context);
-        requestBody.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
-        requestBody.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
-        requestBody.setRefreshRememberFor(true);
+        LoginAcceptRequest request = new LoginAcceptRequest();
+        request.setRemember(true);
+        request.setAcr(jwtClaimsSet.getStringClaim("acr"));
+        request.setSubject(jwtClaimsSet.getSubject());
+        request.setContext(context);
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
+        request.setRefreshRememberFor(true);
 
-        requestLogger.logRequest(uri, HttpMethod.PUT.name(), requestBody);
-        LoginAcceptResponseBody acceptResponseBody = webclient.put()
+        requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);
+        LoginAcceptResponse response = webclient.put()
                 .uri(uri)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .body(BodyInserters.fromValue(request))
                 .retrieve()
-                .bodyToMono(LoginAcceptResponseBody.class)
+                .bodyToMono(LoginAcceptResponse.class)
                 .blockOptional().orElseThrow();
 
-        requestLogger.logResponse(HttpStatus.OK.value(), acceptResponseBody);
-        return acceptResponseBody.getRedirectTo();
+        requestLogger.logResponse(HttpStatus.OK.value(), response);
+        return response;
     }
 
-    public LogoutAcceptResponseBody acceptLogout(String logoutChallenge) {
+    public LogoutAcceptResponse acceptLogout(String logoutChallenge) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout/accept")
                 .queryParam("logout_challenge", logoutChallenge)
@@ -220,16 +220,16 @@ public class HydraService {
 
         try {
             requestLogger.logRequest(uri, HttpMethod.PUT.name());
-            LogoutAcceptResponseBody responseBody = webclient.put()
+            LogoutAcceptResponse response = webclient.put()
                     .uri(uri)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
-                    .bodyToMono(LogoutAcceptResponseBody.class)
+                    .bodyToMono(LogoutAcceptResponse.class)
                     .blockOptional().orElseThrow();
 
-            requestLogger.logResponse(HttpStatus.OK.value(), responseBody);
-            return responseBody;
+            requestLogger.logResponse(HttpStatus.OK.value(), response);
+            return response;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new SsoException(ErrorCode.USER_INPUT, "Failed to accept Hydra logout request", ex);
@@ -264,20 +264,20 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public String acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo) {
+    public ConsentAcceptResponse acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/consent/accept")
                 .queryParam("consent_challenge", consentChallenge)
                 .toUriString();
 
-        ConsentAcceptRequestBody requestBody = new ConsentAcceptRequestBody();
-        ConsentAcceptRequestBody.LoginSession session = new ConsentAcceptRequestBody.LoginSession();
-        ConsentAcceptRequestBody.IdToken idToken = new ConsentAcceptRequestBody.IdToken();
+        ConsentAcceptRequest request = new ConsentAcceptRequest();
+        ConsentAcceptRequest.LoginSession session = new ConsentAcceptRequest.LoginSession();
+        ConsentAcceptRequest.IdToken idToken = new ConsentAcceptRequest.IdToken();
 
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
-        requestBody.setGrantScope(scopes);
-        requestBody.setRemember(true);
-        requestBody.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setGrantScope(scopes);
+        request.setRemember(true);
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
 
         JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
         Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");
@@ -286,20 +286,20 @@ public class HydraService {
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
         session.setIdToken(idToken);
-        requestBody.setSession(session);
+        request.setSession(session);
 
-        requestLogger.logRequest(uri, HttpMethod.PUT.name(), requestBody);
-        ConsentAcceptResponseBody consentResponseBody = webclient.put()
+        requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);
+        ConsentAcceptResponse response = webclient.put()
                 .uri(uri)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .body(BodyInserters.fromValue(request))
                 .retrieve()
-                .bodyToMono(ConsentAcceptResponseBody.class)
+                .bodyToMono(ConsentAcceptResponse.class)
                 .blockOptional().orElseThrow();
 
-        requestLogger.logResponse(HttpStatus.OK.value(), consentResponseBody);
-        return consentResponseBody.getRedirectTo();
+        requestLogger.logResponse(HttpStatus.OK.value(), response);
+        return response;
     }
 
     public void deleteConsentByClientSession(String clientId, String subject, String loginSessionId) {
@@ -360,7 +360,7 @@ public class HydraService {
     }
 
     // TODO GSSO-244 Call this on unsuccessful outcome of login flows so that Hydra resource cleanup would be immediate.
-    public String rejectLogin(String loginChallenge) {
+    public LoginRejectResponse rejectLogin(String loginChallenge) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login/reject")
                 .queryParam("login_challenge", loginChallenge)
@@ -368,17 +368,17 @@ public class HydraService {
 
         try {
             requestLogger.logRequest(uri, HttpMethod.PUT.name());
-            LoginRejectResponseBody loginRejectResponseBody = webclient.put()
+            LoginRejectResponse response = webclient.put()
                     .uri(uri)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(BodyInserters.fromValue(new LoginRejectRequestBody()))
+                    .body(BodyInserters.fromValue(new LoginRejectRequest()))
                     .retrieve()
-                    .bodyToMono(LoginRejectResponseBody.class)
+                    .bodyToMono(LoginRejectResponse.class)
                     .blockOptional().orElseThrow();
 
-            requestLogger.logResponse(HttpStatus.OK.value(), loginRejectResponseBody);
-            return loginRejectResponseBody.getRedirectTo();
+            requestLogger.logResponse(HttpStatus.OK.value(), response);
+            return response;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new SsoException(ErrorCode.USER_INPUT, "Failed to reject Hydra login request", ex);

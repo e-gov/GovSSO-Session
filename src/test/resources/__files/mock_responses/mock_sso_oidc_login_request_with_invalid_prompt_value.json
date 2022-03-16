@@ -1,0 +1,59 @@
+{
+  "challenge": "abcdeff098aadfccabcdeff098aadfcc",
+  "requested_scope": [
+    "openid"
+  ],
+  "requested_access_token_audience": [
+  ],
+  "skip": true,
+  "subject": "test1234",
+  "oidc_context": {
+    "ui_locales": [
+      "et"
+    ],
+    "id_token_hint_claims": {
+      "aud": [
+        "client-id"
+      ],
+      "sid": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
+      "exp": 2145963661
+    }
+  },
+  "client": {
+    "client_id": "client-id",
+    "client_name": "",
+    "redirect_uris": [
+      "https://localhost:11443/oauth/response"
+    ],
+    "grant_types": [
+      "authorization_code"
+    ],
+    "response_types": [
+      "code"
+    ],
+    "scope": "offline_access offline openid",
+    "audience": [
+    ],
+    "owner": "",
+    "policy_uri": "",
+    "allowed_cors_origins": [
+    ],
+    "tos_uri": "",
+    "client_uri": "",
+    "logo_uri": "",
+    "contacts": [
+    ],
+    "client_secret_expires_at": 0,
+    "subject_type": "public",
+    "jwks": {
+    },
+    "token_endpoint_auth_method": "client_secret_basic",
+    "userinfo_signed_response_alg": "none",
+    "created_at": "2021-09-27T14:07:51Z",
+    "updated_at": "2021-09-27T14:07:50.753221Z",
+    "metadata": {
+    }
+  },
+  "request_url": "http://localhost:14443/oauth2/auth?scope=openid\u0026prompt=invalid_value\u0026response_type=code\u0026client_id=openIdDemo\u0026redirect_uri=https://localhost:11443/oauth/response\u0026state=049d71ea-30cd-4a74-8dcd-47156055d364\u0026nonce=5210b42a-2362-420b-bb81-54796da8c814\u0026ui_locales=et",
+  "session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
+}

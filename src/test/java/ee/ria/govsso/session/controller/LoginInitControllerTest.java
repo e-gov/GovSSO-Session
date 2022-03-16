@@ -90,6 +90,29 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
+    void loginInit_WhenPromptEncoded_CreatesSessionAndRedirects() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_encoded_prompt.json")));
+
+        String ssoCookieValue = given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .extract().cookie(COOKIE_NAME_GOVSSO);
+
+        SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
+        assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
+    }
+
+    @Test
     void loginInit_WhenFetchLoginRequestInfoAcrIsSubstantial_CreatesSessionAndRedirects() {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -146,6 +169,29 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("Perekonnanimi3"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
+
+    @Test
+    void loginInit_WhenQueryParamPresentWithPromptNoneAsValue_IgnoresGivenQueryParamAndCreatesSessionAndRedirects() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_query_param_value_as_prompt_none.json")));
+
+        String ssoCookieValue = given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .extract().cookie(COOKIE_NAME_GOVSSO);
+
+        SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
+        assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
     }
 
     @Test
@@ -715,9 +761,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(400)
-                .cookies(emptyMap());
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("SsoException: Request URL must contain prompt=consent");
+        assertErrorIsLogged("SsoException: Request URL must contain prompt value");
     }
 
     @Test
@@ -946,6 +993,48 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(302)
                 .cookies(emptyMap())
                 .header("Location", Matchers.matchesRegex("https://clienta.localhost:11443/auth/login/test"));
+    }
+
+    @Test
+    void loginInit_WhenPromptValueIsInvalid_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_invalid_prompt_value.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid prompt value");
+    }
+
+    @Test
+    void loginInit_WhenMultiplePromptValues_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_multiple_prompt_values.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Request URL contains more than 1 prompt values");
     }
 
     @Test

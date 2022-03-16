@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
+import java.net.URI;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class LogoutRequestInfo {
@@ -14,6 +16,7 @@ public class LogoutRequestInfo {
     private String subject;
     @JsonProperty("sid")
     private String sessionId;
-    private String requestUrl;
+    // TODO: for some reason Hydra does not return full URL here, so have to use URI instead of URL.
+    private URI requestUrl;
     private Boolean rpInitiated;
 }

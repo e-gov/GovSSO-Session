@@ -5,14 +5,18 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
-import ee.ria.govsso.session.service.hydra.LogoutAcceptResponseBody;
+import ee.ria.govsso.session.service.hydra.LogoutAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +25,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.constraints.Pattern;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+
+import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 
 @Slf4j
 @Validated
@@ -60,7 +66,7 @@ public class LogoutController {
         List<Consent> consents = hydraService.getConsents(subject, sessionId);
 
         if (consents.isEmpty() || consentExistsOnlyForRequestClient(consents, requestClientId)) {
-            LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
+            LogoutAcceptResponse logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
             return new ModelAndView("redirect:" + logoutAcceptResponse.getRedirectTo());
         }
 
@@ -80,8 +86,8 @@ public class LogoutController {
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
         validateLogoutRequestInfo(logoutRequestInfo);
 
-        LogoutAcceptResponseBody logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
-        return new RedirectView(logoutAcceptResponse.getRedirectTo());
+        LogoutAcceptResponse response = hydraService.acceptLogout(logoutChallenge);
+        return new RedirectView(response.getRedirectTo().toString());
     }
 
     @PostMapping(value = LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
@@ -92,7 +98,7 @@ public class LogoutController {
         validateLogoutRequestInfo(logoutRequestInfo);
 
         hydraService.rejectLogout(logoutChallenge);
-        String postLogoutRedirectUri = getPostLogoutRedirectUriFromRequestUrl(logoutRequestInfo.getRequestUrl());
+        String postLogoutRedirectUri = getAndValidatePostLogoutRedirectUri(logoutRequestInfo.getRequestUrl());
         return new RedirectView(postLogoutRedirectUri);
     }
 
@@ -101,17 +107,26 @@ public class LogoutController {
             throw new SsoException(ErrorCode.USER_INPUT, "Logout not initiated by relying party");
         }
 
-        String postLogoutRedirectUri = getPostLogoutRedirectUriFromRequestUrl(logoutRequestInfo.getRequestUrl());
-        if (StringUtils.isBlank(postLogoutRedirectUri)) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Invalid post logout redirect URI");
-        }
+        getAndValidatePostLogoutRedirectUri(logoutRequestInfo.getRequestUrl());
     }
 
-    private String getPostLogoutRedirectUriFromRequestUrl(String requestUrl) {
-        return UriComponentsBuilder.fromUriString(requestUrl)
-                .build()
+    @SneakyThrows
+    private String getAndValidatePostLogoutRedirectUri(URI requestUrl) {
+        List<NameValuePair> postLogoutRedirectUris = new URIBuilder(requestUrl)
                 .getQueryParams()
-                .getFirst("post_logout_redirect_uri");
+                .stream()
+                .filter(x -> x.getName().equals("post_logout_redirect_uri"))
+                .toList();
+
+        if (CollectionUtils.isEmpty(postLogoutRedirectUris) || StringUtils.isBlank(postLogoutRedirectUris.get(0).getValue())) {
+            throw new SsoException(USER_INPUT, "Invalid post logout redirect URI");
+        }
+
+        if (postLogoutRedirectUris.size() > 1) {
+            throw new SsoException(USER_INPUT, "Request URL contains more than 1 post logout redirect uri");
+        }
+
+        return postLogoutRedirectUris.get(0).getValue();
     }
 
     private boolean consentExistsOnlyForRequestClient(List<Consent> consents, String requestClientId) {

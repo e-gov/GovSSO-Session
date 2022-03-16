@@ -119,6 +119,7 @@ class TaraMetadataServiceTest extends BaseTest {
         assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
+    // TODO: flaky test
     @Test
     @Order(4)
     @SneakyThrows
@@ -141,6 +142,7 @@ class TaraMetadataServiceTest extends BaseTest {
         assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
+    // TODO: flaky test
     @Test
     @Order(5)
     @SneakyThrows

@@ -7,13 +7,16 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
+import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
+import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.PromptUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -74,11 +77,12 @@ public class LoginInitController {
             oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
         }
 
-        if (loginRequestInfo.getRequestUrl().contains("prompt=none")) {
-            return updateSession(loginRequestInfo, request, response);
+        Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
+        if (prompt == Prompt.NONE) {
+            return updateSession(loginRequestInfo);
         }
 
-        validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo);
+        validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             return authenticateWithTara(loginRequestInfo, response);
         } else {
@@ -119,16 +123,16 @@ public class LoginInitController {
         }
     }
 
-    private ModelAndView updateSession(LoginRequestInfo loginRequestInfo, HttpServletRequest request, HttpServletResponse response) {
+    private ModelAndView updateSession(LoginRequestInfo loginRequestInfo) {
         validateLoginRequestInfoAgainstToken(loginRequestInfo);
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
-        } else {
-            validateIdToken(loginRequestInfo, idToken);
-            String redirectUrl = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
-            return new ModelAndView("redirect:" + redirectUrl);
         }
+
+        validateIdToken(loginRequestInfo, idToken);
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
+        return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
     private void validateLoginRequestInfoAgainstToken(LoginRequestInfo loginRequestInfo) {
@@ -160,13 +164,14 @@ public class LoginInitController {
         }
     }
 
-    private void validateLoginRequestInfoForAuthenticationAndContinuation(LoginRequestInfo loginRequestInfo) {
-        if (!loginRequestInfo.getRequestUrl().contains("prompt=consent")) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Request URL must contain prompt=consent");
-        }
+    private void validateLoginRequestInfoForAuthenticationAndContinuation(LoginRequestInfo loginRequestInfo, Prompt prompt) {
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && oidcContext.getIdTokenHintClaims() != null) {
             throw new SsoException(ErrorCode.USER_INPUT, "id_token_hint_claims must be null");
+        }
+
+        if (prompt != Prompt.CONSENT) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Request URL must contain prompt=consent");
         }
     }
 
@@ -185,7 +190,6 @@ public class LoginInitController {
 
     @SneakyThrows
     private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
-
         if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
             ModelAndView model = new ModelAndView("acrView");
             model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));

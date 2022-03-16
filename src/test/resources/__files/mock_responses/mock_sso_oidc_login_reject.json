@@ -1,3 +1,3 @@
 {
-  "redirect_to": "auth/reject/test"
+  "redirect_to": "https://hydra.localhost:9000/oauth2/auth/reject/test"
 }

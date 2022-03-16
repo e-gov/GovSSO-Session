@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
+import java.net.URL;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class LoginRequestInfo {
@@ -13,7 +15,7 @@ public class LoginRequestInfo {
     private Client client;
     private String subject;
     private String sessionId;
-    private String requestUrl;
+    private URL requestUrl;
     private String[] requestedScope;
     private OidcContext oidcContext;
     private boolean skip;

@@ -17,6 +17,7 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.chrono.IsoChronology;
 import java.time.format.DateTimeFormatter;
@@ -114,13 +115,12 @@ public class LocaleUtil {
     }
 
     @SneakyThrows
-    private NameValuePair getHydraRequestUrlLocaleParameter(String requestUrl) {
-        NameValuePair localeParameter = new URIBuilder(requestUrl).getQueryParams()
+    private NameValuePair getHydraRequestUrlLocaleParameter(URI requestUrl) {
+        return new URIBuilder(requestUrl)
+                .getQueryParams()
                 .stream()
                 .filter(x -> x.getName().equals("ui_locales"))
                 .findFirst()
                 .orElse(null);
-
-        return localeParameter;
     }
 }

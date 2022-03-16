@@ -239,7 +239,30 @@ class ContinueSessionControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("SsoException: Request URL must contain prompt=consent");
+        assertErrorIsLogged("SsoException: Request URL must contain prompt value");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestUrlContainsInvalidPromptValue_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_invalid_prompt_value.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid prompt value");
     }
 
     @Test

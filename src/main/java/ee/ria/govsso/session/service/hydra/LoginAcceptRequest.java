@@ -6,7 +6,14 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ConsentAcceptResponseBody {
+public class LoginAcceptRequest {
 
-    private String redirectTo;
+    boolean remember;
+    String acr;
+    String subject;
+    Context context;
+    int rememberFor;
+    String[] amr;
+    boolean refreshRememberFor;
+
 }

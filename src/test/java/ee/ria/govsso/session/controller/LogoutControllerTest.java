@@ -544,6 +544,26 @@ class LogoutControllerTest extends BaseTest {
         assertErrorIsLogged("SsoException: Invalid post logout redirect URI");
     }
 
+    @Test
+    void logoutInit_WhenMultiplePostLogoutRedirectUris_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_multiple_post_logout_redirect_uris.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Request URL contains more than 1 post logout redirect uri");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "00000000-1111-2222-3333-4444444444445", "00000000-1111-2222-3333444444444444", "3C3EF85A-3D8B-4EA2-BB53-B66BC5BD1931"})
     void logoutInit_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) {

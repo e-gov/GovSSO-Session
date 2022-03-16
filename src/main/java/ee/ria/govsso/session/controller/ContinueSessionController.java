@@ -6,8 +6,11 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
+import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
+import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.util.PromptUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -50,11 +53,11 @@ public class ContinueSessionController {
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
-        } else {
-            validateIdToken(loginRequestInfo, idToken);
-            String redirectUrl = hydraService.acceptLogin(loginChallenge, idToken);
-            return new RedirectView(redirectUrl);
         }
+
+        validateIdToken(loginRequestInfo, idToken);
+        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken);
+        return new RedirectView(response.getRedirectTo().toString());
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -77,7 +80,9 @@ public class ContinueSessionController {
                 throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
             }
         }
-        if (!loginRequestInfo.getRequestUrl().contains("prompt=consent")) {
+
+        Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
+        if (prompt != Prompt.CONSENT) {
             throw new SsoException(ErrorCode.USER_INPUT, "Request URL must contain prompt=consent");
         }
         if (oidcContext != null && oidcContext.getIdTokenHintClaims() != null) {

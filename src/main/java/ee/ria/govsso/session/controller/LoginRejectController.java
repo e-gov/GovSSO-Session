@@ -3,6 +3,7 @@ package ee.ria.govsso.session.controller;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
+import ee.ria.govsso.session.service.hydra.LoginRejectResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -26,12 +27,10 @@ public class LoginRejectController {
     public RedirectView loginReject(@ModelAttribute("loginChallenge")
                                     @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge) {
 
-        String redirectUrl = hydraService.rejectLogin(loginChallenge);
-
-        if (redirectUrl != null) {
-            return new RedirectView(redirectUrl);
-        } else {
+        LoginRejectResponse response = hydraService.rejectLogin(loginChallenge);
+        if (response.getRedirectTo() == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Invalid hydra server response. Redirect URL missing from response.");
         }
+        return new RedirectView(response.getRedirectTo().toString());
     }
 }

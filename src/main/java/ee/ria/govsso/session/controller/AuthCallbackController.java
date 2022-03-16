@@ -5,6 +5,8 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
+import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
+import ee.ria.govsso.session.service.hydra.LoginRejectResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
@@ -39,22 +41,23 @@ public class AuthCallbackController {
             @RequestParam(name = "error", required = false) @Pattern(regexp = "user_cancel", message = "the only supported value is: 'user_cancel'") String error,
             @SsoCookieValue SsoCookie ssoCookie) {
 
-        validateLoginRequestInfo(state, ssoCookie);
+        validateSsoCookie(state, ssoCookie);
 
         if (error != null) {
-            String redirectUrl = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
-            return new RedirectView(redirectUrl);
-        } else if (code == null) {
+            LoginRejectResponse response = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
+            return new RedirectView(response.getRedirectTo().toString());
+        }
+        if (code == null) {
             throw new SsoException(ErrorCode.USER_INPUT, "code parameter must not be null");
         }
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
-
         SignedJWT idToken = taraService.requestIdToken(code);
         verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
-        String redirectUrl = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
-        return new RedirectView(redirectUrl);
+
+        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
+        return new RedirectView(response.getRedirectTo().toString());
     }
 
     @SneakyThrows
@@ -73,7 +76,7 @@ public class AuthCallbackController {
         }
     }
 
-    private void validateLoginRequestInfo(String state, SsoCookie ssoCookie) {
+    private void validateSsoCookie(String state, SsoCookie ssoCookie) {
         if (ssoCookie.getTaraAuthenticationRequestState() == null || ssoCookie.getTaraAuthenticationRequestState().isBlank()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Session tara authentication request state must not be null");
         }

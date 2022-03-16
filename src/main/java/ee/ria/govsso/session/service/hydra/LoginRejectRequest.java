@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LoginRejectRequestBody {
+public class LoginRejectRequest {
 
     String error = "user_cancel";
     String errorDebug = "User canceled the authentication process.";

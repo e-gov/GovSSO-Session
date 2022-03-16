@@ -4,16 +4,11 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
+import java.net.URL;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LoginAcceptRequestBody {
+public class LogoutAcceptResponse {
 
-    boolean remember;
-    String acr;
-    String subject;
-    Context context;
-    int rememberFor;
-    String[] amr;
-    boolean refreshRememberFor;
-
+    private URL redirectTo;
 }

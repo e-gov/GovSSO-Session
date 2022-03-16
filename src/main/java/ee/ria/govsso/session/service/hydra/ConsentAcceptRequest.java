@@ -8,9 +8,9 @@ import java.util.List;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ConsentAcceptRequestBody {
+public class ConsentAcceptRequest {
 
-    private ConsentAcceptRequestBody.LoginSession session;
+    private ConsentAcceptRequest.LoginSession session;
     private List<String> grantScope;
     private boolean remember;
     private int rememberFor;
@@ -18,7 +18,7 @@ public class ConsentAcceptRequestBody {
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class LoginSession {
-        private ConsentAcceptRequestBody.IdToken idToken;
+        private ConsentAcceptRequest.IdToken idToken;
     }
 
     @Data
