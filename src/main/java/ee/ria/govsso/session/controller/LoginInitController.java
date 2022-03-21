@@ -6,6 +6,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.tara.TaraService;
@@ -58,7 +59,6 @@ public class LoginInitController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         if (language == null && localeCookie == null) {
             //Set locale as early as possible so it could be used by error messages as much as possible.
@@ -68,7 +68,7 @@ public class LoginInitController {
 
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            oidcContext.setAcrValues(new String[]{"high"});
+            oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
         }
 
         if (loginRequestInfo.getRequestUrl().contains("prompt=none")) {
@@ -110,7 +110,7 @@ public class LoginInitController {
             if (oidcContext.getAcrValues().length > 1) {
                 throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
 
-            } else if (!oidcContext.getAcrValues()[0].matches("low|substantial|high")) {
+            } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
                 throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
             }
         }
@@ -220,7 +220,6 @@ public class LoginInitController {
     }
 
     private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {
-        Map<String, Integer> acrMap = Map.of("low", 1, "substantial", 2, "high", 3);
-        return acrMap.get(idTokenAcr) >= acrMap.get(loginRequestInfoAcr);
+        return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
     }
 }

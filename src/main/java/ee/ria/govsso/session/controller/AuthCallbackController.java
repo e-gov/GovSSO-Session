@@ -4,6 +4,7 @@ import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
@@ -20,7 +21,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
 
 import javax.validation.constraints.Pattern;
-import java.util.Map;
 
 @Slf4j
 @Validated
@@ -60,7 +60,7 @@ public class AuthCallbackController {
     @SneakyThrows
     private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
         String idTokenAcr = idToken.getJWTClaimsSet().getStringClaim("acr");
-        String loginRequestAcr = "high";
+        String loginRequestAcr = LevelOfAssurance.HIGH.getAcrName();
 
         if (loginRequestInfo.getOidcContext() != null
                 && !ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())
@@ -68,8 +68,7 @@ public class AuthCallbackController {
             loginRequestAcr = loginRequestInfo.getOidcContext().getAcrValues()[0];
         }
 
-        Map<String, Integer> acrMap = Map.of("low", 1, "substantial", 2, "high", 3);
-        if (acrMap.get(idTokenAcr) < acrMap.get(loginRequestAcr)) {
+        if (LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() < LevelOfAssurance.findByAcrName(loginRequestAcr).getAcrLevel()) {
             throw new SsoException(ErrorCode.USER_INPUT, "ID Token acr value must be equal to or higher than hydra login request acr");
         }
     }
