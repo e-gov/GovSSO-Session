@@ -1,24 +1,16 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
-import ee.ria.govsso.session.error.ErrorHandler;
-import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.http.ContentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpHeaders;
-
-import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
@@ -33,28 +25,17 @@ import static ee.ria.govsso.session.controller.LogoutController.LOGOUT_CONTINUE_
 import static ee.ria.govsso.session.controller.LogoutController.LOGOUT_END_SESSION_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.LogoutController.LOGOUT_INIT_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.matchesRegex;
-import static org.hamcrest.Matchers.startsWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Disabled("GSSO-265 Exception message assertions will be refactored")
 class LogoutControllerTest extends BaseTest {
     public static final String TEST_LOGOUT_CHALLENGE = "3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931";
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
     private final SsoCookieSigner ssoCookieSigner;
-
-    @SpyBean
-    private ErrorHandler errorHandler; // TODO GSSO-265 Must check but SpyBean creates new application context, so maybe create mock log appender instead for detailed exception message assertions.
-
-    @Captor
-    private ArgumentCaptor<Exception> exceptionCaptor;
 
     @Test
     void logoutInit_WhenValidSingleClientLogoutRequest_ReturnsRedirect() {
@@ -201,9 +182,7 @@ class LogoutControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -216,6 +195,8 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
                 .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -264,9 +245,7 @@ class LogoutControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -280,6 +259,8 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Authentication error."))
                 .body(containsString("An unexpected error occurred. Please try again later."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -329,9 +310,7 @@ class LogoutControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -346,6 +325,8 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Authentication error."))
                 .body(containsString("An unexpected error occurred. Please try again later."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -395,9 +376,7 @@ class LogoutControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -412,6 +391,8 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
                 .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -481,7 +462,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+    void logoutInit_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -500,15 +481,12 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("Logout not initiated by relying party"));
+        assertErrorIsLogged("SsoException: Logout not initiated by relying party");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"missing", "blank"})
-    void logoutInit_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String
-                                                                                                               postLogoutRedirectUri) throws IOException {
+    void logoutInit_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -524,13 +502,12 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(), startsWith("Invalid post logout redirect URI"));
+        assertErrorIsLogged("SsoException: Invalid post logout redirect URI");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "00000000-1111-2222-3333-4444444444445", "00000000-1111-2222-3333444444444444", "3C3EF85A-3D8B-4EA2-BB53-B66BC5BD1931"})
-    void logoutInit_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) throws IOException {
+    void logoutInit_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) {
         SsoCookie ssoCookie = createSsoCookie();
 
         given()
@@ -543,9 +520,7 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleBindException(exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("logoutInit.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""));
+        assertErrorIsLogged("User input exception: logoutInit.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\"");
     }
 
     @Test
@@ -559,10 +534,12 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: logout_challenge");
     }
 
     @Test
-    void logoutInit_WhenLogoutChallengeMissing_ThrowsUserInputError() throws IOException {
+    void logoutInit_WhenLogoutChallengeMissing_ThrowsUserInputError() {
         given()
                 .when()
                 .get(LOGOUT_INIT_REQUEST_MAPPING)
@@ -571,13 +548,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleBindException(exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("Required request parameter 'logout_challenge' for method parameter type String is not present"));
+        assertErrorIsLogged("User input exception: Required request parameter 'logout_challenge' for method parameter type String is not present");
     }
 
     @Test
-    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith404_ThrowsUserInputError() throws IOException {
+    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith404_ThrowsUserInputError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -594,13 +569,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("404 Not Found from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 404 Not Found from GET");
     }
 
     @Test
-    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith410_ThrowsUserInputError() throws IOException {
+    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith410_ThrowsUserInputError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -617,13 +590,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("410 Gone from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 410 Gone from GET");
     }
 
     @Test
-    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void logoutInit_WhenFetchLogoutRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -640,13 +611,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 500 Internal Server Error from GET");
     }
 
     @Test
-    void logoutInit_WhenGetConsentsReturnsEmptyList_ReturnsRedirect() throws IOException {
+    void logoutInit_WhenGetConsentsReturnsEmptyList_ReturnsRedirect() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -734,7 +703,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenGetConsentsRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void logoutInit_WhenGetConsentsRespondsWith500_ThrowsTechnicalGeneralError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -757,13 +726,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from GET https://hydra.localhost:9000/oauth2/auth/sessions/consent?subject=Isikukood3"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
-    void logoutInit_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() throws IOException {
+    void logoutInit_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -792,13 +759,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("404 Not Found from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/accept?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to accept Hydra logout request --> 404 Not Found from PUT");
     }
 
     @Test
-    void logoutInit_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void logoutInit_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -827,9 +792,7 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/accept?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to accept Hydra logout request --> 500 Internal Server Error from PUT");
     }
 
     @Test
@@ -860,7 +823,7 @@ class LogoutControllerTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "00000000-1111-2222-3333-4444444444445", "00000000-1111-2222-3333444444444444", "3C3EF85A-3D8B-4EA2-BB53-B66BC5BD1931"})
-    void endSession_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) throws IOException {
+    void endSession_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
@@ -873,13 +836,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleBindException(exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("endSession.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""));
+        assertErrorIsLogged("User input exception: endSession.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\"");
     }
 
     @Test
-    void endSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+    void endSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -897,14 +858,12 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(), equalTo("Logout not initiated by relying party"));
+        assertErrorIsLogged("SsoException: Logout not initiated by relying party");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"missing", "blank"})
-    void endSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String
-                                                                                                               postLogoutRedirectUri) throws IOException {
+    void endSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -922,12 +881,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(), startsWith("Invalid post logout redirect URI"));
+        assertErrorIsLogged("SsoException: Invalid post logout redirect URI");
     }
 
     @Test
-    void endSession_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() throws IOException {
+    void endSession_WhenAcceptLogoutRespondsWith404_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -949,13 +907,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("404 Not Found from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/accept?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to accept Hydra logout request --> 404 Not Found from PUT");
     }
 
     @Test
-    void endSession_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void endSession_WhenAcceptLogoutRespondsWith500_ThrowsTechnicalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -977,9 +933,7 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/accept?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to accept Hydra logout request --> 500 Internal Server Error from PUT");
     }
 
     @Test
@@ -1009,7 +963,7 @@ class LogoutControllerTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "......", "00000000-1111-2222-3333-4444444444445", "00000000-1111-2222-3333444444444444", "3C3EF85A-3D8B-4EA2-BB53-B66BC5BD1931"})
-    void continueSession_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) throws IOException {
+    void continueSession_WhenLogoutChallengeInvalid_ThrowsUserInputError(String logoutChallenge) {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
@@ -1022,13 +976,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleBindException(exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("continueSession.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""));
+        assertErrorIsLogged("User input exception: continueSession.logoutChallenge: must match \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\"");
     }
 
     @Test
-    void continueSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() throws IOException {
+    void continueSession_WhenNotRelyingPartyInitiatedLogoutRequest_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -1046,14 +998,12 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(), equalTo("Logout not initiated by relying party"));
+        assertErrorIsLogged("SsoException: Logout not initiated by relying party");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"missing", "blank"})
-    void continueSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String
-                                                                                                                    postLogoutRedirectUri) throws IOException {
+    void continueSession_WhenFetchLogoutRequestInfoReturnsInvalidPostLogoutRedirectUri_ThrowsUserInputError(String postLogoutRedirectUri) {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -1071,13 +1021,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                startsWith("Invalid post logout redirect URI"));
+        assertErrorIsLogged("SsoException: Invalid post logout redirect URI");
     }
 
     @Test
-    void continueSession_WhenFetchLogoutRequestInfoRespondsWith404_ThrowsUserInputError() throws IOException {
+    void continueSession_WhenFetchLogoutRequestInfoRespondsWith404_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(404)));
@@ -1093,13 +1041,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("404 Not Found from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 404 Not Found from GET");
     }
 
     @Test
-    void continueSession_WhenFetchLogoutRequestInfoRespondsWith410_ThrowsUserInputError() throws IOException {
+    void continueSession_WhenFetchLogoutRequestInfoRespondsWith410_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(410)));
@@ -1115,13 +1061,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("410 Gone from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 410 Gone from GET");
     }
 
     @Test
-    void continueSession_WhenFetchLogoutRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void continueSession_WhenFetchLogoutRequestInfoRespondsWith500_ThrowsTechnicalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(500)));
@@ -1137,13 +1081,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from GET https://hydra.localhost:9000/oauth2/auth/requests/logout?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra logout request info --> 500 Internal Server Error from GET");
     }
 
     @Test
-    void continueSession_WhenRejectLogoutRespondsWith404_ThrowsUserInputError() throws IOException {
+    void continueSession_WhenRejectLogoutRespondsWith404_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -1166,13 +1108,11 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("404 Not Found from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/reject?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to reject Hydra logout request --> 404 Not Found from PUT");
     }
 
     @Test
-    void continueSession_WhenRejectLogoutRespondsWith500_ThrowsTechnicalGeneralError() throws IOException {
+    void continueSession_WhenRejectLogoutRespondsWith500_ThrowsTechnicalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -1195,9 +1135,7 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        verify(errorHandler).handleSsoException((SsoException) exceptionCaptor.capture(), any());
-        assertThat(exceptionCaptor.getValue().getMessage(),
-                equalTo("500 Internal Server Error from PUT https://hydra.localhost:9000/oauth2/auth/requests/logout/reject?logout_challenge=3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931"));
+        assertErrorIsLogged("SsoException: Failed to reject Hydra logout request --> 500 Internal Server Error from PUT");
     }
 
     private SsoCookie createSsoCookie() {

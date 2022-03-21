@@ -93,6 +93,8 @@ class ContinueSessionControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: continueSession.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -107,6 +109,8 @@ class ContinueSessionControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: continueSession.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -127,6 +131,8 @@ class ContinueSessionControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Login request subject must not be empty");
     }
 
     @Test
@@ -135,7 +141,7 @@ class ContinueSessionControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty_with_subject.json")));
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
@@ -147,6 +153,8 @@ class ContinueSessionControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Login request ID token hint claim must be null");
     }
 
     @Test
@@ -184,7 +192,7 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
-    void continueSession_WhenConsentsAreMissing_Reauthenticate() {
+    void continueSession_WhenConsentsAreMissing_ThrowsTechnicalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -207,5 +215,7 @@ class ContinueSessionControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: No valid consent requests found");
     }
 }

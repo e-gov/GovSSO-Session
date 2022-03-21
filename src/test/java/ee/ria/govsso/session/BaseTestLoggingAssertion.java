@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static ch.qos.logback.classic.Level.ERROR;
@@ -21,6 +22,7 @@ import static java.util.List.of;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,7 +43,11 @@ public class BaseTestLoggingAssertion {
 
     @AfterEach
     public void afterEachTest() {
+        List<ILoggingEvent> unmatchedErrorsAndWarnings = mockLogAppender.list.stream()
+                .filter(e -> e.getLevel() == ERROR || e.getLevel() == WARN)
+                .collect(Collectors.toList());
         ((Logger) getLogger(ROOT_LOGGER_NAME)).detachAppender(mockLogAppender);
+        assertThat(unmatchedErrorsAndWarnings, empty());
     }
 
     protected List<ILoggingEvent> assertInfoIsLogged(String... messagesInRelativeOrder) {
@@ -87,6 +93,7 @@ public class BaseTestLoggingAssertion {
             eventStream = eventStream.filter(additionalFilter);
         }
         List<ILoggingEvent> events = eventStream.collect(toList());
+        mockLogAppender.list.removeAll(events);
         List<String> messages = events.stream().map(ILoggingEvent::getFormattedMessage).collect(toList());
         assertThat("Expected log messages not found in output.\n\tExpected log messages: " + of(messagesInRelativeOrder) + ",\n\tActual log messages: " + messages,
                 messages, containsInRelativeOrder(expectedMessages.stream().map(CoreMatchers::startsWith).toArray(Matcher[]::new)));
@@ -110,6 +117,7 @@ public class BaseTestLoggingAssertion {
                         e.getFormattedMessage().equals(message))
                 .filter(e -> e.getMarker().toString().startsWith(expectedMarket))
                 .collect(toList());
+        mockLogAppender.list.removeAll(matchingLoggingEvents);
         assertNotNull(matchingLoggingEvents);
         assertThat(matchingLoggingEvents, hasSize(1));
     }

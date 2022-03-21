@@ -105,7 +105,7 @@ public class LoginInitController {
         }
 
         if (!Arrays.asList(requestedScopes).contains("openid") || requestedScopes.length != 1) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope most contain openid and nothing else");
+            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and nothing else");
         }
 
         if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {

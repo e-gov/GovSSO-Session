@@ -92,6 +92,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginReauthenticate.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -106,6 +108,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginReauthenticate.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -130,6 +134,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to delete Hydra consent --> 400 Bad Request from DELETE");
     }
 
     @Test
@@ -150,6 +156,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Hydra login request subject must not be empty.");
     }
 
     @Test
@@ -178,6 +186,8 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to delete Hydra login --> 400 Bad Request from DELETE");
     }
 
     @Test

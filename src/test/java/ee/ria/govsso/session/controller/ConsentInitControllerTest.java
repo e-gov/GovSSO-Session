@@ -36,6 +36,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: consentInit.consentChallenge: must match \"^[a-f0-9]{32}$\"");
     }
 
     @Test
@@ -47,6 +49,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: Required request parameter 'consent_challenge' for method parameter type String is not present");
     }
 
     @Test
@@ -60,6 +64,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: consent_challenge");
     }
 
     @Test
@@ -103,6 +109,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consent request info --> 404 Not Found from GET");
     }
 
     @Test
@@ -121,6 +129,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consent request info --> 410 Gone from GET");
     }
 
     @Test
@@ -139,6 +149,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consent request info --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -163,6 +175,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("Unexpected error: 500 Internal Server Error from PUT");
     }
 
     @Test

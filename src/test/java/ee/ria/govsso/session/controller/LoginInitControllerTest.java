@@ -191,6 +191,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
                 .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -246,6 +248,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Authentication error."))
                 .body(containsString("An unexpected error occurred. Please try again later."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -299,6 +303,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
                 .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -337,9 +343,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -352,6 +356,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Authentication error."))
                 .body(containsString("An unexpected error occurred. Please try again later."));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -404,6 +410,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Valid consents did not have identical tara_id_token values");
     }
 
     @Test
@@ -429,31 +437,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
-    }
 
-    @Test
-    void loginInit_WhenConsentsHaveUnrecognizedLoginSessionIds_ThrowsTechnicalGeneralError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_unrecognized_login_session_ids.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap())
-                .body("error", equalTo("TECHNICAL_GENERAL"));
+        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
     }
 
     @Test
@@ -514,6 +499,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: No valid consent requests found");
     }
 
     @Test
@@ -537,6 +524,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
 
     @ParameterizedTest
@@ -551,6 +540,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginInit.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -565,6 +556,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: login_challenge");
     }
 
     @Test
@@ -577,15 +570,15 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: Required request parameter 'login_challenge' for method parameter type String is not present");
     }
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoRespondsWith404_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
-                        .withStatus(404)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+                        .withStatus(404)));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -596,6 +589,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra login request info --> 404 Not Found from GET");
     }
 
     @Test
@@ -615,15 +610,15 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra login request info --> 410 Gone from GET");
     }
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoRespondsWith500_ThrowsTechincalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/oidc/mock_sso_oidc_login_request.json")));
+                        .withStatus(500)));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -634,6 +629,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra login request info --> 500 Internal Server Error from GET");
     }
 
     @Test
@@ -653,6 +650,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Request URL must contain prompt=consent");
     }
 
     @Test
@@ -672,6 +671,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
     }
 
     @Test
@@ -691,6 +692,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
     }
 
     @Test
@@ -700,7 +703,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_id_token_hint_claim_non_empty_without_subject.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -710,6 +713,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: id_token_hint_claims must be null");
     }
 
     @Test
@@ -729,6 +734,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Subject is null, therefore login response skip value can not be true");
     }
 
     @Test
@@ -748,6 +755,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Subject exists, therefore login response skip value can not be false");
     }
 
     @Test
@@ -768,6 +777,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must contain only 1 value");
     }
 
     @Test
@@ -788,6 +799,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must be one of low/substantial/high");
     }
 
     @Test
@@ -808,6 +821,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must be one of low/substantial/high");
     }
 
     @Test
@@ -905,6 +920,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Subject cannot be empty for session update");
     }
 
     @Test
@@ -924,6 +941,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Oidc context cannot be empty for session update");
     }
 
     @Test
@@ -943,6 +962,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Id token cannot be empty for session update");
     }
 
     @Test
@@ -962,6 +983,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Id token audiences must contain request client id");
     }
 
     @Test
@@ -981,6 +1004,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Id token session id must equal request session id");
     }
 
     @Test
@@ -1000,6 +1025,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Id token must not be expired");
     }
 
     @Test
@@ -1025,6 +1052,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
     }
 
     @Nested
@@ -1058,6 +1087,8 @@ public class LoginInitControllerTest extends BaseTest {
                     .assertThat()
                     .statusCode(500)
                     .body("error", equalTo("TECHNICAL_GENERAL"));
+
+            assertErrorIsLogged("SsoException: Hydra session has expired");
         }
 
         @Test

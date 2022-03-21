@@ -53,6 +53,8 @@ class LoginRejectControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginReject.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -67,6 +69,8 @@ class LoginRejectControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginReject.loginChallenge: Incorrect login_challenge format");
     }
 
     @Test
@@ -86,6 +90,8 @@ class LoginRejectControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to reject Hydra login request --> 404 Not Found from PUT");
     }
 
     @Test
@@ -105,6 +111,8 @@ class LoginRejectControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to reject Hydra login request --> 409 Conflict from PUT");
     }
 
     @Test
@@ -124,6 +132,8 @@ class LoginRejectControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: Failed to reject Hydra login request --> 500 Internal Server Error from PUT");
     }
 
     @Test

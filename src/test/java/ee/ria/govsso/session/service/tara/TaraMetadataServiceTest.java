@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.service.tara;
 
+import ch.qos.logback.classic.Logger;
 import com.nimbusds.langtag.LangTag;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.id.Identifier;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.slf4j.Logger.ROOT_LOGGER_NAME;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -66,6 +70,12 @@ class TaraMetadataServiceTest extends BaseTest {
     @BeforeAll
     static void setUpTaraMetadataNotAvailable() {
         TARA_MOCK_SERVER.resetAll();
+    }
+
+    @BeforeEach
+    public void stopLoggingAppender() {
+        //Logging appender must be stopped because the amount of logs created is inconsistent
+        ((Logger) getLogger(ROOT_LOGGER_NAME)).detachAndStopAllAppenders();
     }
 
     @Test
@@ -98,8 +108,10 @@ class TaraMetadataServiceTest extends BaseTest {
 
         verify(taraMetadataService, atLeast(nextScheduledInvocationCall)).requestMetadata();
         verify(taraMetadataService, never()).requestJWKSet(any());
-        assertThrows(SsoException.class, taraMetadataService::getMetadata);
-        assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
+        SsoException exceptionFromGetMetadata = assertThrows(SsoException.class, taraMetadataService::getMetadata);
+        SsoException exceptionFromGetIDTokenValidator = assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
+        assertThat(exceptionFromGetMetadata.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
     @Test
@@ -115,8 +127,11 @@ class TaraMetadataServiceTest extends BaseTest {
         verify(taraMetadataService, atLeast(metadataUpdateMaxAttempts)).requestMetadata();
         verify(taraMetadataService, atLeast(metadataUpdateMaxAttempts)).requestJWKSet(any());
         verify(taraMetadataService, never()).createIdTokenValidator(any(), any());
-        assertThrows(SsoException.class, taraMetadataService::getMetadata);
-        assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
+        SsoException exceptionFromGetMetadata = assertThrows(SsoException.class, taraMetadataService::getMetadata);
+        SsoException exceptionFromGetIDTokenValidator = assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
+
+        assertThat(exceptionFromGetMetadata.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
     @Test

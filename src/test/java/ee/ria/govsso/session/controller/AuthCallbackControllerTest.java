@@ -122,6 +122,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
     }
 
     @Test
@@ -186,6 +188,9 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
+
     }
 
     @Test
@@ -213,7 +218,7 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @Test
-    void authCallback_WhenErrorParemeterIsIncorrect_ThrowsUserInputError() {
+    void authCallback_WhenErrorParameterIsIncorrect_ThrowsUserInputError() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -233,6 +238,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginCallback.error: the only supported value is: 'user_cancel'");
     }
 
     @Test
@@ -251,6 +258,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: error");
     }
 
     @Test
@@ -267,6 +276,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: code parameter must not be null");
     }
 
     @Test
@@ -285,6 +296,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: code");
     }
 
     @ParameterizedTest
@@ -306,6 +319,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginCallback.code: must match \"^[A-Za-z0-9\\-_.]{6,87}$\"");
     }
 
     @Test
@@ -322,6 +337,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: Required request parameter 'state' for method parameter type String is not present");
     }
 
     @Test
@@ -340,6 +357,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("Duplicate parameters not allowed in request. Found multiple parameters with name: state");
     }
 
     @Test
@@ -357,6 +376,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid TARA callback state");
     }
 
     @Test
@@ -371,6 +392,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_COOKIE_MISSING"));
+
+        assertErrorIsLogged("SsoException: Missing or expired cookie");
     }
 
     @Test
@@ -388,6 +411,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Session tara authentication request state must not be null");
     }
 
     @Test
@@ -406,6 +431,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid TARA callback state");
     }
 
     @Test
@@ -423,6 +450,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Session tara authentication request nonce must not be null");
     }
 
     @Test
@@ -440,6 +469,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Session tara authentication request nonce must not be null");
     }
 
     @ParameterizedTest
@@ -461,6 +492,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("User input exception: loginCallback.state: must match \"^[A-Za-z0-9\\-_]{43}$\"");
     }
 
     @Test
@@ -490,6 +523,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_TARA_UNAVAILABLE"));
+
+        assertErrorIsLogged("SsoException: ErrorCode:null, Error description:null, Status Code:500");
     }
 
     @Test
@@ -519,10 +554,14 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT_OR_EXPIRED"));
+
+        assertErrorIsLogged("SsoException: ErrorCode:null, Error description:null, Status Code:400");
     }
 
     @Test
     void authCallback_WhenAcceptLoginRespondsWith500_ThrowsTechnicalGeneralError() {
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -534,15 +573,11 @@ class AuthCallbackControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_tara_oidc_token.json")));
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
 
-        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge"))
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
-
-        SsoCookie ssoCookie = createSsoCookie();
+                        .withStatus(500)));
 
         given()
                 .param("code", TEST_CODE)
@@ -554,6 +589,8 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("Unexpected error: 500 Internal Server Error from PUT");
     }
 
     @Test
