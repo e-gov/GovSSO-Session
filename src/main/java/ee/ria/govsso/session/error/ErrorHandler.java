@@ -1,6 +1,7 @@
 package ee.ria.govsso.session.error;
 
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -32,9 +33,9 @@ public class ErrorHandler {
     @ExceptionHandler({SsoException.class})
     public void handleSsoException(SsoException ex, HttpServletResponse response) throws IOException {
         if (ex.getErrorCode().isLogStackTrace() || log.isDebugEnabled()) {
-            logErrorWithStacktrace(ex, ex.getErrorCode(), "Server encountered an SsoException: {}");
+            logErrorWithStacktrace(ex, ex.getErrorCode(), "SsoException: {}");
         } else {
-            logError(ex, ex.getErrorCode(), "Server encountered an SsoException: {}");
+            logError(ex, ex.getErrorCode(), "SsoException: {}");
         }
         response.sendError(ex.getErrorCode().getHttpStatusCode());
     }
@@ -42,15 +43,16 @@ public class ErrorHandler {
     // These are considered as TECHNICAL_GENERAL errors.
     @ExceptionHandler({Exception.class})
     public void handleAll(Exception ex, HttpServletResponse response) throws IOException {
-        logErrorWithStacktrace(ex, ErrorCode.TECHNICAL_GENERAL, "Server encountered an unexpected error: {}");
+        logErrorWithStacktrace(ex, ErrorCode.TECHNICAL_GENERAL, "Unexpected error: {}");
         response.sendError(500);
     }
 
     private void logErrorWithStacktrace(Exception ex, ErrorCode errorCode, String messageFormat) {
-        log.error(append("error.code", errorCode.name()), messageFormat, ex.getMessage(), ex);
+        log.error(append("error.code", errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex), ex);
     }
 
     private void logError(Exception ex, ErrorCode errorCode, String messageFormat) {
-        log.error(append("error.code", errorCode.name()), messageFormat, ex.getMessage());
+        log.error(append("error.code", errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex));
     }
+
 }

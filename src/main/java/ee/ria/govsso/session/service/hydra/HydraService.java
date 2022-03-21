@@ -62,11 +62,11 @@ public class HydraService {
             return loginRequestInfo;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra login request info", ex);
             else if (ex.getStatusCode() == HttpStatus.GONE)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra login request info", ex);
             else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login request info", ex);
         }
     }
 
@@ -92,9 +92,9 @@ public class HydraService {
             return logoutRequestInfo;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND || ex.getStatusCode() == HttpStatus.GONE)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra logout request info", ex);
             else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra logout request info", ex);
         }
     }
 
@@ -120,11 +120,11 @@ public class HydraService {
             return consentRequestInfo;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra consent request info", ex);
             else if (ex.getStatusCode() == HttpStatus.GONE)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra consent request info", ex);
             else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra consent request info", ex);
         }
     }
 
@@ -157,7 +157,7 @@ public class HydraService {
 
             return validConsents;
         } catch (WebClientResponseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra consents list", ex);
         }
     }
 
@@ -232,9 +232,9 @@ public class HydraService {
             return responseBody;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to accept Hydra logout request", ex);
             else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to accept Hydra logout request", ex);
         }
     }
 
@@ -257,9 +257,9 @@ public class HydraService {
             requestLogger.logResponse(HttpStatus.OK.value(), responseEntity);
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to reject Hydra logout request", ex);
             else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to reject Hydra logout request", ex);
         }
     }
 
@@ -336,7 +336,7 @@ public class HydraService {
 
             requestLogger.logResponse(HttpStatus.OK.value(), responseEntity);
         } catch (Exception ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to delete Hydra consent", ex);
         }
     }
 
@@ -355,7 +355,7 @@ public class HydraService {
 
             requestLogger.logResponse(HttpStatus.OK.value(), responseEntity);
         } catch (Exception ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to delete Hydra login", ex);
         }
     }
 
@@ -381,11 +381,11 @@ public class HydraService {
             return loginRejectResponseBody.getRedirectTo();
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to reject Hydra login request", ex);
             else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
-                throw new SsoException(ErrorCode.USER_INPUT, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to reject Hydra login request", ex);
             } else
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, ex.getMessage(), ex);
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to reject Hydra login request", ex);
         }
     }
 

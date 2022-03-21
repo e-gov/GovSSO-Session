@@ -7,6 +7,7 @@ import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.verify;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Disabled("GSSO-265 Exception message assertions will be refactored")
 class LogoutControllerTest extends BaseTest {
     public static final String TEST_LOGOUT_CHALLENGE = "3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931";
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";

@@ -17,6 +17,7 @@ import ee.ria.govsso.session.configuration.properties.TaraConfigurationPropertie
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import ee.ria.govsso.session.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -89,7 +90,7 @@ public class TaraMetadataService {
             log.info("TARA metadata successfully updated. Metadata={}, jwkSet={}", metadata, jwkSet);
         } catch (Exception ex) {
             providerMetadata = null;
-            log.error("Unable to update TARA metadata", ex);
+            log.error("Unable to update TARA metadata: {}", ExceptionUtil.getCauseMessages(ex), ex);
             throw new SsoException("Unable to update TARA metadata", ex);
         }
     }
