@@ -56,9 +56,8 @@ if [ "$http_response" = 200 ]; then
        echo "Institution successfully added"
        echo
 else
-       echo "Unexpected error when adding new institution: $institution"
+       echo "Error when adding new institution: $institution"
        echo "Response: $(cat response.txt)"
-       exit 1
 fi
 
 echo "----- [ Create client: $clientId from file: $createClientPayload ]"
