@@ -20,14 +20,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.config.RedirectConfig.redirectConfig;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import({BuildProperties.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
-    protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
-    private static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
+    public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");
         put("X-Frame-Options", "DENY");
@@ -38,11 +40,10 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         // TODO: Returned during actual application run but for some reason not returned during tests
 //        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
     }};
-
+    protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
     protected static final String GATEWAY_MOCK_URL = "https://gateway.localhost:8000";
     protected static final String HYDRA_MOCK_URL = "https://hydra.localhost:9000";
     protected static final String TARA_MOCK_URL = "https://tara.localhost:10000";
-
     protected static final WireMockServer HYDRA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpDisabled(true)
             .httpsPort(9000)
@@ -51,7 +52,6 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
             .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
-
     protected static final WireMockServer TARA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpDisabled(true)
             .httpsPort(10000)
@@ -60,7 +60,6 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
             .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
-
     protected static final RSAKey TARA_JWK = TaraTestSetup.generateJWK();
     @LocalServerPort
     protected int port;
@@ -90,7 +89,10 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     @BeforeEach
     public void beforeEachTest() {
         // TODO GSSO-245 Consider using custom RequestSpecification/ResponseSpecification for common CORS header assertion
-        RestAssured.responseSpecification = new ResponseSpecBuilder().expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
+        RestAssured.responseSpecification = new ResponseSpecBuilder()
+                .expectHeader(ACCESS_CONTROL_ALLOW_ORIGIN, nullValue(String.class))
+                .expectHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS, nullValue(String.class))
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
         RestAssured.port = port;
         HYDRA_MOCK_SERVER.resetAll();
     }

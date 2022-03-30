@@ -10,6 +10,8 @@ import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
+import io.restassured.RestAssured;
+import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.http.Cookie;
 import io.restassured.matcher.DetailedCookieMatcher;
@@ -827,6 +829,9 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
+        RestAssured.responseSpecification = new ResponseSpecBuilder()
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -844,6 +849,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
                 .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+
     }
 
     @Test

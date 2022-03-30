@@ -1,6 +1,8 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
+import io.restassured.RestAssured;
+import io.restassured.builder.ResponseSpecBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
@@ -181,6 +183,8 @@ class ConsentInitControllerTest extends BaseTest {
 
     @Test
     void consentInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
+        RestAssured.responseSpecification = new ResponseSpecBuilder()
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
