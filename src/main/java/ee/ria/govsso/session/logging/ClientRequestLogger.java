@@ -7,7 +7,7 @@ import net.logstash.logback.marker.LogstashMarker;
 
 import static net.logstash.logback.marker.Markers.append;
 
-public class ClientRequestLogger {
+public class ClientRequestLogger { // TODO: Compare with AUT-850
 
     private final org.slf4j.Logger log;
 
