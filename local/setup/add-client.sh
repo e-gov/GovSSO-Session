@@ -9,15 +9,28 @@ clientId=$6
 createClientPayload=$7
 
 echo
+echo "----- [ Load home page for XSRF token ]"
+echo
+curl --insecure \
+  --request GET \
+  --cookie-jar cookies.txt \
+  --url "https://$adminServiceUrl/" \
+  --header "Content-Type: application/json" \
+
+XSRFTOKEN=$(grep -oP '__Host-XSRF-TOKEN\s*\K([\w-]+)' cookies.txt)
+
+echo
 echo "----- [ Login to admin service ]"
 echo
 #TODO: possible to use --cacert to pass truststore instead of --insecure
-curl --insecure --request POST --cookie-jar cookies.txt \
+curl --insecure \
+  --request POST \
+  --cookie cookies.txt \
+  --cookie-jar cookies.txt \
   --url "https://$adminServiceUrl/login" \
-  --header 'Content-Type: application/json' \
+  --header "Content-Type: application/json" \
+  --header "X-XSRF-TOKEN: $XSRFTOKEN" \
   --data "{\"username\":\"$adminServiceUsername\",\"password\":\"$adminServicePassword\"}"
-
-XSRFTOKEN=$(grep -oP 'XSRF-TOKEN\s*\K([\w-]+)' cookies.txt)
 
 echo
 echo "----- [ Delete client: $clientId ]"
