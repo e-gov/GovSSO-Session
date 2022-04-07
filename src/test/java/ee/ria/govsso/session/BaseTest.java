@@ -6,9 +6,11 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.nimbusds.jose.jwk.RSAKey;
 import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.info.BuildProperties;
@@ -20,16 +22,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.config.RedirectConfig.redirectConfig;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static org.springframework.http.HttpHeaders.ORIGIN;
 
+@Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import({BuildProperties.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
-    public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS = new HashMap<>() {{
+    public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");
         put("X-Frame-Options", "DENY");
@@ -37,8 +40,15 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         put("Pragma", "no-cache");
         put("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
         put("Expires", "0");
+        put(ACCESS_CONTROL_ALLOW_ORIGIN, null);
+        put(ACCESS_CONTROL_ALLOW_CREDENTIALS, null);
         // TODO: Returned during actual application run but for some reason not returned during tests
 //        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
+    }};
+    public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS_WITH_CORS = new HashMap<>() {{
+        putAll(EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS);
+        put(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443");
+        put(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
     }};
     protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
     protected static final String GATEWAY_MOCK_URL = "https://gateway.localhost:8000";
@@ -74,6 +84,9 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     private static void configureRestAssured() {
         RestAssured.filters(new ResponseLoggingFilter());
         RestAssured.config = RestAssured.config().redirect(redirectConfig().followRedirects(false));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+                .addHeader(ORIGIN, "https://clienta.localhost:11443")
+                .build();
     }
 
     protected static void setUpTaraMetadataMocks() {
@@ -88,12 +101,9 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
 
     @BeforeEach
     public void beforeEachTest() {
-        // TODO GSSO-245 Consider using custom RequestSpecification/ResponseSpecification for common CORS header assertion
+        RestAssured.requestSpecification.port(port);
         RestAssured.responseSpecification = new ResponseSpecBuilder()
-                .expectHeader(ACCESS_CONTROL_ALLOW_ORIGIN, nullValue(String.class))
-                .expectHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS, nullValue(String.class))
-                .expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
-        RestAssured.port = port;
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS).build();
         HYDRA_MOCK_SERVER.resetAll();
     }
 }

@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,9 +49,6 @@ import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
-import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
-import static org.springframework.http.HttpHeaders.ORIGIN;
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 @Slf4j
@@ -60,6 +58,12 @@ public class LoginInitControllerTest extends BaseTest {
     private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
+
+    @BeforeEach
+    public void setupExpectedResponseSpec() {
+        RestAssured.responseSpecification = new ResponseSpecBuilder()
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITH_CORS).build();
+    }
 
     @Test
     void loginInit_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
@@ -179,9 +183,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
                 .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+                        .withStatus(500)));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -256,6 +258,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Test
     void loginInit_WhenLocaleFromParameterIsUnknownAndLocaleFromCookieIsUnknownAndLocaleFromHydraIsUnknown_OpensViewInEstonian() {
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -828,31 +831,6 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenOriginHeaderIsSet_SetsCorsResponseHeaders() {
-        RestAssured.responseSpecification = new ResponseSpecBuilder()
-                .expectHeaders(EXPECTED_RESPONSE_HEADERS).build();
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .header(ORIGIN, "https://clienta.localhost:11443")
-                .when()
-                .get("/login/init")
-                .then()
-                .assertThat()
-                .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
-                .header(ACCESS_CONTROL_ALLOW_ORIGIN, "https://clienta.localhost:11443")
-                .header(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-
-    }
-
-    @Test
     void loginInit_WhenNoCSRFCookieIsSet_SetsCSRFCookie() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -1067,9 +1045,16 @@ public class LoginInitControllerTest extends BaseTest {
     @TestPropertySource(properties = {"govsso.session-max-duration-hours=1"})
     class MaxSessionDurationOneHourTests extends BaseTest {
 
+        @BeforeEach
+        public void setupExpectedResponseSpec() {
+            RestAssured.responseSpecification = new ResponseSpecBuilder()
+                    .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITH_CORS).build();
+        }
+
         @Test
         @SneakyThrows
         void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsTechnicalGeneralError() {
+
             SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
             String responseBody = createConsentsResponseBodyWithIdToken(jwt);
 
@@ -1088,7 +1073,7 @@ public class LoginInitControllerTest extends BaseTest {
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
                     .when()
-                    .get("/login/init")
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
                     .then()
                     .assertThat()
                     .statusCode(500)
@@ -1119,7 +1104,7 @@ public class LoginInitControllerTest extends BaseTest {
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
                     .when()
-                    .get("/login/init")
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
                     .then()
                     .assertThat()
                     .statusCode(200);
