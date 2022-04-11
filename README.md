@@ -10,14 +10,18 @@ TODO What this application does.
 
 ## Building Dependencies
 
-1. Follow TARA2-Admin/README.md to build it's Docker image
-2. Follow GOVSSO-Client/README.md to build it's Docker image
-3. Generate TLS certificates. Stored locally in local/tls folder.
+1. Follow [TARA2-Admin/README.md](https://github.com/e-gov/TARA2-Admin#building-and-running-in-docker) to build it's Docker image
+2. Follow [GOVSSO-Client/README.md](https://github.com/e-gov/GOVSSO-Client#running-in-docker) to build it's Docker image
+3. Build  [Ory Hydra HSM Docker image](https://github.com/ory/hydra/blob/v1.11.7/.docker/Dockerfile-hsm)
+    ```shell
+    docker build -f .docker/Dockerfile-hsm -t oryd/hydra:feature-govsso https://github.com/ory/hydra.git#v1.11.7
+    ```
+4. Generate TLS certificates. Stored locally in local/tls folder.
    ```shell
    cd local/tls
    ./generate-certificates.sh
    ```
-4. ```shell
+5. ```shell
    docker compose build
    ```
 

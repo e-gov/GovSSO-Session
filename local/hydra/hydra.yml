@@ -14,6 +14,11 @@ serve:
     access_log:
       disable_for_health: true
     port: 8443
+hsm:
+  enabled: true
+  library: /usr/lib/softhsm/libsofthsm2.so
+  pin: '1234'
+  token_label: hydra
 webfinger:
   oidc_discovery:
     supported_claims:
