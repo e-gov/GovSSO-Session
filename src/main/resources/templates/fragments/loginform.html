@@ -12,6 +12,7 @@
                 <div class="c-tab-login__content">
                     <div class="c-tab-login__content-wrap">
                         <div class="c-tab-login__content-icon">
+                            <img class="icon" th:if="${logo != null}" th:src="${'data:image/svg+xml;base64,' + logo}">
                         </div>
                         <div class="c-tab-login__content-text">
                             <div aria-level="2" role="heading">
@@ -22,27 +23,27 @@
                             <div class="row data-table">
                                 <div class="personal-info">
                                     <div class="personal-info-label" th:utext="#{label.sso.first_name}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${givenName}"></div>
+                                    <div class="personal-info-value" th:text="${givenName}" translate="no"></div>
                                 </div>
                                 <div class="personal-info">
                                     <div class="personal-info-label" th:utext="#{label.sso.personal_code}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${subject}"></div>
+                                    <div class="personal-info-value" th:text="${subject}" translate="no"></div>
                                 </div>
                                 <div class="personal-info">
                                     <div class="personal-info-label" th:utext="#{label.sso.last_name}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${familyName}"></div>
+                                    <div class="personal-info-value" th:text="${familyName}" translate="no"></div>
                                 </div>
                                 <div class="personal-info">
                                     <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${dateOfBirth}"></div>
+                                    <div class="personal-info-value" th:text="${dateOfBirth}" translate="no"></div>
                                 </div>
                                 <div class="personal-info" th:if="${email != null}">
                                     <div class="personal-info-label" th:utext="#{label.sso.email}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${email}"></div>
+                                    <div class="personal-info-value" th:text="${email}" translate="no"></div>
                                 </div>
                                 <div class="personal-info" th:if="${phoneNumber != null}">
                                     <div class="personal-info-label" th:utext="#{label.sso.phone_number}"></div>
-                                    <div class="personal-info-value" translate="no" th:text="${phoneNumber}"></div>
+                                    <div class="personal-info-value" th:text="${phoneNumber}" translate="no"></div>
                                 </div>
                             </div>
 

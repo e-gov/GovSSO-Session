@@ -22,7 +22,7 @@ public class SecurityConfigurationProperties {
     public static final String DEFAULT_CONTENT_SECURITY_POLICY = "connect-src 'self'; " +
             "default-src 'none'; " +
             "font-src 'self'; " +
-            "img-src 'self'; " +
+            "img-src 'self' data:; " +
             "script-src 'self'; " +
             "style-src 'self'; " +
             "base-uri 'none'; " +

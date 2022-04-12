@@ -12,6 +12,7 @@
                 <div class="c-tab-login__content">
                     <div class="c-tab-login__content-wrap">
                         <div class="c-tab-login__content-icon">
+                            <img class="icon" th:if="${logo != null}" th:src="${'data:image/svg+xml;base64,' + logo}">
                         </div>
                         <div class="c-tab-login__content-text">
                             <div aria-level="2" role="heading">

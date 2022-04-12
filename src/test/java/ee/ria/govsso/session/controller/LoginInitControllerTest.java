@@ -49,6 +49,7 @@ import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 @Slf4j
@@ -143,7 +144,40 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
                 .body(containsString("Perekonnanimi3"))
-                .body(containsString("12.07.1961"));
+                .body(containsString("12.07.1961"))
+                .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
+
+    @Test
+    void loginInit_WhenFetchLoginRequestInfoWithoutLogoIsSuccessful_CreatesSessionAndOpensView() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject_without_logo.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
+                .body(containsString("kasutab ühekordse sisselogimise"))
+                .body(containsString("Eesnimi3"))
+                .body(containsString("test1234"))
+                .body(containsString("Perekonnanimi3"))
+                .body(containsString("12.07.1961"))
+                .body(not(containsString("data:image/svg+xml;base64")));
     }
 
     @Test

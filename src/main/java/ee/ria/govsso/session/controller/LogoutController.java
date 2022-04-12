@@ -139,6 +139,7 @@ public class LogoutController {
         logoutView.addObject("logoutChallenge", logoutChallenge);
         logoutView.addObject("clientName", clientName);
         logoutView.addObject("activeSessions", activeSessions);
+        logoutView.addObject("logo", logoutRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
         return logoutView;
     }
 }

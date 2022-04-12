@@ -202,6 +202,7 @@ public class LoginInitController {
             model.addObject("subject", loginRequestInfo.getSubject());
             model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
+            model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
         }
         return model;
     }

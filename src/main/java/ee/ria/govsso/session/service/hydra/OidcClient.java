@@ -12,4 +12,5 @@ import java.util.Map;
 public class OidcClient {
     private Map<String, String> nameTranslations = new HashMap<>();
     private Map<String, String> shortNameTranslations = new HashMap<>();
+    private String logo;
 }

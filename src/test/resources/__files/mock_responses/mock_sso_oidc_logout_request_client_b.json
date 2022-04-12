@@ -52,7 +52,8 @@
         "institution": {
           "registry_code": "70000001",
           "sector": "public"
-        }
+        },
+        "logo": "testlogo"
       }
     }
   }

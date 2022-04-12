@@ -36,7 +36,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");
         put("X-Frame-Options", "DENY");
-        put("Content-Security-Policy", "connect-src 'self'; default-src 'none'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; base-uri 'none'; frame-ancestors 'none'; block-all-mixed-content");
+        put("Content-Security-Policy", "connect-src 'self'; default-src 'none'; font-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; base-uri 'none'; frame-ancestors 'none'; block-all-mixed-content");
         put("Pragma", "no-cache");
         put("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
         put("Expires", "0");

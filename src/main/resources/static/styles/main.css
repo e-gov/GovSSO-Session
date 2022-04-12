@@ -622,7 +622,8 @@ body {
 }
 
 .c-tab-login__content-icon .icon {
-	color: #344255
+    width: 160px;
+    height: 100px;
 }
 
 .c-tab-login__content-icon .icon-id-card {
