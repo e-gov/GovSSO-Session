@@ -172,7 +172,7 @@ public class LoginInitController {
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
         String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(acrValue);
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(acrValue, loginRequestInfo.getChallenge());
 
         SsoCookie ssoCookie = SsoCookie.builder()
                 .loginChallenge(loginRequestInfo.getChallenge())

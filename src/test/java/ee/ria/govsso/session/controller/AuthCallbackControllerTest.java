@@ -632,7 +632,7 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     private SsoCookie createSsoCookie() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high");
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", TEST_LOGIN_CHALLENGE);
         return SsoCookie.builder()
                 .loginChallenge(TEST_LOGIN_CHALLENGE)
                 .taraAuthenticationRequestState(authenticationRequest.getState().getValue())

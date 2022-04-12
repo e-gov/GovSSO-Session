@@ -67,7 +67,7 @@ public class TaraService {
     private final SSLContext trustContext;
 
     @SneakyThrows
-    public AuthenticationRequest createAuthenticationRequest(String acrValue) {
+    public AuthenticationRequest createAuthenticationRequest(String acrValue, String loginChallenge) {
         ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
         URI callback = ssoConfigurationProperties.getCallbackUri();
         State state = new State();
@@ -81,6 +81,7 @@ public class TaraService {
                 .nonce(nonce)
                 .acrValues(List.of(new ACR(acrValue)))
                 .uiLocales(getUiLocales())
+                .customParameter("govsso_login_challenge", loginChallenge)
                 .build();
     }
 
