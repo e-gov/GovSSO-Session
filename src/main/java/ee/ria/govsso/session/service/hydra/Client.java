@@ -10,5 +10,5 @@ public class Client {
 
     private String clientId;
     private String clientName;
-    private Metadata metadata = new Metadata();
+    private Metadata metadata;
 }
