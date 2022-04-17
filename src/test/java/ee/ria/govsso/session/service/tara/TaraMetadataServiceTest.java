@@ -74,7 +74,10 @@ class TaraMetadataServiceTest extends BaseTest {
 
     @BeforeEach
     public void stopLoggingAppender() {
-        //Logging appender must be stopped because the amount of logs created is inconsistent
+        // We are not using BaseTestLoggingAssertion.assertErrorIsLogged to assert exceptions, but are directly
+        // asserting exceptions thrown by called methods. Because of retry mechanism in TaraMetadataService, same errors
+        // are logged multiple times. Logging must be turned off, because otherwise all logged errors and warnings must
+        // be asserted in tests.
         ((Logger) getLogger(ROOT_LOGGER_NAME)).detachAndStopAllAppenders();
     }
 
@@ -110,7 +113,9 @@ class TaraMetadataServiceTest extends BaseTest {
         verify(taraMetadataService, never()).requestJWKSet(any());
         SsoException exceptionFromGetMetadata = assertThrows(SsoException.class, taraMetadataService::getMetadata);
         SsoException exceptionFromGetIDTokenValidator = assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
+        assertThat(exceptionFromGetMetadata.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
         assertThat(exceptionFromGetMetadata.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(exceptionFromGetIDTokenValidator.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
         assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
@@ -130,7 +135,9 @@ class TaraMetadataServiceTest extends BaseTest {
         SsoException exceptionFromGetMetadata = assertThrows(SsoException.class, taraMetadataService::getMetadata);
         SsoException exceptionFromGetIDTokenValidator = assertThrows(SsoException.class, taraMetadataService::getIDTokenValidator);
 
+        assertThat(exceptionFromGetMetadata.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
         assertThat(exceptionFromGetMetadata.getMessage(), equalTo("TARA metadata not available"));
+        assertThat(exceptionFromGetIDTokenValidator.getErrorCode(), equalTo(TECHNICAL_TARA_UNAVAILABLE));
         assertThat(exceptionFromGetIDTokenValidator.getMessage(), equalTo("TARA metadata not available"));
     }
 
