@@ -339,7 +339,7 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEnglish_ErrorMessageIsInEnglish() {
+    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInEnglish() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -366,7 +366,7 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenMultipleLocalesFromHydra_ReturnsLogoutViewInRussian() {
+    void loginInit_WhenMultipleLocalesFromHydra_OpensViewInRussian() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)

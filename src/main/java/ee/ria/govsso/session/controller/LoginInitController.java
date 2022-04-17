@@ -62,10 +62,11 @@ public class LoginInitController {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
 
+        // Set locale as early as possible, so it could be used by error messages as much as possible.
         if (language == null && localeCookie == null) {
-            //Set locale as early as possible so it could be used by error messages as much as possible.
             LocaleUtil.setLocale(loginRequestInfo);
         }
+
         validateLoginRequestInfo(loginRequestInfo);
 
         OidcContext oidcContext = loginRequestInfo.getOidcContext();

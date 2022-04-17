@@ -200,7 +200,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEnglish_OpensViewInEnglish() {
+    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInEnglish() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -234,7 +234,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenLocaleFromHydraIsRussianAndLocaleFromCookieIsEnglish_ErrorMessageIsInEnglish() {
+    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInEnglish() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -396,7 +396,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenMultipleLocalesFromHydra_ReturnsLogoutViewInRussian() {
+    void logoutInit_WhenMultipleLocalesFromHydra_OpensViewInRussian() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))

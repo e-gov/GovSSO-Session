@@ -2,6 +2,7 @@ package ee.ria.govsso.session.util;
 
 import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.time.chrono.IsoChronology;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.FormatStyle;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -31,7 +33,7 @@ import static java.util.regex.Pattern.compile;
 @UtilityClass
 public class LocaleUtil {
 
-    public static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|ru|fr)").asMatchPredicate();
+    private static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|fr)").asMatchPredicate();
     public static final String DEFAULT_LOCALE = "et";
 
     public Locale getLocale() {
@@ -44,11 +46,16 @@ public class LocaleUtil {
     }
 
     public void setLocale(LoginRequestInfo loginRequestInfo) {
-        String requestedLocale = getDefaultOrRequestedLocale(loginRequestInfo);
+        String requestedLocale = getFirstSupportedOrDefaultLocale(loginRequestInfo);
         setLocale(requestedLocale);
     }
 
-    public void setLocale(String requestedLocale) {
+    public void setLocale(LogoutRequestInfo logoutRequestInfo) {
+        String requestedLocale = getFirstSupportedOrDefaultLocale(logoutRequestInfo);
+        setLocale(requestedLocale);
+    }
+
+    private void setLocale(String requestedLocale) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         Locale locale = StringUtils.parseLocaleString(requestedLocale);
@@ -57,20 +64,32 @@ public class LocaleUtil {
         localeResolver.setLocale(request, response, locale);
     }
 
-    private String getDefaultOrRequestedLocale(LoginRequestInfo loginRequestInfo) {
+    private String getFirstSupportedOrDefaultLocale(LoginRequestInfo loginRequestInfo) {
         if (loginRequestInfo.getOidcContext() == null) {
             return DEFAULT_LOCALE;
         }
 
-        return loginRequestInfo.getOidcContext().getUiLocales()
-                .stream()
+        return getFirstSupportedOrDefaultLocale(loginRequestInfo.getOidcContext().getUiLocales());
+    }
+
+    private String getFirstSupportedOrDefaultLocale(LogoutRequestInfo logoutRequestInfo) {
+        NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
+        if (localeParameter == null) {
+            return DEFAULT_LOCALE;
+        }
+
+        return getFirstSupportedOrDefaultLocale(List.of(localeParameter.getValue().split(" ")));
+    }
+
+    private String getFirstSupportedOrDefaultLocale(List<String> locales) {
+        return locales.stream()
                 .filter(SUPPORTED_LANGUAGES)
                 .findFirst()
                 .orElse(DEFAULT_LOCALE);
     }
 
     public String getTranslatedClientName(Client client) {
-        Locale locale = LocaleUtil.getLocale();
+        Locale locale = getLocale();
 
         Map<String, String> nameTranslations = client.getMetadata().getOidcClient().getNameTranslations();
         String translatedName = nameTranslations.get(DEFAULT_LOCALE);
@@ -86,16 +105,16 @@ public class LocaleUtil {
                 FormatStyle.SHORT,
                 null,
                 IsoChronology.INSTANCE,
-                LocaleUtil.getLocale());
-        //Let other date components use short style, but year must use long style.
+                getLocale());
+        // Let other date components use short style, but year must use long style.
         formatPattern = formatPattern.replaceAll("\\byy\\b", "yyyy");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern, LocaleUtil.getLocale());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern, getLocale());
 
         return localDate.format(formatter);
     }
 
     @SneakyThrows
-    public NameValuePair getHydraRequestUrlLocaleParameter(String requestUrl) {
+    private NameValuePair getHydraRequestUrlLocaleParameter(String requestUrl) {
         NameValuePair localeParameter = new URIBuilder(requestUrl).getQueryParams()
                 .stream()
                 .filter(x -> x.getName().equals("ui_locales"))

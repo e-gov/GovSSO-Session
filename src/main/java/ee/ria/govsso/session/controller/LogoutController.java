@@ -11,7 +11,6 @@ import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.NameValuePair;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -27,9 +26,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Optional;
-
-import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LOCALE;
-import static ee.ria.govsso.session.util.LocaleUtil.SUPPORTED_LANGUAGES;
 
 @Slf4j
 @Validated
@@ -51,12 +47,9 @@ public class LogoutController {
 
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
 
-        //Set locale as early as possible so it could be used by error messages as much as possible.
-        NameValuePair localeParameter = LocaleUtil.getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
-        if (language == null && localeCookie == null && localeParameter != null) {
-            List<String> locales = List.of(localeParameter.getValue().split(" "));
-            String locale = locales.stream().filter(SUPPORTED_LANGUAGES).findFirst().orElse(DEFAULT_LOCALE);
-            LocaleUtil.setLocale(locale);
+        // Set locale as early as possible, so it could be used by error messages as much as possible.
+        if (language == null && localeCookie == null) {
+            LocaleUtil.setLocale(logoutRequestInfo);
         }
 
         validateLogoutRequestInfo(logoutRequestInfo);
