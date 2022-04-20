@@ -19,6 +19,7 @@ hsm:
   library: /usr/lib/softhsm/libsofthsm2.so
   pin: '1234'
   token_label: hydra
+  key_set_prefix: govsso.
 webfinger:
   oidc_discovery:
     supported_claims:
