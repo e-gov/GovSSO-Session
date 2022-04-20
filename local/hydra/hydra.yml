@@ -74,3 +74,4 @@ sqa:
   opt_out: true
 log:
   format: json
+  redaction_text: redacted
