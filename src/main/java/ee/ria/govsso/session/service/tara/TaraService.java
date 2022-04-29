@@ -123,7 +123,12 @@ public class TaraService {
         }
     }
 
-    public void verifyIdToken(@NonNull String nonce, @NonNull SignedJWT idToken) {
+    @SneakyThrows
+    public void verifyIdToken(@NonNull String nonce, @NonNull SignedJWT idToken, String loginChallenge) {
+        if (idToken.getJWTClaimsSet().getStringClaim("govsso_login_challenge") == null ||
+                !idToken.getJWTClaimsSet().getStringClaim("govsso_login_challenge").equals(loginChallenge)) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Invalid TARA callback govsso login challenge");
+        }
         try {
             IDTokenValidator verifier = taraMetadataService.getIDTokenValidator();
             verifier.validate(idToken, Nonce.parse(nonce));

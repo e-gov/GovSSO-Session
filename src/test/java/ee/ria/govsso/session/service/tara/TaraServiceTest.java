@@ -241,7 +241,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT idToken = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> taraService.verifyIdToken(null,
-                idToken));
+                idToken, TEST_LOGIN_CHALLENGE));
 
         assertThat(exception.getMessage(), equalTo("nonce is marked non-null but is null"));
     }
@@ -252,7 +252,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         String nonce = authenticationRequest.getNonce().getValue();
 
         NullPointerException exception = assertThrows(NullPointerException.class,
-                () -> taraService.verifyIdToken(nonce, null));
+                () -> taraService.verifyIdToken(nonce, null, TEST_LOGIN_CHALLENGE));
 
         assertThat(exception.getMessage(), equalTo("idToken is marked non-null but is null"));
     }
@@ -265,6 +265,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -275,7 +276,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -290,6 +291,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -300,7 +302,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -314,6 +316,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -324,7 +327,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -339,6 +342,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", "abc123")
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -349,7 +353,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -364,6 +368,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience("unknownclient123")
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -374,7 +379,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -389,6 +394,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
@@ -398,7 +404,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -413,6 +419,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .issuer(TARA_MOCK_URL)
                 .issueTime(new Date())
@@ -422,7 +429,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -437,6 +444,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer("https://unknownissuer:9877")
@@ -447,7 +455,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -462,6 +470,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issueTime(new Date())
@@ -471,7 +480,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -487,6 +496,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -497,7 +507,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -513,6 +523,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -522,7 +533,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -536,6 +547,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -545,7 +557,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT);
+        taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT, TEST_LOGIN_CHALLENGE);
     }
 
     @Test
@@ -557,6 +569,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -567,7 +580,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
@@ -582,6 +595,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", nonce)
                 .claim("state", state)
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -591,11 +605,58 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
         SsoException ssoException = assertThrows(SsoException.class,
-                () -> taraService.verifyIdToken(nonce, signedJWT));
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
 
         assertThat(ssoException.getMessage(), equalTo("Unable to validate ID Token"));
         Throwable cause = ssoException.getCause();
         assertThat(cause.getMessage(), equalTo("Missing JWT expiration (exp) claim"));
+    }
+
+    @Test
+    void verifyIdToken_WhenGovssoLoginChallengeMissing_ThrowsSsoException() {
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        String nonce = authenticationRequest.getNonce().getValue();
+        String state = authenticationRequest.getState().getValue();
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .claim("nonce", nonce)
+                .claim("state", state)
+                .audience(taraConfigurationProperties.clientId())
+                .subject("test")
+                .issuer(TARA_MOCK_URL)
+                .issueTime(new Date())
+                .expirationTime(Date.from(Instant.now().plusSeconds(10)))
+                .build();
+        OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
+        SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
+
+        SsoException ssoException = assertThrows(SsoException.class,
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
+
+        assertThat(ssoException.getMessage(), equalTo("Invalid TARA callback govsso login challenge"));
+    }
+
+    @Test
+    void verifyIdToken_WhenGovssoLoginChallengeInvalid_ThrowsSsoException() {
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        String nonce = authenticationRequest.getNonce().getValue();
+        String state = authenticationRequest.getState().getValue();
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .claim("nonce", nonce)
+                .claim("state", state)
+                .claim("govsso_login_challenge", "invalidLoginChallenge")
+                .audience(taraConfigurationProperties.clientId())
+                .subject("test")
+                .issuer(TARA_MOCK_URL)
+                .issueTime(new Date())
+                .expirationTime(Date.from(Instant.now().plusSeconds(10)))
+                .build();
+        OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
+        SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
+
+        SsoException ssoException = assertThrows(SsoException.class,
+                () -> taraService.verifyIdToken(nonce, signedJWT, TEST_LOGIN_CHALLENGE));
+
+        assertThat(ssoException.getMessage(), equalTo("Invalid TARA callback govsso login challenge"));
     }
 
     @Test
@@ -605,6 +666,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
@@ -614,13 +676,14 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT signedJWT = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
 
-        taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT);
+        taraService.verifyIdToken(authenticationRequest.getNonce().getValue(), signedJWT, TEST_LOGIN_CHALLENGE);
     }
 
     private JWTClaimsSet createClaimSet(AuthenticationRequest authenticationRequest) {
         return new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
                 .claim("state", authenticationRequest.getState().getValue())
+                .claim("govsso_login_challenge", TEST_LOGIN_CHALLENGE)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)

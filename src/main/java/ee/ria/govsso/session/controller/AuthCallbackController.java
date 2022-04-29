@@ -52,7 +52,7 @@ public class AuthCallbackController {
 
         SignedJWT idToken = taraService.requestIdToken(code);
         verifyAcr(idToken, loginRequestInfo);
-        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken);
+        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
         String redirectUrl = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
         return new RedirectView(redirectUrl);
     }

@@ -63,7 +63,7 @@ class AuthCallbackControllerTest extends BaseTest {
     @Test
     void authCallback_WhenTokenRequestAndAcceptRequestAreSuccessful_Redirects() {
         SsoCookie ssoCookie = createSsoCookie();
-        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high", TEST_LOGIN_CHALLENGE);
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -93,6 +93,68 @@ class AuthCallbackControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", Matchers.containsString("auth/login/test"));
+    }
+
+    @Test
+    void authCallback_WhenTokenRequestResponseLoginChallengeIsNull_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high", null);
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid TARA callback govsso login challenge");
+    }
+
+    @Test
+    void authCallback_WhenTokenRequestResponseLoginChallengeIsInvalid_ThrowsUserInputError() {
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high", "invalidLoginChallenge");
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Invalid TARA callback govsso login challenge");
     }
 
     @Test
@@ -642,11 +704,17 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @SneakyThrows
     private OIDCTokenResponse getTaraOidcTokenResponse(SsoCookie ssoCookie, String acr) {
+        return getTaraOidcTokenResponse(ssoCookie, acr, TEST_LOGIN_CHALLENGE);
+    }
+
+    @SneakyThrows
+    private OIDCTokenResponse getTaraOidcTokenResponse(SsoCookie ssoCookie, String acr, String loginChallenge) {
         JWSSigner signer = new RSASSASigner(TARA_JWK);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", ssoCookie.getTaraAuthenticationRequestNonce())
                 .claim("state", ssoCookie.getTaraAuthenticationRequestState())
                 .claim("acr", acr)
+                .claim("govsso_login_challenge", loginChallenge)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")
                 .issuer(TARA_MOCK_URL)
