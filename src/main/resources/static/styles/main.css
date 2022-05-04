@@ -82,10 +82,6 @@ fieldset {
 	fill: currentColor
 }
 
-.icon-id-card {
-	width: 1.5em
-}
-
 html,
 body {
 	height: 100%;
@@ -499,10 +495,6 @@ body {
 	}
 }
 
-.c-tab-login__nav-link .icon-id-card {
-	font-size: 24px
-}
-
 .c-tab-login__nav-link.is-active,
 .c-tab-login__nav-link:hover {
 	text-decoration: none;
@@ -624,10 +616,6 @@ body {
 .c-tab-login__content-icon .icon {
     width: 160px;
     height: 100px;
-}
-
-.c-tab-login__content-icon .icon-id-card {
-	font-size: 60px
 }
 
 @media (max-width: 800px) {

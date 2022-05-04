@@ -454,7 +454,7 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
+    void loginInit_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_OpensAcrView() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -473,11 +473,38 @@ public class LoginInitControllerTest extends BaseTest {
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap())
-                .body("error", equalTo("TECHNICAL_GENERAL"));
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
+                .body(containsString("Teenusesse <strong>Teenusenimi A</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
 
-        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
+    @Test
+    void loginInit_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValueWithoutLogo_OpensAcrView() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject_without_logo.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
+                .body(containsString("Teenusesse <strong>Teenusenimi A</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(not(containsString("data:image/svg+xml;base64,testlogo")));
     }
 
     @Test

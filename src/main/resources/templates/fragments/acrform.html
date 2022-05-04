@@ -17,59 +17,31 @@
                         <div aria-level="2" role="heading">
                             <h2 th:utext="#{label.sso.title(${clientName})}"></h2>
                         </div>
-                        <p th:utext="#{label.sso.instruction(${clientName})}"></p>
-
-                        <div class="row data-table">
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.first_name}"></div>
-                                <div class="personal-info-value" th:text="${givenName}" translate="no"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.personal_code}"></div>
-                                <div class="personal-info-value" th:text="${subject}" translate="no"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.last_name}"></div>
-                                <div class="personal-info-value" th:text="${familyName}" translate="no"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
-                                <div class="personal-info-value" th:text="${dateOfBirth}" translate="no"></div>
-                            </div>
-                            <div class="personal-info" th:if="${email != null}">
-                                <div class="personal-info-label" th:utext="#{label.sso.email}"></div>
-                                <div class="personal-info-value" th:text="${email}" translate="no"></div>
-                            </div>
-                            <div class="personal-info" th:if="${phoneNumber != null}">
-                                <div class="personal-info-label" th:utext="#{label.sso.phone_number}"></div>
-                                <div class="personal-info-value" th:text="${phoneNumber}" translate="no"></div>
-                            </div>
-                        </div>
+                        <p th:utext="#{label.sso.acr_instruction(${clientName})}"></p>
 
                         <form class="c-form" id="continueForm" layout:fragment="login-form-content"
                               method="post"
                               role="form">
                             <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
                             <input th:name="loginChallenge" th:value="${loginChallenge}" type="hidden"/>
-                            <button class="c-btn c-btn--primary" formaction="/login/continuesession"
-                                    role="button"
-                                    th:text="#{label.sso.continue}"
-                                    type="submit">
-                                Login
-                            </button>
                             <button class="c-btn c-btn--cancel" formaction="/login/reauthenticate" role="button"
                                     th:text="#{label.sso.reauthenticate}"
                                     type="submit">
-                                Cancel
+                                Reauthenticate
+                            </button>
+                            <button class="c-btn c-btn--primary" formaction="/login/reject"
+                                    role="button"
+                                    th:text="#{label.sso.back}"
+                                    type="submit">
+                                Back
                             </button>
                         </form>
                     </div>
 
-
                 </div>
                 <div class="c-tab-login__content-wrap">
                     <p class="detailed-instruction"
-                       th:utext="#{label.sso.detailed_instruction(${clientName})}">
+                       th:utext="#{label.sso.detailed_acr_instruction}">
                     </p>
                 </div>
                 <div class="c-tab-login__footer">

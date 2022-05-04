@@ -185,18 +185,20 @@ public class LoginInitController {
 
     @SneakyThrows
     private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        validateIdToken(loginRequestInfo, idToken);
-        ModelAndView model = new ModelAndView("authView");
-        JWTClaimsSet claimsSet;
-        try {
-            claimsSet = idToken.getJWTClaimsSet();
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
+
+        if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
+            ModelAndView model = new ModelAndView("acrView");
+            model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
+            model.addObject("loginChallenge", loginRequestInfo.getChallenge());
+            model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+            return model;
         }
+
+        ModelAndView model = new ModelAndView("authView");
+        JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
         if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
             model.addObject("givenName", profileAttributes.get("given_name"));
             model.addObject("familyName", profileAttributes.get("family_name"));
-            model.addObject("dateOfBirth", profileAttributes.get("date_of_birth"));
             if (profileAttributes.get("date_of_birth") != null)
                 model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
             model.addObject("subject", loginRequestInfo.getSubject());
@@ -215,18 +217,22 @@ public class LoginInitController {
     }
 
     private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        try {
-            JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
-            String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
-            if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(claimsSet.getStringClaim("acr"), acrValue)) {
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
-            }
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
+        if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
         }
     }
 
-    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {
-        return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
+    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, JWT idToken) {
+        String loginRequestInfoAcr = loginRequestInfo.getOidcContext().getAcrValues()[0];
+        String idTokenAcr;
+
+        try {
+            idTokenAcr = idToken.getJWTClaimsSet().getStringClaim("acr");
+        } catch (ParseException ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
+        }
+
+        return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel()
+                >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
     }
 }
