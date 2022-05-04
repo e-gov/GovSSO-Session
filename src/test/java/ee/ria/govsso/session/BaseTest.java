@@ -42,7 +42,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         put("Expires", "0");
         put(ACCESS_CONTROL_ALLOW_ORIGIN, null);
         put(ACCESS_CONTROL_ALLOW_CREDENTIALS, null);
-        // TODO: Returned during actual application run but for some reason not returned during tests
+        // TODO: Use HTTPS for API tests. Given header only returned over https.
 //        put("Strict-Transport-Security", "max-age=16070400 ; includeSubDomains");
     }};
     public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS_WITH_CORS = new HashMap<>() {{
