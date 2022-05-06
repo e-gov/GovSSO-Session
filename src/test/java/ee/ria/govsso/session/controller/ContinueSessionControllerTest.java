@@ -218,4 +218,171 @@ class ContinueSessionControllerTest extends BaseTest {
 
         assertErrorIsLogged("SsoException: No valid consent requests found");
     }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestUrlDoesntContainPromptConsent_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_url_with_subject_without_prompt_consent.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Request URL must contain prompt=consent");
+    }
+
+    @Test
+    void continueSession_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(500)
+                .cookies(emptyMap())
+                .body("error", equalTo("TECHNICAL_GENERAL"));
+
+        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestScopeWithoutOpenid_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_without_openid.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestScopeWithMoreThanOpenid_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_more_than_openid.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestHasMoreThanOneAcrValue_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_more_than_one_acr.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must contain only 1 value");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestHasOneIncorrectAcrValue_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_one_incorrect_acr.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must be one of low/substantial/high");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestHasOneCapitalizedAcrValue_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_capitalized_acr.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: acrValues must be one of low/substantial/high");
+    }
 }
