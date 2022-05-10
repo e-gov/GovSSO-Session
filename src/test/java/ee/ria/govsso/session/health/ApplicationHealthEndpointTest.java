@@ -32,6 +32,7 @@ class ApplicationHealthEndpointTest extends BaseTest {
                 .body("status", equalTo("UP"))
                 .body("components.diskSpace.status", equalTo("UP"))
                 .body("components.hydra.status", equalTo("UP"))
+                .body("components.tara.status", equalTo("UP"))
                 .body("components.livenessState.status", equalTo("UP"))
                 .body("components.ping.status", equalTo("UP"))
                 .body("components.readinessState.status", equalTo("UP"))
@@ -93,6 +94,17 @@ class ApplicationHealthEndpointTest extends BaseTest {
         assertTrustStoreHealthUp(response, "");
     }
 
+    @Test
+    void healthTara_WhenTaraRespondsWithMetadata_RespondsWith200AndTaraStatusUp() {
+        given()
+                .when()
+                .get("/actuator/health/tara")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("status", equalTo("UP"));
+    }
+
     private void assertTrustStoreHealthUp(ValidatableResponse response, String prefix) {
         response.body("status", equalTo("UP"))
                 .body(prefix + "components.Hydra.status", equalTo("UP"))
@@ -110,4 +122,5 @@ class ApplicationHealthEndpointTest extends BaseTest {
                 .body(prefix + "components.TARA.details.certificates[0].state", equalTo("ACTIVE"))
                 .body(prefix + "components.TARA.details.certificates[1].", nullValue());
     }
+
 }

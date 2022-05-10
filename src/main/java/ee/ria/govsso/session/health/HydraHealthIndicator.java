@@ -1,6 +1,7 @@
 package ee.ria.govsso.session.health;
 
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
+import ee.ria.govsso.session.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,9 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class HydraHealthIndicator implements HealthIndicator {
+class HydraHealthIndicator implements HealthIndicator {
+
+    private static final String HYDRA_HEALTH_CHECK_PATH = "/health/alive";
 
     private final WebClient webclient;
     private final HydraConfigurationProperties confProperties;
@@ -33,14 +36,14 @@ public class HydraHealthIndicator implements HealthIndicator {
         try {
             return webclient
                     .get()
-                    .uri(confProperties.adminUrl().toURI().resolve("/health/alive"))
+                    .uri(confProperties.adminUrl().toURI().resolve(HYDRA_HEALTH_CHECK_PATH))
                     .exchangeToMono(response -> Mono.just(response.statusCode()))
                     .block();
         } catch (WebClientResponseException e) {
-            log.debug("Failed to check Hydra status: " + e.getMessage());
+            log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
             return e.getStatusCode();
         } catch (Exception e) {
-            log.debug("Failed to check Hydra status: " + e.getMessage());
+            log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }
