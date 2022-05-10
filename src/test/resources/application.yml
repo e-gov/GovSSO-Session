@@ -3,10 +3,16 @@ management:
     health:
       probes:
         enabled: true
+      show-details: always
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: configprops,env,health,info
+  info:
+    java:
+      enabled: true
+    git:
+      mode: full
 
 spring:
   application:

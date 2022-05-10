@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.slf4j.Logger.ROOT_LOGGER_NAME;
 import static org.slf4j.LoggerFactory.getLogger;
 
+// TODO: tests are flaky
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestPropertySource(properties = {

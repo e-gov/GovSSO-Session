@@ -140,7 +140,7 @@ services:
     environment:
       - management.endpoints.web.exposure.include=*
       - server.port=15443
-      - govsso.hydra.base-url=https://gateway.localhost:13443/
+      - govsso.base-url=https://gateway.localhost:13443/
       # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
       - govsso.hydra.admin-url=https://hydra.localhost:4445/
       - govsso.tara.issuer-url=https://tara.localhost:16443
