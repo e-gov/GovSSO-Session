@@ -2,6 +2,7 @@ package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.service.alerts.AlertsService;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LogoutAcceptResponse;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
@@ -43,6 +45,8 @@ public class LogoutController {
     public static final String REGEXP_LOGOUT_CHALLENGE = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
 
     private final HydraService hydraService;
+    @Autowired(required = false)
+    private AlertsService alertsService;
 
     @GetMapping(value = LOGOUT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView logoutInit(@RequestParam(name = "logout_challenge")
@@ -154,6 +158,10 @@ public class LogoutController {
         logoutView.addObject("clientName", clientName);
         logoutView.addObject("activeSessions", activeSessions);
         logoutView.addObject("logo", logoutRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+        if (alertsService != null) {
+            logoutView.addObject("alerts", alertsService.getStaticAndActiveAlerts());
+            logoutView.addObject("hasStaticAlert", alertsService.hasStaticAlert());
+        }
         return logoutView;
     }
 }

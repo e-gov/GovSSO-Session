@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.configuration;
 
+import ee.ria.govsso.session.configuration.properties.AdminConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -21,11 +22,23 @@ import java.security.KeyStore;
 
 @Configuration
 @RequiredArgsConstructor
-class HydraConfiguration {
+class WebClientConfiguration {
 
     @Bean
     ClientRequestLogger hydraRequestLogger() {
         return new ClientRequestLogger(HydraService.class, "Hydra");
+    }
+
+    @Bean
+    public WebClient adminWebClient(ClientRequestLogger requestLogger, KeyStore adminTrustStore) {
+        SslContext sslContext = initSslContext(adminTrustStore);
+
+        HttpClient httpClient = HttpClient.create()
+                .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .filter(responseFilter(requestLogger))
+                .build();
     }
 
     @Bean
@@ -41,7 +54,16 @@ class HydraConfiguration {
 
     @Bean
     @SneakyThrows
-    KeyStore hydraTrustStore(HydraConfigurationProperties.TlsConfigurationProperties tlsProperties) {
+    KeyStore hydraTrustStore(HydraConfigurationProperties.HydraTlsConfigurationProperties tlsProperties) {
+        InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
+        KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
+        trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
+        return trustStore;
+    }
+
+    @Bean
+    @SneakyThrows
+    KeyStore adminTrustStore(AdminConfigurationProperties.AdminTlsConfigurationProperties tlsProperties) {
         InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
         KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
         trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
@@ -49,9 +71,9 @@ class HydraConfiguration {
     }
 
     @SneakyThrows
-    private SslContext initSslContext(KeyStore hydraTrustStore) {
+    private SslContext initSslContext(KeyStore trustStore) {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(hydraTrustStore);
+        trustManagerFactory.init(trustStore);
         return SslContextBuilder.forClient().trustManager(trustManagerFactory).build();
     }
 

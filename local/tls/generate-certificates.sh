@@ -28,6 +28,7 @@ curl http://c.sk.ee/ldapca.crt --output ldap/sk-ldap-ca.crt
 ./generate-truststore.sh 'govsso-ca' 'clienta'
 ./generate-truststore.sh 'govsso-ca' 'clientb'
 
+./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.admin.truststore.p12'
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.hydra.truststore.p12'
 ./generate-truststore.sh 'tara-ca' 'session' 'session.localhost.tara.truststore.p12'
 
@@ -45,7 +46,9 @@ cp session/*.p12 ../../src/main/resources
 # Remove all existing PKCS12 files and copy required PKCS12 files to test resources
 rm -f ../../src/test/resources/*.p12
 cp './session/session.localhost.keystore.p12' '../../src/test/resources'
+cp './session/session.localhost.admin.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.tara.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.hydra.truststore.p12' '../../src/test/resources'
+cp './admin/admin.localhost.keystore.p12' '../../src/test/resources'
 cp './hydra/hydra.localhost.keystore.p12' '../../src/test/resources'
 cp './tara/tara.localhost.keystore.p12' '../../src/test/resources'

@@ -5,6 +5,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.service.alerts.AlertsService;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -53,6 +55,8 @@ public class LoginInitController {
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
     private final TaraService taraService;
+    @Autowired(required = false)
+    private AlertsService alertsService;
 
     @GetMapping(value = LOGIN_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView loginInit(
@@ -209,6 +213,10 @@ public class LoginInitController {
             model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
             model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+            if (alertsService != null) {
+                model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
+                model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
+            }
         }
         return model;
     }

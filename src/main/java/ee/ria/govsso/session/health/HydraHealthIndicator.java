@@ -5,6 +5,7 @@ import ee.ria.govsso.session.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ class HydraHealthIndicator implements HealthIndicator {
 
     private static final String HYDRA_HEALTH_CHECK_PATH = "/health/alive";
 
+    @Qualifier("hydraWebClient")
     private final WebClient webclient;
     private final HydraConfigurationProperties confProperties;
 

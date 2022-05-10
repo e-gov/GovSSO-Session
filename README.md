@@ -10,7 +10,8 @@ TODO What this application does.
 
 ## Building Dependencies
 
-1. Follow [TARA2-Admin/README.md](https://github.com/e-gov/TARA2-Admin#building-and-running-in-docker) to build it's Docker image
+1. Follow [TARA2-Admin/README.md](https://github.com/e-gov/TARA2-Admin#building-and-running-in-docker) to build it's
+   Docker image
 2. Follow [GOVSSO-Client/README.md](https://github.com/e-gov/GOVSSO-Client#running-in-docker) to build it's Docker image
 3. Build  [Ory Hydra HSM Docker image](https://github.com/ory/hydra/blob/v1.11.7/.docker/Dockerfile-hsm)
     ```shell
@@ -168,6 +169,44 @@ TODO
 | `govsso.security.cookie-signing-secret` | Yes | | Login flow cookie signing secret. Minimum length 32. |
 | `govsso.security.cookie-max-age-seconds` | No | 3600 | Login flow cookie max age in seconds. Minimum value -1. A positive value indicates when the cookie should expire relative to the current time. A value of 0 means the cookie should expire immediately. A negative value results in no "Max-Age" attribute in which case the cookie is removed when the browser is closed. |
 | `govsso.security.masked-field-names` | No | Comma separated field names to mask when structurally logging objects. |
+
+<a name="admin_integration_conf"></a>
+
+### Integration with Admin service
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.admin.host-url` | Yes | | Point to Admin service host url |
+
+<a name="admin_tls_conf"></a>
+
+### TLS configuration for outbound connections
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.admin.tls.trust-store-location` | Yes | | Location of the truststore containing trusted CA certificates. |
+| `govsso.admin.tls.trust-store-password` | Yes | | Truststore password |
+| `govsso.admin.tls.trust-store-type` | No | PKCS12 | Truststore type (jks, pkcs12). |
+
+<a name="alerts_conf"></a>
+
+## Alerts configuration
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.alerts.enabled` | No | false | Enables alerts update service.|
+| `govsso.alerts.refresh-alerts-interval-in-milliseconds` | No | 10000 | How often alerts are requested from the configured alerts url. Minimum value 1000. |
+| `govsso.alerts.static-alert.message-templates[x].message` | No | | Static alert message.|
+| `govsso.alerts.static-alert.message-templates[x].locale` | No | | Static alert message locale. Example value: `et` |
+
+Where x denotes index. Example:
+
+````
+govsso.alerts.static-alert.message-templates[0].message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO dokumentatsioonis</a>!
+govsso.alerts.static-alert.message-templates[0].locale=et
+govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO documentation</a>!
+govsso.alerts.static-alert.message-templates[1].locale=en
+````
 
 ## Licenses
 

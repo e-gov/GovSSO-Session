@@ -54,6 +54,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     protected static final String GATEWAY_MOCK_URL = "https://gateway.localhost:8000";
     protected static final String HYDRA_MOCK_URL = "https://hydra.localhost:9000";
     protected static final String TARA_MOCK_URL = "https://tara.localhost:10000";
+    protected static final String ADMIN_MOCK_URL = "https://admin.localhost:11000";
     protected static final WireMockServer HYDRA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpDisabled(true)
             .httpsPort(9000)
@@ -70,6 +71,14 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
             .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
+    protected static final WireMockServer ADMIN_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
+            .httpsPort(11000)
+            .keystorePath("src/test/resources/admin.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
+            .notifier(new ConsoleNotifier(true))
+    );
     protected static final RSAKey TARA_JWK = TaraTestSetup.generateJWK();
     @LocalServerPort
     protected int port;
@@ -78,6 +87,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     static void setUpAll() {
         configureRestAssured();
         HYDRA_MOCK_SERVER.start();
+        ADMIN_MOCK_SERVER.start();
         setUpTaraMetadataMocks();
     }
 

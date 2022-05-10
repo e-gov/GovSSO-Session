@@ -564,27 +564,11 @@ body {
 }
 
 .c-tab-login__warning {
-	display: none
-}
-
-.c-tab-login__warning.is-active {
 	display: block
 }
 
-@media (max-width: 800px) {
-	.c-tab-login__warning.is-active {
-		display: none
-	}
-}
-
 .c-tab-login__static-warning {
-	display: none
-}
-
-@media (max-width: 800px) {
-	.c-tab-login__static-warning {
-		display: block
-	}
+	display: block
 }
 
 .c-tab-login__content-wrap {
@@ -890,7 +874,10 @@ input[type=number]::-webkit-outer-spin-button {
 		 border-width: 2px;
 	}
 }
-
+.alert-warning {
+  background-color: #fcf8e3;
+  border: 4px solid #faebcc;
+}
 .c-lang-list {
     display: flex;
 }
