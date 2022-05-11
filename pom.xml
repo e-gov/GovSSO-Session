@@ -12,7 +12,7 @@
 
     <groupId>ee.ria.govsso</groupId>
     <artifactId>govsso-session</artifactId>
-    <version>0.4.0</version>
+    <version>0.5.0</version>
     <packaging>war</packaging>
 
     <name>GOVSSO Session Service</name>
