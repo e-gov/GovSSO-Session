@@ -6,6 +6,7 @@ import ee.ria.govsso.session.service.hydra.HydraService;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -20,17 +21,16 @@ import java.security.KeyStore;
 
 @Configuration
 @RequiredArgsConstructor
-public class HydraConfiguration {
+class HydraConfiguration {
 
     @Bean
-    public ClientRequestLogger hydraRequestLogger() {
+    ClientRequestLogger hydraRequestLogger() {
         return new ClientRequestLogger(HydraService.class, "Hydra");
     }
 
     @Bean
-    public WebClient hydraWebClient(HydraConfigurationProperties configurationProperties, ClientRequestLogger requestLogger) {
-        SslContext sslContext = initSslContext(configurationProperties.tls());
-
+    WebClient hydraWebClient(ClientRequestLogger requestLogger, KeyStore hydraTrustStore) {
+        SslContext sslContext = initSslContext(hydraTrustStore);
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
         return WebClient.builder()
@@ -39,18 +39,20 @@ public class HydraConfiguration {
                 .build();
     }
 
-    private SslContext initSslContext(HydraConfigurationProperties.TlsConfigurationProperties tlsProperties) {
-        try (InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream()) {
-            KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
-            trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
+    @Bean
+    @SneakyThrows
+    KeyStore hydraTrustStore(HydraConfigurationProperties.TlsConfigurationProperties tlsProperties) {
+        InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
+        KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
+        trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
+        return trustStore;
+    }
 
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(trustStore);
-
-            return SslContextBuilder.forClient().trustManager(trustManagerFactory).build();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Hydra WebClient SslContext initialization failed", ex);
-        }
+    @SneakyThrows
+    private SslContext initSslContext(KeyStore hydraTrustStore) {
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(hydraTrustStore);
+        return SslContextBuilder.forClient().trustManager(trustManagerFactory).build();
     }
 
     private ExchangeFilterFunction responseFilter(ClientRequestLogger requestLogger) {

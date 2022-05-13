@@ -1,32 +1,37 @@
 package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
-import org.apache.commons.lang3.StringUtils;
+import lombok.SneakyThrows;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.net.ssl.SSLContext;
+import java.io.InputStream;
+import java.security.KeyStore;
 
 @Configuration
-public class TaraConfiguration {
+class TaraConfiguration {
 
     @Bean
-    public SSLContext taraTrustContext(TaraConfigurationProperties configurationProperties) {
-        TaraConfigurationProperties.TlsConfigurationProperties tlsProperties = configurationProperties.tls();
+    @SneakyThrows
+    SSLContext taraTrustContext(
+            TaraConfigurationProperties.TlsConfigurationProperties tlsProperties,
+            KeyStore taraTrustStore
+    ) {
+        return SSLContextBuilder.create()
+                .setKeyStoreType(taraTrustStore.getType())
+                .loadTrustMaterial(taraTrustStore, null)
+                .setProtocol(tlsProperties.defaultProtocol())
+                .build();
+    }
 
-        try {
-            SSLContextBuilder sslContextBuilder = SSLContextBuilder.create()
-                    .setKeyStoreType(tlsProperties.trustStoreType())
-                    .loadTrustMaterial(
-                            tlsProperties.trustStoreLocation().getFile(),
-                            tlsProperties.trustStorePassword().toCharArray());
-            if (StringUtils.isNotBlank(tlsProperties.defaultProtocol())) {
-                sslContextBuilder.setProtocol(tlsProperties.defaultProtocol());
-            }
-            return sslContextBuilder.build();
-        } catch (Exception ex) {
-            throw new IllegalStateException("TARA SSLContext initialization failed", ex);
-        }
+    @Bean
+    @SneakyThrows
+    KeyStore taraTrustStore(TaraConfigurationProperties.TlsConfigurationProperties tlsProperties) {
+        InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
+        KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
+        trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
+        return trustStore;
     }
 }
