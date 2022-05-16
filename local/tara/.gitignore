@@ -1,0 +1,10 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!config.json
+!generate-id-token-keys.sh
+
+# ...even if they are in subdirectories
+!*/

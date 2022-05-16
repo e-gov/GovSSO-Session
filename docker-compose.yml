@@ -178,10 +178,7 @@ services:
   tara: # Map to host ports 16xxx.
     # TODO Use specific version.
     # TODO Optimize Dockerfile (use multi-stage to exclude build environment).
-    build:
-      context: https://github.com/e-gov/TARA-Mock.git
-      args:
-        genkeys: 'true'
+    build: https://github.com/aarmam/TARA-Mock.git#feature/GSSO-410
     deploy:
       resources:
         limits:
@@ -195,6 +192,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./local/tara/config.json:/service/config.json:ro
+      - ./local/tara/id-token:/var/id-token:ro
       - ./local/tls/tara:/var/certs:ro
 
   admin: # Map to host ports 17xxx.

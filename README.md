@@ -16,10 +16,10 @@ TODO What this application does.
     ```shell
     docker build -f .docker/Dockerfile-hsm -t oryd/hydra:feature-govsso https://github.com/ory/hydra.git#v1.11.7
     ```
-4. Generate TLS certificates. Stored locally in local/tls folder.
+4. Generate required resources (TLS certificates, TARA id-token keys, etc.)
    ```shell
-   cd local/tls
-   ./generate-certificates.sh
+   cd ./local
+   ./generate-resources.sh
    ```
 5. ```shell
    docker compose build

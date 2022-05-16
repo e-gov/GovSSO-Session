@@ -49,8 +49,3 @@ cp './session/session.localhost.tara.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.hydra.truststore.p12' '../../src/test/resources'
 cp './hydra/hydra.localhost.keystore.p12' '../../src/test/resources'
 cp './tara/tara.localhost.keystore.p12' '../../src/test/resources'
-
-echo "--------------------------- Process finished"
-# Prevents script window to be closed after completion
-echo -e "\nPress any key to exit the script."
-read -rn1
