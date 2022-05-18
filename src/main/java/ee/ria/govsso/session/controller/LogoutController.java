@@ -2,7 +2,6 @@ package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LogoutAcceptResponse;
@@ -145,7 +144,7 @@ public class LogoutController {
         List<String> activeSessions = consents.stream()
                 .map(c -> c.getConsentRequest().getClient())
                 .filter(c -> !c.getClientId().equals(clientId))
-                .map(Client::getClientName)
+                .map(LocaleUtil::getTranslatedClientName)
                 .sorted()
                 .distinct()
                 .toList();

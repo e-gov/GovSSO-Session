@@ -206,7 +206,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из Teenusenimi A"));
+                .body(containsString("Вы вышли из Teenusenimi A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
+
     }
 
     @Test
@@ -269,7 +271,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out from Service name A"));
+                .body(containsString("You have been logged out from Service name A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"));
+
     }
 
     @Test
@@ -334,7 +338,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out from Service name A"));
+                .body(containsString("You have been logged out from Service name A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"));
+
     }
 
     @Test
@@ -400,7 +406,8 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi A teenusest"));
+                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
     }
 
     @Test
@@ -464,7 +471,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из Teenusenimi A"));
+                .body(containsString("Вы вышли из Teenusenimi A"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
+
     }
 
     @Test

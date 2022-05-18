@@ -7,7 +7,29 @@
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
       "client": {
         "client_id": "client-c",
-        "client_name": "Teenusenimi C"
+        "client_name": "Teenusenimi C",
+        "metadata": {
+          "display_user_consent": false,
+          "oidc_client": {
+            "name": "Teenusenimi C",
+            "name_translations": {
+              "et": "Teenusenimi C",
+              "en": "Service name C",
+              "ru": "Название службы C"
+            },
+            "short_name": "Teenus C",
+            "short_name_translations": {
+              "et": "Teenus C",
+              "en": "Service C",
+              "ru": "Название C"
+            },
+            "institution": {
+              "registry_code": "70000001",
+              "sector": "public"
+            },
+            "logo": "testlogo"
+          }
+        }
       }
     }
   },
@@ -19,7 +41,29 @@
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
       "client": {
         "client_id": "client-b",
-        "client_name": "Teenusenimi B"
+        "client_name": "Teenusenimi B",
+        "metadata": {
+          "display_user_consent": false,
+          "oidc_client": {
+            "name": "Teenusenimi B",
+            "name_translations": {
+              "et": "Teenusenimi B",
+              "en": "Service name B",
+              "ru": "Название службы B"
+            },
+            "short_name": "Teenus B",
+            "short_name_translations": {
+              "et": "Teenus B",
+              "en": "Service B",
+              "ru": "Название B"
+            },
+            "institution": {
+              "registry_code": "70000001",
+              "sector": "public"
+            },
+            "logo": "testlogo"
+          }
+        }
       }
     }
   },
@@ -31,7 +75,29 @@
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
       "client": {
         "client_id": "client-a",
-        "client_name": "Teenusenimi A"
+        "client_name": "Teenusenimi A",
+        "metadata": {
+          "display_user_consent": false,
+          "oidc_client": {
+            "name": "Teenusenimi A",
+            "name_translations": {
+              "et": "Teenusenimi A",
+              "en": "Service name A",
+              "ru": "Название службы A"
+            },
+            "short_name": "Teenus A",
+            "short_name_translations": {
+              "et": "Teenus A",
+              "en": "Service A",
+              "ru": "Название A"
+            },
+            "institution": {
+              "registry_code": "70000001",
+              "sector": "public"
+            },
+            "logo": "testlogo"
+          }
+        }
       }
     }
   },
@@ -43,7 +109,29 @@
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
       "client": {
         "client_id": "client-c",
-        "client_name": "Teenusenimi C"
+        "client_name": "Teenusenimi C",
+        "metadata": {
+          "display_user_consent": false,
+          "oidc_client": {
+            "name": "Teenusenimi C",
+            "name_translations": {
+              "et": "Teenusenimi C",
+              "en": "Service name C",
+              "ru": "Название службы C"
+            },
+            "short_name": "Teenus C",
+            "short_name_translations": {
+              "et": "Teenus C",
+              "en": "Service C",
+              "ru": "Название C"
+            },
+            "institution": {
+              "registry_code": "70000001",
+              "sector": "public"
+            },
+            "logo": "testlogo"
+          }
+        }
       }
     }
   }

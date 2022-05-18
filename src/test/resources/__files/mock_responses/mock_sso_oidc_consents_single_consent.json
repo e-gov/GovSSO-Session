@@ -6,7 +6,29 @@
       },
       "client": {
         "client_id": "client-a",
-        "client_name": "Teenusenimi A"
+        "client_name": "Teenusenimi A",
+        "metadata": {
+          "display_user_consent": false,
+          "oidc_client": {
+            "name": "Teenusenimi A",
+            "name_translations": {
+              "et": "Teenusenimi A",
+              "en": "Service name A",
+              "ru": "Название службы A"
+            },
+            "short_name": "Teenus A",
+            "short_name_translations": {
+              "et": "Teenus A",
+              "en": "Service A",
+              "ru": "Название A"
+            },
+            "institution": {
+              "registry_code": "70000001",
+              "sector": "public"
+            },
+            "logo": "testlogo"
+          }
+        }
       },
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
     }
