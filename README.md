@@ -64,7 +64,12 @@ TODO What this application does.
    ```shell
    docker compose up
    ```
-
+## Running With Elastic APM enabled
+1. Run
+    ```shell
+   docker compose -f docker-compose.yml -f docker-compose-elk.yml up
+   ```
+2. Open kibana and explore APM module for metrics and application logs.
 ## Endpoints
 
 * Dozzle (log viewer)
@@ -99,7 +104,8 @@ TODO What this application does.
     * https://admin.localhost:17443/actuator/health
 * MailHog
     * http://localhost:18080/ - UI
-
+* Kibana
+    * http://localhost:22560/ - UI
 ## Configuration
 
 TODO

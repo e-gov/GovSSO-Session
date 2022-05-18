@@ -1,0 +1,142 @@
+version: '3.8'
+# 3.8 required for depends_on condition support, although not officially listed in https://docs.docker.com/compose/compose-file/compose-versioning/#version-38
+services:
+
+  gateway:
+    labels:
+      - co.elastic.logs/enabled=true
+      - co.elastic.logs/module=nginx
+
+  hydra:
+    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && mkdir -p /var/log/govsso-hydra && chmod 750 /var/log/govsso-hydra && hydra serve --config /etc/hydra/hydra.yml all 2>&1 | tee -a /var/log/govsso-hydra/hydra-1.log'
+    environment:
+      - TRACING_PROVIDER=elastic-apm
+      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVICE_NAME=govsso-hydra
+      - ELASTIC_APM_HOSTNAME=hydra.localhost
+      - ELASTIC_APM_ENVIRONMENT=dev-local
+      - ELASTIC_APM_VERIFY_SERVER_CERT=false
+      - ELASTIC_APM_METRICS_INTERVAL=10s
+      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/health/*
+    labels:
+      - co.elastic.logs/enabled=true
+    user: root
+    volumes:
+      - govsso-hydra-logs:/var/log/govsso-hydra:rw
+
+  session:
+    environment:
+      - LOG_FILE_LEVEL=INFO
+      - LOG_HOME=/var/log/govsso-session
+      - ELASTIC_APM_ENABLED=true
+      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVICE_NAME=govsso-session
+      - ELASTIC_APM_HOSTNAME=session.localhost
+      - ELASTIC_APM_ENVIRONMENT=dev-local
+      - ELASTIC_APM_VERIFY_SERVER_CERT=false
+      - ELASTIC_APM_METRICS_INTERVAL=10s
+      - ELASTIC_APM_CLOUD_PROVIDER=NONE
+      - ELASTIC_APM_APPLICATION_PACKAGES=ee.ria.govsso.session
+      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/actuator/*
+    labels:
+      - co.elastic.logs/enabled=true
+    user: root
+    volumes:
+      - govsso-session-logs:/var/log/govsso-session:rw
+
+  admin:
+    environment:
+      - LOG_FILE_LEVEL=INFO
+      - LOG_HOME=/var/log/govsso-admin
+    labels:
+      - co.elastic.logs/enabled=true
+    user: root
+    volumes:
+      - govsso-admin-logs:/var/log/govsso-admin:rw
+
+  hydra-db:
+    labels:
+      - co.elastic.logs/enabled=true
+      - co.elastic.logs/module=postgresql
+
+  admin-db:
+    labels:
+      - co.elastic.logs/enabled=true
+      - co.elastic.logs/module=postgresql
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+    environment:
+      - ELASTICSEARCH_PASSWORD=changeme
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - discovery.type=single-node
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s",
+      ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    ports:
+      - '21200:9200'
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.3
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -f -I http://localhost:5601/api/status | grep -q 'HTTP/1.1 200 OK'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    ports:
+      - '22601:5601'
+    restart: unless-stopped
+
+  apm:
+    image: docker.elastic.co/apm/apm-server:7.17.3
+    command: >
+      apm-server -e
+        --strict.perms=false        
+        -E apm-server.kibana.host=http://kibana:5601
+        -E output.elasticsearch.hosts=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    ports:
+      - '23200:8200'
+    restart: unless-stopped
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.3
+    command: -e --strict.perms=false
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./local/setup/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  govsso-admin-logs:
+    name: govsso-admin-logs
+  govsso-hydra-logs:
+    name: govsso-hydra-logs
+  govsso-session-logs:
+    name: govsso-session-logs

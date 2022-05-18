@@ -160,12 +160,15 @@ services:
       - govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO documentation</a>!
       - govsso.alerts.static-alert.message-templates[1].locale=en
       - govsso.alerts.enabled=true
+      - ELASTIC_APM_ENABLED=false
+      - BPL_DEBUG_ENABLED=true
     networks:
       default:
         aliases:
           - session.localhost
     ports:
       - '15443:15443'
+      - '15800:8000'
     restart: unless-stopped
     volumes:
       - ./local/tls/session:/var/certs:ro
@@ -216,7 +219,7 @@ services:
         limits:
           memory: 650M
     environment:
-      - spring.application.name=GOVSSO-Admin
+      - spring.application.name=govsso-admin
       - tara-oidc.url=https://hydra.localhost:4445/
       - auth.tls-truststore-path=/var/certs/admin.localhost.truststore.p12
       - auth.tls-truststore-password=changeit
