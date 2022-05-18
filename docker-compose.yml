@@ -122,6 +122,7 @@ services:
       # TODO: move to govsso-hydra/config.yml
       - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
       - SSL_CERT_FILE=/var/certs/govsso-ca.localhost.crt
+      - HTTPS_PROXY=https://outproxy.localhost:8443
     networks:
       default:
         aliases:
@@ -325,6 +326,25 @@ services:
     restart: unless-stopped
     volumes:
       - admin-db-data:/var/lib/postgresql/data
+
+  outproxy: # Map to host ports 21xxx.
+    image: httpd:2.4-alpine
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+    hostname: outproxy.localhost
+    networks:
+      default:
+        aliases:
+          - outproxy.localhost
+    ports:
+      - '21443:8443'
+    restart: unless-stopped
+    volumes:
+      - ./local/outproxy/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./local/tls/outproxy/outproxy.localhost.crt:/var/certs/outproxy.localhost.crt:ro
+      - ./local/tls/outproxy/outproxy.localhost.key:/var/certs/outproxy.localhost.key:ro
 
   hydra-janitor:
     build: local/hydra-janitor

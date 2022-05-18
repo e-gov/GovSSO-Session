@@ -14,6 +14,7 @@ rm -rf ./*/
 ./generate-certificate.sh 'govsso-ca' 'admin'
 ./generate-certificate.sh 'govsso-ca' 'hydra-db'
 ./generate-certificate.sh 'govsso-ca' 'admin-db'
+./generate-certificate.sh 'govsso-ca' 'outproxy'
 
 ./generate-ca-certificate.sh 'tara'
 ./generate-certificate.sh 'tara-ca' 'tara'
