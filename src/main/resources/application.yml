@@ -32,10 +32,14 @@ server:
     enabled-protocols: TLSv1.3
 
 govsso:
-  # By default use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
+  # By default, use URL-s accessible from host machine ("localhost") to support "Running GOVSSO Session Service Locally
   #  and Dependencies in Docker Compose" workflow in README.md.
   base-url: https://gateway.localhost:13443/
+  # NB! Hydra database clean-up functionality will remove session data older than 24 hours, so
+  # setting this value over 1440 (24 hours) also requires increasing Hydra database clean-up time limit.
   session-max-update-interval-minutes: 15
+  # NB! Hydra database clean-up functionality will remove session data older than 24 hours, so
+  # setting this value over 24 also requires increasing Hydra database clean-up time limit.
   session-max-duration-hours: 12
   hydra:
     admin-url: https://hydra.localhost:14445/
