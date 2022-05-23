@@ -5,6 +5,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
@@ -43,6 +44,10 @@ import java.util.List;
 import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
+import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 
 @Slf4j
 @Validated
@@ -55,6 +60,7 @@ public class LoginInitController {
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
     private final TaraService taraService;
+    private final StatisticsLogger statisticsLogger;
     @Autowired(required = false)
     private AlertsService alertsService;
 
@@ -68,6 +74,7 @@ public class LoginInitController {
             HttpServletResponse response) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
+        request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
         if (language == null && localeCookie == null) {
@@ -83,6 +90,7 @@ public class LoginInitController {
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
         if (prompt == Prompt.NONE) {
+            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, UPDATE_SESSION);
             return updateSession(loginRequestInfo);
         }
 
@@ -136,6 +144,7 @@ public class LoginInitController {
 
         validateIdToken(loginRequestInfo, idToken);
         LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
+        statisticsLogger.logAccept(loginRequestInfo, idToken, UPDATE_SESSION);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 

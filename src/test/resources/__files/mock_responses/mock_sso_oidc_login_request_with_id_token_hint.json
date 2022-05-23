@@ -55,6 +55,12 @@
     "created_at": "2021-09-27T14:07:51Z",
     "updated_at": "2021-09-27T14:07:50.753221Z",
     "metadata": {
+      "oidc_client": {
+        "institution": {
+          "registry_code": "70000001",
+          "sector": "public"
+        }
+      }
     }
   },
   "request_url": "https://hydra.localhost:9000/oauth2/auth?response_type=code&client_id=client-a&scope=openid&state=qVi_R4vggnVPAReEXcneq_f27YSDDDXlCmucToJpryI%3D&redirect_uri=https://clienta.localhost:11443/login/oauth2/code/govsso&nonce=XcXOJ3PRtkTykeoOiz08wI6FVX8CQvgGyB88n6w8iDA&id_token_hint=eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzo1NjY4MWJhMi04OGUwLTQ1MzctYWI0Zi03MWE3ZjIzYzZjZmQiLCJ0eXAiOiJKV1QifQ.eyJhY3IiOiJoaWdoIiwiYW1yIjpbIm1JRCJdLCJhdF9oYXNoIjoibW44OFZoUW8tWFdSb1dSRmRUNUtvUSIsImF1ZCI6WyJjbGllbnQtYSJdLCJhdXRoX3RpbWUiOjE2NDYzODkzNjYsImJpcnRoZGF0ZSI6IjE5NjEtMDctMTIiLCJleHAiOjE2NDYzOTAyNzcsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMiLCJnaXZlbl9uYW1lIjoiRWVzbmltaTMiLCJpYXQiOjE2NDYzODkzNzcsImlzcyI6Imh0dHBzOi8vZ2F0ZXdheS5sb2NhbGhvc3Q6MTM0NDMvIiwianRpIjoiODc2YjYwYzgtNWE2MS00M2JlLTg5OTktMWIzZGQ5OTJjNWVkIiwibm9uY2UiOiJkb1BaVVhhblIxUUtDV05DbHFmaFYwZGN6YVZRWnBnTjRXWjgwYVdzZlo4IiwicmF0IjoxNjQ2Mzg5Mzc3LCJzaWQiOiJiNTQzMDdjNC05NzQ5LTQ1MmEtOTkxMi00NGNiY2UyNGJhYTAiLCJzdWIiOiJJc2lrdWtvb2QzIn0.hctLFIT-C69_8STNvlFkjU-UDc_UnnWsbXGlJwLihCTaErhq1Uay7SsXx_sswxQDj_Rrv8PfVm_vhQDSFLl2EZKRgQnIXSjX60CMWNPq4q642_7Q0qPaSbQ8iGcEvXZcHnjnpt4k3zfAkkjjG5hWkHpDFhjQUs_1m48Rr2o-a4EPxFsOD5IgKE4mNCjI-0Olr9l08rFSQ5P8Zz-xAQWAEpHTr8FF5rIHyh_WU8Zw2bkS8w_2zVn-_vtab2_hElSlnvFhaX0k7fKrRWW0ka8tYjfwVZLERW22uwHl4CxXtl-2C8JkiVWEYe3Vc67_7-qp_ERk6t1bhp8W9G7vHPnVqZQX3xV-PhB9Fw7PSID_JIDg7SdikqhRszJMWaN6SoXNqBWVgWsfWhvkjpGZcLpc-NE7ReFm7gKJDEtMDEVQ7v43inPfPgo0dvOOYIGHQfETlsgyZ1lXgsu5O1LLyniF5Jvw8AA7udRsKmiY2gqpNT6rg-R_xj4t2O-RfU4S5X_ZI7zHg0_Y0T9H5-83XQd6iBKxTORTMr2iRBdqFzD1eoukfIl-GwGgEMlXv7tAocIv3y1JfUtHiGOuQSRM5FfiDRLdIwt_U71vcm8fh-MvoUxEmUiRUABOm6liSwP-oEAU4YfgMGgJNMsjoU3mufMiiazm0W7j_SR84K3tNSoHPAs&prompt=none",

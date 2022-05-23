@@ -257,9 +257,12 @@ class AuthCallbackControllerTest extends BaseTest {
 
     @Test
     void authCallback_WhenErrorParemeterIsUserCancel_Redirects() {
-
         SsoCookie ssoCookie = createSsoCookie();
-
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/reject?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -714,6 +717,7 @@ class AuthCallbackControllerTest extends BaseTest {
                 .claim("nonce", ssoCookie.getTaraAuthenticationRequestNonce())
                 .claim("state", ssoCookie.getTaraAuthenticationRequestState())
                 .claim("acr", acr)
+                .claim("amr", new String[]{"mID"})
                 .claim("govsso_login_challenge", loginChallenge)
                 .audience(taraConfigurationProperties.clientId())
                 .subject("test")

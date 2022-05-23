@@ -4,6 +4,8 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.logging.StatisticsLogger;
+import ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
@@ -21,11 +23,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Pattern;
 import java.text.ParseException;
 import java.util.Arrays;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
+import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 
 @Slf4j
 @Validated
@@ -35,13 +41,17 @@ public class ContinueSessionController {
     public static final String AUTH_VIEW_REQUEST_MAPPING = "/login/continuesession";
 
     private final HydraService hydraService;
+    private final StatisticsLogger statisticsLogger;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView continueSession(
             @ModelAttribute("loginChallenge")
-            @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge) {
+            @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
+            HttpServletRequest request) {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
+        request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+        request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
 
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
@@ -57,6 +67,7 @@ public class ContinueSessionController {
 
         validateIdToken(loginRequestInfo, idToken);
         LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken);
+        statisticsLogger.logAccept(loginRequestInfo, idToken, AuthenticationRequestType.CONTINUE_SESSION);
         return new RedirectView(response.getRedirectTo().toString());
     }
 

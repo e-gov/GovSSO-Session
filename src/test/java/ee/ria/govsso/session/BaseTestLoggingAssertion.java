@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import ee.ria.govsso.session.logging.StatisticsLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
@@ -45,6 +46,7 @@ public class BaseTestLoggingAssertion {
     public void afterEachTest() {
         List<ILoggingEvent> unmatchedErrorsAndWarnings = mockLogAppender.list.stream()
                 .filter(e -> e.getLevel() == ERROR || e.getLevel() == WARN)
+                .filter(e -> !e.getLoggerName().equals(StatisticsLogger.class.getName()))
                 .collect(Collectors.toList());
         ((Logger) getLogger(ROOT_LOGGER_NAME)).detachAppender(mockLogAppender);
         assertThat(unmatchedErrorsAndWarnings, empty());

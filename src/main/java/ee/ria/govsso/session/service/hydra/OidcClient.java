@@ -10,6 +10,7 @@ import java.util.Map;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OidcClient {
+    private Institution institution;
     private Map<String, String> nameTranslations = new HashMap<>();
     private Map<String, String> shortNameTranslations = new HashMap<>();
     private String logo;

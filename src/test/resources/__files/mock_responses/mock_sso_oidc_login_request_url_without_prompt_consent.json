@@ -45,6 +45,12 @@
     "created_at": "2021-09-27T14:07:51Z",
     "updated_at": "2021-09-27T14:07:50.753221Z",
     "metadata": {
+      "oidc_client": {
+        "institution": {
+          "registry_code": "70000001",
+          "sector": "public"
+        }
+      }
     }
   },
   "request_url": "https://hydra.localhost:9000/oauth2/auth?scope=openid\u0026response_type=code\u0026client_id=openIdDemo\u0026redirect_uri=https://hydra.localhost:9000/oauth/response\u0026state=049d71ea-30cd-4a74-8dcd-47156055d364\u0026nonce=5210b42a-2362-420b-bb81-54796da8c814\u0026ui_locales=et",
