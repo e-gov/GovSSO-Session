@@ -82,7 +82,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -105,7 +105,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -128,7 +128,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=substantial&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=substantial&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -168,6 +168,73 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("test1234"))
                 .body(containsString("Perekonnanimi3"))
                 .body(containsString("12.07.1961"))
+                .body(not(containsString("12345")))
+                .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
+
+    @Test
+    void loginInit_WhenFetchLoginRequestInfoWithSubjectAndPhoneScopeIsSuccessful_CreatesSessionAndOpensViewWIthPhoneNumber() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_openid_and_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_idtoken_with_phone.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("kasutab ühekordse sisselogimise"))
+                .body(containsString("Eesnimi3"))
+                .body(containsString("test1234"))
+                .body(containsString("Perekonnanimi3"))
+                .body(containsString("12.07.1961"))
+                .body(containsString("12345"))
+                .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
+
+    @Test
+    void loginInit_WhenTaraIdTokenContainsPhoneNumber_CreatesSessionAndOpensViewWithPhoneNumber() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_with_phone.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("kasutab ühekordse sisselogimise"))
+                .body(containsString("Eesnimi3"))
+                .body(containsString("test1234"))
+                .body(containsString("Perekonnanimi3"))
+                .body(containsString("12.07.1961"))
+                .body(containsString("12345"))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
 
@@ -187,7 +254,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .extract().cookie(COOKIE_NAME_GOVSSO);
 
         SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
@@ -777,13 +844,12 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLoginResponseRequestScopeWithoutOpenid_ThrowsUserInputError() {
-
+    void loginInit_WhenLoginResponseRequestScopeContainsOnlyPhone_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_without_openid.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_phone.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -794,17 +860,17 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
     }
 
     @Test
-    void loginInit_WhenLoginResponseRequestScopeWithMoreThanOpenid_ThrowsUserInputError() {
+    void loginInit_WhenLoginResponseRequestWithInvalidScope_ThrowsUserInputError() {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_more_than_openid.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_idcard.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -815,7 +881,28 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
+    }
+
+    @Test
+    void loginInit_WhenLoginResponseRequestScopeWithOpenIdAndInvalidScope_ThrowsUserInputError() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_openid_and_idcard.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap());
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
     }
 
     @Test
@@ -964,7 +1051,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
+                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
                 .cookie(COOKIE_NAME_XSRF_TOKEN, detailedCookieMatcher
                         .httpOnly(true)
                         .secured(true)

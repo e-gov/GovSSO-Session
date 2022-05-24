@@ -295,12 +295,12 @@ class ContinueSessionControllerTest extends BaseTest {
     }
 
     @Test
-    void continueSession_WhenLoginResponseRequestScopeWithoutOpenid_ThrowsUserInputError() {
+    void continueSession_WhenLoginResponseRequestWithInvalidScope_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_without_openid.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_idcard.json")));
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
@@ -314,16 +314,16 @@ class ContinueSessionControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
     }
 
     @Test
-    void continueSession_WhenLoginResponseRequestScopeWithMoreThanOpenid_ThrowsUserInputError() {
+    void continueSession_WhenLoginResponseRequestScopeWithOpenidAndInvalidScope_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_more_than_openid.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_openid_and_idcard.json")));
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
@@ -337,7 +337,30 @@ class ContinueSessionControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
+    }
+
+    @Test
+    void continueSession_WhenLoginResponseRequestScopeContainsOnlyPhone_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_scope_with_phone.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
     }
 
     @Test

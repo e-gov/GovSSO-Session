@@ -282,9 +282,15 @@ public class HydraService {
         JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
         Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");
 
+        String[] requestedScopes = consentRequestInfo.getRequestedScope();
+
         idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
+        if (List.of(requestedScopes).contains("phone") && taraIdToken.getJWTClaimsSet().getClaims().get("phone_number") != null) {
+            idToken.setPhoneNumber(taraIdToken.getJWTClaimsSet().getClaims().get("phone_number").toString());
+            idToken.setPhoneNumberVerified((Boolean) taraIdToken.getJWTClaimsSet().getClaims().get("phone_number_verified"));
+        }
         session.setIdToken(idToken);
         request.setSession(session);
 

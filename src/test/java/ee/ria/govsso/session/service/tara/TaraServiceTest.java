@@ -80,7 +80,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         assertThat(authenticationRequest.getUILocales(), nullValue());
         List<String> scopes = authenticationRequest.getScope().toStringList();
         assertThat(authenticationRequest.getResponseType().toString(), equalTo("code"));
-        assertThat(scopes, contains("openid"));
+        assertThat(scopes, contains("openid", "phone"));
     }
 
     @Test

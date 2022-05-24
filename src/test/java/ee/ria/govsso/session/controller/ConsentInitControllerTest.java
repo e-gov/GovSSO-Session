@@ -13,8 +13,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -75,7 +78,7 @@ class ConsentInitControllerTest extends BaseTest {
     }
 
     @Test
-    void consentInit_WhenAcceptConsentIsSuccessful_Redirects() {
+    void consentInit_WhenAcceptConsentIsSuccessful_RedirectsWithIdTokenWithoutPhone() {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
                 .willReturn(aResponse()
@@ -97,6 +100,93 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .withRequestBody(notMatching(".*\"phone_number\":\"12345\",\"phone_number_verified\":true.*")));
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithPhoneNumber_RedirectsWithIdTokenIncludingPhone() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_with_phone_idtoken_with_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"phone_number\":\"12345\",\"phone_number_verified\":true")));
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithScopePhoneAndWithoutIdtokenPhone_RedirectsWithIdTokenWithoutPhone() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_with_phone_idtoken_without_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .withRequestBody(notMatching(".*\"phone_number\":\"12345\",\"phone_number_verified\":true.*")));
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithoutScopePhoneAndWithIdtokenPhone_RedirectsWithIdTokenWithoutPhone() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/consent?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_without_phone_idtoken_with_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", MOCK_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/consent/accept?consent_challenge=" + MOCK_CONSENT_CHALLENGE))
+                .withRequestBody(notMatching(".*\"phone_number\":\"12345\",\"phone_number_verified\":true.*")));
     }
 
     @Test

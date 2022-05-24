@@ -121,8 +121,10 @@ public class LoginInitController {
             }
         }
 
-        if (!Arrays.asList(requestedScopes).contains("openid") || requestedScopes.length != 1) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and nothing else");
+        if (!Arrays.asList(requestedScopes).contains("openid") ||
+                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
+                requestedScopes.length > 2) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
         }
 
         if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
@@ -222,6 +224,7 @@ public class LoginInitController {
             model.addObject("familyName", profileAttributes.get("family_name"));
             if (profileAttributes.get("date_of_birth") != null)
                 model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
+            model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
             model.addObject("subject", loginRequestInfo.getSubject());
             model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());

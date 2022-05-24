@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.service.hydra;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
@@ -23,9 +24,12 @@ public class ConsentAcceptRequest {
 
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IdToken {
         private String givenName;
         private String familyName;
         private String birthdate;
+        private String phoneNumber;
+        private Boolean phoneNumberVerified;
     }
 }

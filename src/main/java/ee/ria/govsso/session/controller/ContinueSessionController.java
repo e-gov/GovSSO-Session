@@ -74,14 +74,18 @@ public class ContinueSessionController {
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         String[] requestedScopes = loginRequestInfo.getRequestedScope();
+
         if (loginRequestInfo.getSubject().isEmpty()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Login request subject must not be empty");
         }
         if (!loginRequestInfo.isSkip()) {
             throw new SsoException(TECHNICAL_GENERAL, "Subject exists, therefore login response skip value can not be false");
         }
-        if (!Arrays.asList(requestedScopes).contains("openid") || requestedScopes.length != 1) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and nothing else");
+
+        if (!Arrays.asList(requestedScopes).contains("openid") ||
+                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
+                requestedScopes.length > 2) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
         }
         if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
             if (oidcContext.getAcrValues().length > 1) {

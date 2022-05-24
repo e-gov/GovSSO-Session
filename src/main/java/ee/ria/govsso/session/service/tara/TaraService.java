@@ -53,6 +53,7 @@ import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIM
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
 import static com.nimbusds.oauth2.sdk.ResponseType.Value.CODE;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
+import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.PHONE;
 
 @Slf4j
 @Service
@@ -73,7 +74,7 @@ public class TaraService {
         State state = new State();
         Nonce nonce = new Nonce();
         ResponseType responseType = new ResponseType(CODE);
-        Scope scope = new Scope(OPENID);
+        Scope scope = new Scope(OPENID, PHONE);
 
         return new AuthenticationRequest.Builder(responseType, scope, clientID, callback)
                 .endpointURI(taraMetadataService.getMetadata().getAuthorizationEndpointURI())

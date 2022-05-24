@@ -26,7 +26,8 @@
   ],
   "backchannel_logout_uri": "https://clienta.localhost:11443/backchannellogout",
   "scope": [
-    "openid"
+    "openid",
+    "phone"
   ],
   "secret": "secreta",
   "description": "This is a sample client. Intended for use in development environment only.",
