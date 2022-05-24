@@ -75,7 +75,11 @@ class CertificateInfoCacheTest {
     @Test
     void certificateInfos_certificateExpiresIn29Days_certificateStateActiveWithWarning() {
         List<CertificateInfo> certificateInfos = new ArrayList<>();
-        certificateInfos.add(activeCertInfoBuilder().validTo(Instant.now().plus(Period.ofDays(29))).build());
+        certificateInfos.add(activeCertInfoBuilder().validTo(
+                        Instant.now()
+                                .plus(Period.ofDays(29))
+                                .plus(Duration.ofMinutes(1)))
+                .build());
         certificateInfos.add(activeCertInfoBuilder().build());
 
         CertificateInfoCache certificateInfoCache = new CertificateInfoCache(certificateInfos);
@@ -89,7 +93,11 @@ class CertificateInfoCacheTest {
     @Test
     void certificateInfos_certificateExpiresIn30Days_certificateStateActiveWithWarning() {
         List<CertificateInfo> certificateInfos = new ArrayList<>();
-        certificateInfos.add(activeCertInfoBuilder().validTo(Instant.now().plus(Period.ofDays(30))).build());
+        certificateInfos.add(activeCertInfoBuilder().validTo(
+                        Instant.now()
+                                .plus(Period.ofDays(30))
+                                .plus(Duration.ofMinutes(1)))
+                .build());
         certificateInfos.add(activeCertInfoBuilder().build());
 
         CertificateInfoCache certificateInfoCache = new CertificateInfoCache(certificateInfos);
