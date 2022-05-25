@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 // To use package-protected method "updateMetadata", this test must be in this package thus cannot be in health package.
-@Disabled // TODO: Flaky in during jenkins build for unknown reason
+@Disabled // TODO: GSSO-444 Flaky during jenkins build only for unknown reason
 @TestPropertySource(properties = {
         "govsso.tara.metadata-max-attempts=1",
 })
