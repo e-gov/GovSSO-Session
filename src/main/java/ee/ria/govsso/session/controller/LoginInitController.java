@@ -199,6 +199,10 @@ public class LoginInitController {
             model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
             model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+            if (alertsService != null) {
+                model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
+                model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
+            }
             return model;
         }
 

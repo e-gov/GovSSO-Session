@@ -6,6 +6,20 @@
         <br>
     </noscript>
 
+    <div class="c-tab-login__warning" th:if="${not #lists.isEmpty(alerts)}">
+        <div class="alert alert-warning">
+            <ul>
+                <li th:each="alert : ${alerts}">
+                    <strong th:if="${alert.isLoadedFromConf()}"
+                            th:utext="${alert.getAlertMessage(#locale.language)}"></strong>
+                    <strong th:text="${alert.getAlertMessage(#locale.language)}"
+                            th:unless="${alert.isLoadedFromConf()}"></strong>
+                </li>
+            </ul>
+        </div>
+        <br>
+    </div>
+
     <div class="c-tab-login">
         <main class="c-tab-login__main" role="main">
             <div class="c-tab-login__content">
