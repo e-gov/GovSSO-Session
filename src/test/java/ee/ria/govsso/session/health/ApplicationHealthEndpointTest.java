@@ -1,27 +1,18 @@
 package ee.ria.govsso.session.health;
 
-import ee.ria.govsso.session.BaseTest;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 
-class ApplicationHealthEndpointTest extends BaseTest {
+class ApplicationHealthEndpointTest extends HealthEndpointTest {
 
     @Test
     void health_WhenAllServicesUp_RespondsWith200() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/health/alive"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withBody("{\"status\":\"ok\"}")));
+        mockHydraHealthAliveUp();
 
         ValidatableResponse response = given()
                 .when()
@@ -41,22 +32,26 @@ class ApplicationHealthEndpointTest extends BaseTest {
         assertTrustStoreHealthUp(response, "components.truststore.");
     }
 
+    // "/actuator/health/readiness" endpoint outcome depends on other services (including Hydra status),
+    // but readiness in general health endpoint does not.
     @Test
-    void healthReadiness_WhenAllServicesUp_RespondsWith200() {
+    void health_WhenAllServicesButHydraUp_RespondsWith503ButReadinessUp() {
+        mockHydraHealthAliveDown();
+
         given()
                 .when()
-                .get("/actuator/health/readiness")
+                .get("/actuator/health")
                 .then()
                 .assertThat()
-                .statusCode(200);
+                .statusCode(503)
+                .body("status", equalTo("DOWN"))
+                .body("components.hydra.status", equalTo("DOWN"))
+                .body("components.readinessState.status", equalTo("UP"));
     }
 
     @Test
     void healthHydra_WhenHydraHealthEndpointRespondsWith200_RespondsWith200AndHydraStatusUp() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/health/alive"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withBody("{\"status\":\"ok\"}")));
+        mockHydraHealthAliveUp();
 
         given()
                 .when()
@@ -69,9 +64,7 @@ class ApplicationHealthEndpointTest extends BaseTest {
 
     @Test
     void healthHydra_WhenHydraHealthEndpointRespondsWithError_RespondsWith503AndHydraStatusDown() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/health/alive"))
-                .willReturn(aResponse()
-                        .withStatus(400)));
+        mockHydraHealthAliveDown();
 
         given()
                 .when()
@@ -104,23 +97,4 @@ class ApplicationHealthEndpointTest extends BaseTest {
                 .statusCode(200)
                 .body("status", equalTo("UP"));
     }
-
-    private void assertTrustStoreHealthUp(ValidatableResponse response, String prefix) {
-        response.body("status", equalTo("UP"))
-                .body(prefix + "components.Hydra.status", equalTo("UP"))
-                .body(prefix + "components.Hydra.details.certificates[0]", notNullValue())
-                .body(prefix + "components.Hydra.details.certificates[0].alias", equalTo("govsso-ca.localhost"))
-                .body(prefix + "components.Hydra.details.certificates[0].subjectDN", equalTo("CN=govsso-ca.localhost,O=govsso-local,L=Tallinn,C=EE"))
-                .body(prefix + "components.Hydra.details.certificates[0].serialNumber", notNullValue())
-                .body(prefix + "components.Hydra.details.certificates[0].state", equalTo("ACTIVE"))
-                .body(prefix + "components.Hydra.details.certificates[1].", nullValue())
-                .body(prefix + "components.TARA.status", equalTo("UP"))
-                .body(prefix + "components.TARA.details.certificates[0]", notNullValue())
-                .body(prefix + "components.TARA.details.certificates[0].alias", equalTo("tara-ca.localhost"))
-                .body(prefix + "components.TARA.details.certificates[0].subjectDN", equalTo("CN=tara-ca.localhost,O=tara-local,L=Tallinn,C=EE"))
-                .body(prefix + "components.TARA.details.certificates[0].serialNumber", notNullValue())
-                .body(prefix + "components.TARA.details.certificates[0].state", equalTo("ACTIVE"))
-                .body(prefix + "components.TARA.details.certificates[1].", nullValue());
-    }
-
 }

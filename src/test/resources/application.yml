@@ -4,6 +4,9 @@ management:
       probes:
         enabled: true
       show-details: always
+      group:
+        readiness:
+          include: readinessState,truststore,tara,hydra
   endpoints:
     web:
       exposure:
