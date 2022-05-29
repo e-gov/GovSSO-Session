@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health.truststore;
+package ee.ria.govsso.session.actuator.health.truststore;
 
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;

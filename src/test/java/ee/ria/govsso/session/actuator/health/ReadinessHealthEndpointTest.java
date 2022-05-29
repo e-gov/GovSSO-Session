@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health;
+package ee.ria.govsso.session.actuator.health;
 
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.Test;

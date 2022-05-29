@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health;
+package ee.ria.govsso.session.actuator.health;
 
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import ee.ria.govsso.session.error.exceptions.SsoException;

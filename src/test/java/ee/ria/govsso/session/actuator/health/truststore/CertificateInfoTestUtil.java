@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health.truststore;
+package ee.ria.govsso.session.actuator.health.truststore;
 
 import java.time.Duration;
 import java.time.Instant;

@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health;
+package ee.ria.govsso.session.actuator.health;
 
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.util.ExceptionUtil;

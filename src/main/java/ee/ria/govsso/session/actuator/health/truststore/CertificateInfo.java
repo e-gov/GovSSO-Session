@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health.truststore;
+package ee.ria.govsso.session.actuator.health.truststore;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

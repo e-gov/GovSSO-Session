@@ -1,4 +1,4 @@
-package ee.ria.govsso.session.health.truststore;
+package ee.ria.govsso.session.actuator.health.truststore;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.health.Status;
@@ -6,9 +6,9 @@ import org.springframework.boot.actuate.health.Status;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ee.ria.govsso.session.health.truststore.CertificateInfoTestUtil.activeCertInfoBuilder;
-import static ee.ria.govsso.session.health.truststore.CertificateInfoTestUtil.expiredCertInfoBuilder;
-import static ee.ria.govsso.session.health.truststore.CertificateInfoTestUtil.inactiveCertInfoBuilder;
+import static ee.ria.govsso.session.actuator.health.truststore.CertificateInfoTestUtil.activeCertInfoBuilder;
+import static ee.ria.govsso.session.actuator.health.truststore.CertificateInfoTestUtil.expiredCertInfoBuilder;
+import static ee.ria.govsso.session.actuator.health.truststore.CertificateInfoTestUtil.inactiveCertInfoBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TrustStoreHealthIndicatorTest {
