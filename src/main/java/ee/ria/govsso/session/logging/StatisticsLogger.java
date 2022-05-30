@@ -91,7 +91,7 @@ public class StatisticsLogger {
         log.info(appendFields(sessionStatistics), "Statistics");
     }
 
-    public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull LoginRequestInfo loginRequestInfo, @NonNull AuthenticationRequestType requestType) {
+    public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType) {
         var client = loginRequestInfo.getClient();
         var institution = client.getMetadata().getOidcClient().getInstitution();
         var sid = loginRequestInfo.getSessionId();
