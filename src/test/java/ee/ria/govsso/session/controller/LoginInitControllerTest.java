@@ -162,7 +162,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -217,7 +217,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -248,9 +248,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("вход в Название службы A электронную услугу"))
+                .body(containsString("вход в <span translate=\"no\"> Название службы A </span> электронную услугу"))
                 .body(containsString("использует решение единого входа (SSO)."))
-                .body(containsString("12/07/1961"));
+                .body(containsString("12/07/1961"))
+                .body(containsString("html lang=\"fr\""));
     }
 
     @Test
@@ -274,7 +275,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"fr\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -303,9 +305,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Logging in to Service name A"))
-                .body(containsString("service uses a single sign-on (SSO) solution"))
-                .body(containsString("7/12/1961"));
+                .body(containsString("Logging in to <span translate=\"no\"> Service name A </span>"))
+                .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>) solution"))
+                .body(containsString("7/12/1961"))
+                .body(containsString("html lang=\"en\""));
     }
 
     @Test
@@ -331,7 +334,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."));
+                .body(containsString("An unexpected error occurred. Please try again later."))
+                .body(containsString("html lang=\"en\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -361,7 +365,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("kasutab ühekordse sisselogimise"));
+                .body(containsString("kasutab ühekordse sisselogimise"))
+                .body(containsString("html lang=\"unknown\""));
     }
 
     @Test
@@ -387,7 +392,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."))
+                .body(containsString("html lang=\"unknown\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -415,7 +421,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("service uses a single sign-on (SSO) solution"));
+                .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>) solution"))
+                .body(containsString("html lang=\"en\""));
     }
 
     @Test
@@ -440,7 +447,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."));
+                .body(containsString("An unexpected error occurred. Please try again later."))
+                .body(containsString("html lang=\"en\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -467,9 +475,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("вход в Название службы A электронную услугу"))
+                .body(containsString("вход в <span translate=\"no\"> Название службы A </span> электронную услугу"))
                 .body(containsString("использует решение единого входа (SSO)."))
-                .body(containsString("12/07/1961"));
+                .body(containsString("12/07/1961"))
+                .body(containsString("html lang=\"fr\""));
     }
 
     @Test
@@ -521,8 +530,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
-                .body(containsString("Teenusesse <strong>Teenusenimi A</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine"))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
 
@@ -548,8 +557,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse Teenusenimi A sisselogimine"))
-                .body(containsString("Teenusesse <strong>Teenusenimi A</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine"))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
                 .body(not(containsString("data:image/svg+xml;base64,testlogo")));
     }
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout}" th:with="hideHeaderLanguageSelection=true"
+<html layout:decorate="~{layout}" th:lang="${#locale.language}" th:with="hideHeaderLanguageSelection=true"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.w3.org/1999/xhtml">
 <head th:replace="~{fragments/head}"></head>
 <body>
@@ -7,7 +7,7 @@
     <div class="container">
         <div class="alert alert-error" role="alert">
             <p><strong><span th:remove="tag" th:text="#{message.error.auth.title}"></span></strong></p>
-            <p th:if="${message != null}" th:text="${message}"></p>
+            <p th:if="${message != null}" th:utext="${message}"></p>
             <p th:text="#{error.technical_general}" th:unless="${message != null}"></p>
             <p th:if="${incident_nr != null}" th:text="#{label.error.incident-number(${incident_nr})}"></p>
         </div>

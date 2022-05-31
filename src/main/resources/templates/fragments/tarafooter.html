@@ -14,7 +14,7 @@
                         <img th:alt="#{label.footer.alt}" th:if="${#messages.msgOrNull('logo.footer.cef') != null}"
                              th:src="#{logo.footer.cef}">
                         <div th:if="${#messages.msgOrNull('logo.footer.cef') == null}"
-                             th:text="#{label.footer.alt}"></div>
+                             th:utext="#{label.footer.alt}"></div>
                     </div>
                 </div>
             </div>

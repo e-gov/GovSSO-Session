@@ -99,7 +99,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi B </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
@@ -135,7 +135,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
@@ -171,7 +171,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
                 .body(not(containsString("data:image/svg+xml;base64")));
     }
@@ -206,8 +206,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
+                .body(containsString("Вы вышли из <span translate=\"no\"> Teenusenimi A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"fr\""));
 
     }
 
@@ -235,7 +236,8 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."));
+                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"fr\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -271,8 +273,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out from Service name A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"));
+                .body(containsString("You have been logged out from <span translate=\"no\"> Service name A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"en\""));
 
     }
 
@@ -301,7 +304,8 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."));
+                .body(containsString("An unexpected error occurred. Please try again later."))
+                .body(containsString("html lang=\"en\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -338,8 +342,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out from Service name A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"));
+                .body(containsString("You have been logged out from <span translate=\"no\"> Service name A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"en\""));
 
     }
 
@@ -369,7 +374,8 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."));
+                .body(containsString("An unexpected error occurred. Please try again later."))
+                .body(containsString("html lang=\"en\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -406,8 +412,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"unknown\""));
     }
 
     @Test
@@ -436,7 +443,8 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
-                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."));
+                .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."))
+                .body(containsString("html lang=\"unknown\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -471,8 +479,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из Teenusenimi A"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"));
+                .body(containsString("Вы вышли из <span translate=\"no\"> Teenusenimi A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"fr\""));
 
     }
 
@@ -504,7 +513,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi A teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Teenusenimi C(?:.*\\r*\\n*)*"));
         // For some reason <ul>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi B[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi C[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<\/ul> does not work
     }
@@ -735,7 +744,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi B </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"));
 
         HYDRA_MOCK_SERVER.verify(exactly(0), deleteRequestedFor(urlPathMatching("/oauth2/auth/sessions/consent")));
@@ -766,7 +775,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud Teenusenimi B teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi B </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi A(?:.*\\r*\\n*)*"));
     }
 
