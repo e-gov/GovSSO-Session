@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Locale;
 
 @RequiredArgsConstructor
 public class RequestCorrelationFilter extends OncePerRequestFilter {
@@ -28,7 +29,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 
         String requestId = MDC.get(MDC_ATTRIBUTE_TRACE_ID);
         if (StringUtils.isEmpty(requestId)) {
-            MDC.put(MDC_ATTRIBUTE_TRACE_ID, RandomStringUtils.random(32, "0123456789abcdef").toLowerCase());
+            MDC.put(MDC_ATTRIBUTE_TRACE_ID, RandomStringUtils.random(32, "0123456789abcdef").toLowerCase(Locale.ROOT));
         }
 
         // NB! Set traceId also as HttpServletRequest attribute to make it accessible for Tomcat's AccessLogValve

@@ -15,6 +15,7 @@ import org.thymeleaf.util.ArrayUtils;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_CANCELED;
@@ -47,7 +48,7 @@ public class StatisticsLogger {
         var sessionTime = Instant.now().getEpochSecond() - iat.toInstant().getEpochSecond();
         var oidcContext = loginRequestInfo.getOidcContext();
         var acrValues = oidcContext != null ? oidcContext.getAcrValues() : null;
-        var grantedAcr = claims.getStringClaim("acr").toUpperCase();
+        var grantedAcr = claims.getStringClaim("acr").toUpperCase(Locale.ROOT);
         var amr = stream(claims.getStringArrayClaim("amr"))
                 .filter(authenticationTypes::containsKey)
                 .map(authenticationTypes::get)

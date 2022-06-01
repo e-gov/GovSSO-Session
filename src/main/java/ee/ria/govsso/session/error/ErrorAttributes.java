@@ -49,7 +49,7 @@ public class ErrorAttributes extends DefaultErrorAttributes {
 
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode) {
         Locale locale = LocaleUtil.getLocale();
-        attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(), null, locale));
+        attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(Locale.ROOT), null, locale));
         attr.put(ERROR_ATTR_INCIDENT_NR, MDC.get(MDC_ATTRIBUTE_TRACE_ID));
         attr.put(ERROR_ATTR_ERROR_CODE, errorCode.name());
     }
