@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.ArrayUtils;
 
@@ -16,7 +17,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
-import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_CANCELED;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_FAILED;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_SUCCESS;
@@ -67,8 +67,8 @@ public class StatisticsLogger {
                 .grantedAcr(grantedAcr)
                 .build();
         amr.ifPresent(sessionStatistics::setAuthenticationType);
-        if (acrValues != null && !ArrayUtils.isEmpty(acrValues)) {
-            sessionStatistics.setRequestedAcr(acrValues[0]);
+        if (!ArrayUtils.isEmpty(acrValues) && StringUtils.isNotBlank(acrValues[0])) {
+            sessionStatistics.setRequestedAcr(acrValues[0].toUpperCase(Locale.ROOT));
         }
 
         log.info(appendFields(sessionStatistics), "Statistics");
