@@ -38,11 +38,15 @@ services:
       - server.ssl.key-store-password=changeit
       - server.ssl.trust-store=/var/certs/clienta.localhost.truststore.p12
       - server.ssl.trust-store-password=changeit
+      - BPL_DEBUG_ENABLED=true
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=10
     networks:
       default:
         aliases:
           - clienta.localhost
     ports:
+      - '11000:8000'
       - '11443:11443'
     restart: unless-stopped
     volumes:
@@ -71,11 +75,15 @@ services:
       - server.ssl.key-store-password=changeit
       - server.ssl.truststore=/var/certs/clientb.localhost.truststore.p12
       - server.ssl.truststore-password=changeit
+      - BPL_DEBUG_ENABLED=true
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=10
     networks:
       default:
         aliases:
           - clientb.localhost
     ports:
+      - '12000:8000'
       - '12443:12443'
     restart: unless-stopped
     volumes:
@@ -162,13 +170,15 @@ services:
       - govsso.alerts.enabled=true
       - ELASTIC_APM_ENABLED=false
       - BPL_DEBUG_ENABLED=true
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=10
     networks:
       default:
         aliases:
           - session.localhost
     ports:
+      - '15000:8000'
       - '15443:15443'
-      - '15800:8000'
     restart: unless-stopped
     volumes:
       - ./local/tls/session:/var/certs:ro
