@@ -79,7 +79,7 @@ services:
       timeout: 10s
       retries: 120
     ports:
-      - '21200:9200'
+      - '22200:9200'
     restart: unless-stopped
 
   kibana:
@@ -99,7 +99,7 @@ services:
       timeout: 10s
       retries: 120
     ports:
-      - '22601:5601'
+      - '23601:5601'
     restart: unless-stopped
 
   apm:
@@ -115,7 +115,7 @@ services:
       kibana:
         condition: service_healthy
     ports:
-      - '23200:8200'
+      - '24200:8200'
     restart: unless-stopped
 
   filebeat:
