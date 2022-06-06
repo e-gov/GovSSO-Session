@@ -64,6 +64,14 @@ TODO What this application does.
    ```shell
    docker compose up
    ```
+
+## Clean Hydra database
+
+1. Run Hydra janitor container which runs Hydra janitor clean-up script
+   ```shell
+   docker-compose --profile hydra-janitor up -d
+   ```
+
 ## Running With Elastic APM enabled
 1. Run
     ```shell
@@ -117,8 +125,8 @@ TODO
 | Parameter        | Mandatory | Default value | Description, example |
 | :---------------- | :---------- | :---------- | :---------------- |
 | `govsso.base-url` | Yes | | Base URL of the SSO gateway service, for example: https://gateway.localhost:13443/ |
-| `govsso.session-max-update-interval-minutes` | Yes | | sets how long the authentication should be remembered for in SSO OIDC service. |
-| `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. |
+| `govsso.session-max-update-interval-minutes` | Yes | | Sets how long the authentication should be remembered for in SSO OIDC service. NB! Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 1440 (24 hours) also requires increasing Hydra database clean-up time limit. |
+| `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. NB! Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 24 also requires increasing Hydra database clean-up time limit. |
 
 <a name="hydra_integration_conf"></a>
 
