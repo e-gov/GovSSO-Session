@@ -34,8 +34,8 @@ import static java.util.regex.Pattern.compile;
 @UtilityClass
 public class LocaleUtil {
 
-    private static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|fr)").asMatchPredicate();
     public static final String DEFAULT_LOCALE = "et";
+    private static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|fr)").asMatchPredicate();
 
     public Locale getLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();

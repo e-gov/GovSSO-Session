@@ -26,9 +26,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.HtmlUtils;
 
 import javax.validation.constraints.Pattern;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -155,7 +157,7 @@ public class LogoutController {
 
         ModelAndView logoutView = new ModelAndView("logoutView");
         logoutView.addObject("logoutChallenge", logoutChallenge);
-        logoutView.addObject("clientName", clientName);
+        logoutView.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
         logoutView.addObject("activeSessions", activeSessions);
         logoutView.addObject("logo", logoutRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
         if (alertsService != null) {

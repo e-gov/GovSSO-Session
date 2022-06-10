@@ -32,11 +32,13 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.HtmlUtils;
 import org.thymeleaf.util.ArrayUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -45,7 +47,6 @@ import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
-import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 
@@ -207,7 +208,8 @@ public class LoginInitController {
     private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
         if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
             ModelAndView model = new ModelAndView("acrView");
-            model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
+            String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
+            model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
             model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
             if (alertsService != null) {
@@ -220,13 +222,15 @@ public class LoginInitController {
         ModelAndView model = new ModelAndView("authView");
         JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
         if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
+            String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
+
             model.addObject("givenName", profileAttributes.get("given_name"));
             model.addObject("familyName", profileAttributes.get("family_name"));
             if (profileAttributes.get("date_of_birth") != null)
                 model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
             model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
             model.addObject("subject", loginRequestInfo.getSubject());
-            model.addObject("clientName", LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient()));
+            model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
             model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
             if (alertsService != null) {

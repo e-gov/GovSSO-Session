@@ -29,7 +29,7 @@
                     </div>
                     <div class="c-tab-login__content-text">
                         <div aria-level="2" role="heading">
-                            <h2 th:utext="#{label.sso.logout.title(${clientName})}"></h2>
+                            <h2 th:utext="#{label.sso.logout.title(${clientNameEscaped})}"></h2>
                         </div>
 
                         <div class="service-list" id="service-list">
@@ -99,8 +99,8 @@
                 <div class="c-tab-logout__footer">
                     <p>
                         <a rel="noopener"
-                           target="_blank" th:href="${#messages.msg('link.sso.help')}"
-                           th:utext="${#messages.msg('label.sso.help')}">Help</a>
+                           target="_blank" th:href="#{link.sso.help}"
+                           th:utext="#{label.sso.help}">Help</a>
                     </p>
                 </div>
             </div>

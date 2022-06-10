@@ -48,7 +48,20 @@
     "created_at": "2021-09-27T14:07:51Z",
     "updated_at": "2021-09-27T14:07:50.753221Z",
     "metadata": {
+      "display_user_consent": false,
       "oidc_client": {
+        "name": "Teenusenimi A",
+        "name_translations": {
+          "et": "Teenusenimi A",
+          "en": "Service name A",
+          "fr": "Название службы A"
+        },
+        "short_name": "Teenus A",
+        "short_name_translations": {
+          "et": "Teenus A",
+          "en": "Service A",
+          "fr": "Название A"
+        },
         "institution": {
           "registry_code": "70000001",
           "sector": "public"
