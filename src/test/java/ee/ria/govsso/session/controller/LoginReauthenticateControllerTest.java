@@ -25,8 +25,6 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class LoginReauthenticateControllerTest extends BaseTest {
 
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
-
     @Test
     void loginReauthenticate_WhenLoginReauthenticateIsSuccessful_Redirects() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))

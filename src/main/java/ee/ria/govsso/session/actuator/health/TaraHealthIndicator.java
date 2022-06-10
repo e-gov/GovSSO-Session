@@ -29,7 +29,9 @@ class TaraHealthIndicator implements HealthIndicator {
             OIDCProviderMetadata metadata = taraMetadataService.getMetadata();
             return metadata != null;
         } catch (SsoException e) {
-            log.debug("Failed to get TARA metadata: {}", ExceptionUtil.getCauseMessages(e), e);
+            if (log.isDebugEnabled()) {
+                log.debug("Failed to get TARA metadata: {}", ExceptionUtil.getCauseMessages(e), e);
+            }
             return false;
         }
     }

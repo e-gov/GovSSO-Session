@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.equalTo;
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class LoginRejectControllerTest extends BaseTest {
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
     @Test
     void loginReject_WhenLoginRejectSuccessful_Redirects() {

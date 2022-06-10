@@ -48,13 +48,14 @@ import static com.nimbusds.oauth2.sdk.util.CollectionUtils.contains;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
 import static com.nimbusds.openid.connect.sdk.SubjectType.PUBLIC;
 import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
+import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.TARA;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaraMetadataService {
 
-    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), "TARA");
+    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), TARA);
     private final TaraConfigurationProperties taraConfigurationProperties;
     @Qualifier("taraTrustContext")
     private final SSLContext trustContext;
@@ -82,12 +83,10 @@ public class TaraMetadataService {
                     multiplierExpression = "${govsso.tara.metadata-backoff-multiplier:1.1}"))
     void updateMetadata() {
         try {
-            log.info("TARA metadata update request");
             OIDCProviderMetadata metadata = requestMetadata();
             JWKSet jwkSet = requestJWKSet(metadata);
             IDTokenValidator idTokenValidator = createIdTokenValidator(metadata, jwkSet);
             providerMetadata = Tuples.of(metadata, idTokenValidator);
-            log.info("TARA metadata successfully updated. Metadata={}, jwkSet={}", metadata, jwkSet);
         } catch (Exception ex) {
             providerMetadata = null;
             log.error("Unable to update TARA metadata: {}", ExceptionUtil.getCauseMessages(ex), ex);

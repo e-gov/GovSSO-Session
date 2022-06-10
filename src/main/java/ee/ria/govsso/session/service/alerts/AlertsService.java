@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.ALERTS;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -31,7 +32,7 @@ public class AlertsService {
 
     @Qualifier("adminWebClient")
     private final WebClient webclient;
-    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), "Admin");
+    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), ALERTS);
     private final AlertsConfigurationProperties alertsConfigurationProperties;
     private final AdminConfigurationProperties adminConfigurationProperties;
     List<Alert> alerts;

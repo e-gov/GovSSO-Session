@@ -53,7 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests under appropriate *Controller tests
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private final TaraService taraService;
     private final TaraConfigurationProperties taraConfigurationProperties;
 
@@ -115,9 +114,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
         assertThat(ssoException.getMessage(), equalTo("Unsigned ID Token"));
 
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA request",
                 "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA response",
                 "http.response.status_code=200, http.response.body.content=\"{\\\"access_token\\\":\\\"");
     }
 
@@ -131,9 +130,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
         assertThat(ssoException.getMessage(), equalTo("ErrorCode:null, Error description:null, Status Code:404"));
 
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA request",
                 "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA response",
                 "http.response.status_code=404");
     }
 
@@ -147,9 +146,9 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
         assertThat(ssoException.getMessage(), equalTo("ErrorCode:null, Error description:null, Status Code:400"));
 
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service request",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA request",
                 "http.request.method=POST, url.full=https://tara.localhost:10000/oidc/token");
-        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA service response",
+        assertMessageWithMarkerIsLoggedOnce(TaraService.class, Level.INFO, "TARA response",
                 "http.response.status_code=400");
     }
 

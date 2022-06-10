@@ -42,10 +42,14 @@ class HydraHealthIndicator implements HealthIndicator {
                     .exchangeToMono(response -> Mono.just(response.statusCode()))
                     .block();
         } catch (WebClientResponseException e) {
-            log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
+            if (log.isDebugEnabled()) {
+                log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
+            }
             return e.getStatusCode();
         } catch (Exception e) {
-            log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
+            if (log.isDebugEnabled()) {
+                log.debug("Failed to check Hydra status: {}", ExceptionUtil.getCauseMessages(e), e);
+            }
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }

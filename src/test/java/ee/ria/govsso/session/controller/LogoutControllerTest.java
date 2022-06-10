@@ -34,7 +34,6 @@ import static org.hamcrest.Matchers.not;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class LogoutControllerTest extends BaseTest {
     public static final String TEST_LOGOUT_CHALLENGE = "3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931";
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
 
     private final SsoCookieSigner ssoCookieSigner;
 

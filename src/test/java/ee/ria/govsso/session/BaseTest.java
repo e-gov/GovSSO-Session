@@ -32,6 +32,8 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @Import({BuildProperties.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
+    protected static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
+
     public static final Map<String, Object> EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS = new HashMap<>() {{
         put("X-XSS-Protection", "0");
         put("X-Content-Type-Options", "nosniff");

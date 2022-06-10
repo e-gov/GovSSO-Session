@@ -20,13 +20,15 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.security.KeyStore;
 
+import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.HYDRA;
+
 @Configuration
 @RequiredArgsConstructor
 class WebClientConfiguration {
 
     @Bean
     ClientRequestLogger hydraRequestLogger() {
-        return new ClientRequestLogger(HydraService.class, "Hydra");
+        return new ClientRequestLogger(HydraService.class, HYDRA);
     }
 
     @Bean

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
+import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.HYDRA;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -16,12 +17,12 @@ import static org.hamcrest.Matchers.hasSize;
 @Slf4j
 class ClientRequestLoggerTest extends BaseTestLoggingAssertion {
 
-    private final ClientRequestLogger clientRequestLogger = new ClientRequestLogger(ClientRequestLogger.class, "Hydra");
+    private final ClientRequestLogger clientRequestLogger = new ClientRequestLogger(ClientRequestLogger.class, HYDRA);
 
     @Test
     void logRequest_WhenNoRequestBody() {
         clientRequestLogger.logRequest("https://hydra.localhost:9000", HttpMethod.GET.name());
-        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "Hydra service request");
+        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "HYDRA request");
         assertThat(loggedEvents, hasSize(1));
         ILoggingEvent logEvent = loggedEvents.get(0);
         assertThat("http.request.method=GET, url.full=https://hydra.localhost:9000", equalTo(logEvent.getMarker().toString()));
@@ -30,7 +31,7 @@ class ClientRequestLoggerTest extends BaseTestLoggingAssertion {
     @Test
     void logRequest_WhenRequestBodyPresent() {
         clientRequestLogger.logRequest("https://hydra.localhost:9000", HttpMethod.GET.name(), "RequestBody");
-        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "Hydra service request");
+        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "HYDRA request");
         assertThat(loggedEvents, hasSize(1));
         ILoggingEvent logEvent = loggedEvents.get(0);
         assertThat(
@@ -41,7 +42,7 @@ class ClientRequestLoggerTest extends BaseTestLoggingAssertion {
     @Test
     void logResponse_WhenNoResponseBody() {
         clientRequestLogger.logResponse(HttpStatus.OK.value());
-        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "Hydra service response");
+        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "HYDRA response");
         assertThat(loggedEvents, hasSize(1));
         assertThat("http.response.status_code=200", equalTo(loggedEvents.get(0).getMarker().toString()));
     }
@@ -49,7 +50,7 @@ class ClientRequestLoggerTest extends BaseTestLoggingAssertion {
     @Test
     void logResponse_WhenResponseBodyPresent() {
         clientRequestLogger.logResponse(HttpStatus.OK.value(), "ResponseBody");
-        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "Hydra service response");
+        List<ILoggingEvent> loggedEvents = assertInfoIsLogged(ClientRequestLogger.class, "HYDRA response");
         assertThat(loggedEvents, hasSize(1));
         ILoggingEvent logEvent = loggedEvents.get(0);
         assertThat("http.response.status_code=200, http.response.body.content=\"ResponseBody\"",

@@ -46,8 +46,6 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class AuthCallbackControllerTest extends BaseTest {
-
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private static final String TEST_CODE = "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg";
     private static final String TEST_STATE = "VuF_ylfAWHflipdR2d6xKGLh6VB_7UrNetD3lXfOc0g";
     private final TaraConfigurationProperties taraConfigurationProperties;

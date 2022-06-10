@@ -56,7 +56,6 @@ import static org.springframework.test.context.NestedTestConfiguration.Enclosing
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LoginInitControllerTest extends BaseTest {
 
-    private static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
 

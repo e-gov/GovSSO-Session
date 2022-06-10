@@ -2,12 +2,17 @@ package ee.ria.govsso.session.logging;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.logstash.logback.marker.LogstashMarker;
 
 import static net.logstash.logback.marker.Markers.append;
 
-public class ClientRequestLogger { // TODO: Compare with AUT-850
+public class ClientRequestLogger {
 
     private final org.slf4j.Logger log;
 
@@ -18,17 +23,29 @@ public class ClientRequestLogger { // TODO: Compare with AUT-850
     private static final String PROP_RESPONSE_BODY_CONTENT = "http.response.body.content";
     private static final String PROP_RESPONSE_STATUS_CODE = "http.response.status_code";
 
-    private final String LOG_REQUEST_MESSAGE;
-    private final String LOG_RESPONSE_MESSAGE;
+    private final String logRequestMessage;
+    private final String logResponseMessage;
 
-    private final ObjectMapper OBJECT_MAPPER;
+    private final ObjectMapper objectMapper;
 
-    public ClientRequestLogger(Class<?> classToBeLogged, String serviceName) {
+    public enum Service {
+        ALERTS,
+        TARA,
+        HYDRA,
+    }
+
+    public ClientRequestLogger(Class<?> classToBeLogged, Service service) {
         log = org.slf4j.LoggerFactory.getLogger(classToBeLogged);
-        LOG_REQUEST_MESSAGE = String.format("%s service request", serviceName);
-        LOG_RESPONSE_MESSAGE = String.format("%s service response", serviceName);
-        OBJECT_MAPPER = new ObjectMapper();
-        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        logRequestMessage = String.format("%s request", service.name());
+        logResponseMessage = String.format("%s response", service.name());
+        objectMapper = JsonMapper
+                .builder()
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .addModule(new JavaTimeModule())
+                .build();
     }
 
     public void logRequest(String requestUrl, String httpMethod) {
@@ -41,13 +58,13 @@ public class ClientRequestLogger { // TODO: Compare with AUT-850
 
         if (requestBodyObject != null) {
             try {
-                String requestBodyJson = OBJECT_MAPPER.writeValueAsString(requestBodyObject);
+                String requestBodyJson = objectMapper.writeValueAsString(requestBodyObject);
                 logMarker.and(append(PROP_REQUEST_BODY_CONTENT, requestBodyJson));
             } catch (JsonProcessingException ex) {
                 throw new IllegalStateException("Unable to convert request body object to JSON string", ex);
             }
         }
-        log.info(logMarker, LOG_REQUEST_MESSAGE);
+        log.info(logMarker, logRequestMessage);
     }
 
     public void logResponse(int httpStatusCode) {
@@ -58,12 +75,12 @@ public class ClientRequestLogger { // TODO: Compare with AUT-850
         LogstashMarker logMarker = append(PROP_RESPONSE_STATUS_CODE, httpStatusCode);
         if (responseBodyObject != null) {
             try {
-                String responseBodyJson = OBJECT_MAPPER.writeValueAsString(responseBodyObject);
+                String responseBodyJson = objectMapper.writeValueAsString(responseBodyObject);
                 logMarker.and(append(PROP_RESPONSE_BODY_CONTENT, responseBodyJson));
             } catch (JsonProcessingException ex) {
                 throw new IllegalStateException("Unable to convert response body object to JSON string", ex);
             }
         }
-        log.info(logMarker, LOG_RESPONSE_MESSAGE);
+        log.info(logMarker, logResponseMessage);
     }
 }

@@ -38,7 +38,6 @@ import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -54,13 +53,13 @@ import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOU
 import static com.nimbusds.oauth2.sdk.ResponseType.Value.CODE;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.PHONE;
+import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.TARA;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaraService {
 
-    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), "TARA");
+    private final ClientRequestLogger requestLogger = new ClientRequestLogger(this.getClass(), TARA);
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final TaraMetadataService taraMetadataService;
