@@ -33,11 +33,16 @@ webfinger:
       - iss
       - jti
       - nonce
+      - phone_number
+      - phone_number_verified
       - birthdate
       - family_name
       - given_name
       - sid
       - sub
+    supported_scope:
+      - openid
+      - phone
 urls:
   login: https://gateway.localhost:13443/login/init
   consent: https://gateway.localhost:13443/consent/init
