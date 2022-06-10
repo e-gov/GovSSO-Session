@@ -28,16 +28,16 @@ webfinger:
       - at_hash
       - aud
       - auth_time
+      - birthdate
       - exp
+      - family_name
+      - given_name
       - iat
       - iss
       - jti
       - nonce
       - phone_number
       - phone_number_verified
-      - birthdate
-      - family_name
-      - given_name
       - sid
       - sub
     supported_scope:
