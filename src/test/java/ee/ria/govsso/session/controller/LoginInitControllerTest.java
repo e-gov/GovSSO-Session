@@ -162,7 +162,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -228,7 +228,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -597,8 +597,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine"))
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </strong> sisselogimine"))
+                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
 

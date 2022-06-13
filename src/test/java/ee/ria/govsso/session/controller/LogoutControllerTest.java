@@ -135,7 +135,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
@@ -513,7 +513,7 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A </span> teenusest"))
+                .body(containsString("Olete välja logitud <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*Teenusenimi C(?:.*\\r*\\n*)*"));
         // For some reason <ul>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi B[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<li>[\n\r\s]*<strong>[\n\r\s]*Teenusenimi C[\n\r\s]*<\/strong>[\n\r\s]*<\/li>[\n\r\s]*<\/ul> does not work
     }

@@ -6,7 +6,7 @@
   "rp_initiated": true,
   "client": {
     "client_id": "client-a",
-    "client_name": "Teenusenimi A",
+    "client_name": "Teenusenimi A<1>2&3",
     "redirect_uris": [
       "https://clienta.localhost:11443/login/oauth2/code/govsso"
     ],
@@ -37,17 +37,17 @@
     "metadata": {
       "display_user_consent": false,
       "oidc_client": {
-        "name": "Teenusenimi A",
+        "name": "Teenusenimi A<1>2&3",
         "name_translations": {
-          "et": "Teenusenimi A",
-          "en": "Service name A",
-          "ru": "Название службы A"
+          "et": "Teenusenimi A<1>2&3",
+          "en": "Service name A<1>2&3",
+          "ru": "Название службы A<1>2&3"
         },
-        "short_name": "Teenus A",
+        "short_name": "Teenus A<1>2&3",
         "short_name_translations": {
-          "et": "Teenus A",
-          "en": "Service A",
-          "ru": "Название A"
+          "et": "Teenus A<1>2&3",
+          "en": "Service A<1>2&3",
+          "ru": "Название A<1>2&3"
         },
         "institution": {
           "registry_code": "70000001",
