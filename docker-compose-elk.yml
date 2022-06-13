@@ -8,7 +8,7 @@ services:
       - co.elastic.logs/module=nginx
 
   hydra:
-    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && mkdir -p /var/log/govsso-hydra && chmod 750 /var/log/govsso-hydra && hydra serve --config /etc/hydra/hydra.yml all 2>&1 | tee -a /var/log/govsso-hydra/hydra-1.log'
+    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && mkdir -p /var/log/govsso-hydra && chmod 750 /var/log/govsso-hydra && hydra serve --config /etc/govsso-hydra/config.yml all 2>&1 | tee -a /var/log/govsso-hydra/hydra-1.log'
     environment:
       - TRACING_PROVIDER=elastic-apm
       - ELASTIC_APM_SERVER_URL=http://apm:8200

@@ -119,7 +119,7 @@ services:
         limits:
           memory: 250M
     environment:
-      # TODO: move to hydra.yml
+      # TODO: move to govsso-hydra/config.yml
       - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
       - SSL_CERT_FILE=/var/certs/govsso-ca.localhost.crt
     networks:
@@ -131,7 +131,7 @@ services:
       - '14445:4445'
     restart: unless-stopped
     volumes:
-      - ./local/hydra:/etc/hydra:ro
+      - ./local/hydra:/etc/govsso-hydra:ro
       - ./local/tls/hydra/hydra.localhost.crt:/var/certs/hydra.localhost.crt:ro
       - ./local/tls/hydra/hydra.localhost.key:/var/certs/hydra.localhost.key:ro
       - ./local/tls/govsso-ca/govsso-ca.localhost.crt:/var/certs/govsso-ca.localhost.crt:ro
@@ -343,7 +343,7 @@ services:
       - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
     volumes:
       - ./local/hydra-janitor:/etc/hydra-janitor:ro
-      - ./local/hydra:/etc/hydra:ro
+      - ./local/hydra:/etc/govsso-hydra:ro
       - ./local/tls/hydra/hydra.localhost.crt:/var/certs/hydra.localhost.crt:ro
       - ./local/tls/hydra/hydra.localhost.key:/var/certs/hydra.localhost.key:ro
 

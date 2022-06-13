@@ -7,7 +7,7 @@ psql --file "${basedir}/row_counts.sql"
 
 # Call Hydra built-in clean-up method
 hydra janitor \
-  --config /etc/hydra/hydra.yml \
+  --config /etc/govsso-hydra/config.yml \
   --keep-if-younger 24h \
   --requests \
   --tokens \
