@@ -7,10 +7,12 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
+import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.service.tara.TaraService;
@@ -99,11 +101,16 @@ public class LoginInitController {
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             return authenticateWithTara(loginRequestInfo, response);
         } else {
-            JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+            List<Consent> consents = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+            JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
             if (idToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);
+            } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
+                return openAcrView(loginRequestInfo);
+            } else if (skipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
+                return acceptLogin(loginRequestInfo, idToken);
             } else {
-                return sessionContinuationView(loginRequestInfo, idToken);
+                return openSessionContinuationView(loginRequestInfo, idToken);
             }
         }
     }
@@ -140,7 +147,8 @@ public class LoginInitController {
 
     private ModelAndView updateSession(LoginRequestInfo loginRequestInfo) {
         validateLoginRequestInfoAgainstToken(loginRequestInfo);
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        List<Consent> consents = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
@@ -205,20 +213,7 @@ public class LoginInitController {
     }
 
     @SneakyThrows
-    private ModelAndView sessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
-            ModelAndView model = new ModelAndView("acrView");
-            String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
-            model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
-            model.addObject("loginChallenge", loginRequestInfo.getChallenge());
-            model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
-            if (alertsService != null) {
-                model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
-                model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
-            }
-            return model;
-        }
-
+    private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
         ModelAndView model = new ModelAndView("authView");
         JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
         if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
@@ -241,7 +236,46 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest request, HttpServletResponse response) {
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
+        statisticsLogger.logAccept(loginRequestInfo, idToken, StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION);
+        return new ModelAndView("redirect:" + response.getRedirectTo());
+    }
+
+    private ModelAndView openAcrView(LoginRequestInfo loginRequestInfo) {
+        ModelAndView model = new ModelAndView("acrView");
+        String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
+        model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
+        model.addObject("loginChallenge", loginRequestInfo.getChallenge());
+        model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+        if (alertsService != null) {
+            model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
+            model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
+        }
+        return model;
+    }
+
+    private boolean skipContinuationView(Metadata metadata, List<Consent> consents) {
+        if (metadata.skipContinuationView()) {
+            return true;
+        } else if (metadata.getSkipUserConsentClientIds() == null) {
+            return false;
+        } else {
+            return sessionHasSkipUserConsentClientIds(consents, metadata.getSkipUserConsentClientIds());
+        }
+    }
+
+    private boolean sessionHasSkipUserConsentClientIds(List<Consent> consents, List<String> skipUserConsentClientIds) {
+        for (Consent consent : consents) {
+            if (skipUserConsentClientIds.contains(consent.getConsentRequest().getClient().getClientId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ModelAndView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest
+            request, HttpServletResponse response) {
         hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
         CookieUtil.deleteHydraSessionCookie(request, response);

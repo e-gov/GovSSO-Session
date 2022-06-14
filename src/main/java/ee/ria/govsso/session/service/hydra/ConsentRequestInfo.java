@@ -12,6 +12,7 @@ public class ConsentRequestInfo {
 
     private String challenge;
     private String[] requestedScope;
+    private Client client;
     private Context context;
 
 }

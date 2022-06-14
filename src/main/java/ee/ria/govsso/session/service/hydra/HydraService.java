@@ -161,13 +161,12 @@ public class HydraService {
         }
     }
 
-    public JWT getTaraIdTokenFromConsentContext(String subject, String sessionId) {
-        List<Consent> validConsents = getConsents(subject, sessionId);
-        if (validConsents.isEmpty()) {
+    public JWT getTaraIdTokenFromConsentContext(List<Consent> consents) {
+        if (consents.isEmpty()) {
             return null;
         }
         try {
-            JWT idToken = SignedJWT.parse(validConsents.get(0).getConsentRequest().getContext().getTaraIdToken());
+            JWT idToken = SignedJWT.parse(consents.get(0).getConsentRequest().getContext().getTaraIdToken());
             if (!isNbfValid(idToken)) {
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
             }

@@ -50,7 +50,7 @@
     "created_at": "2021-09-27T14:07:51Z",
     "updated_at": "2021-09-27T14:07:50.753221Z",
     "metadata": {
-      "display_user_consent": false,
+      "display_user_consent": true,
       "oidc_client": {
         "name": "Teenusenimi A",
         "name_translations": {

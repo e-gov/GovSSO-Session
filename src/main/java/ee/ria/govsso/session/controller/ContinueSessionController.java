@@ -6,6 +6,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType;
+import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Pattern;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -59,8 +61,8 @@ public class ContinueSessionController {
         }
 
         validateLoginRequestInfo(loginRequestInfo);
-
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        List<Consent> consents = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
