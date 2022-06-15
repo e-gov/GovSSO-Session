@@ -26,7 +26,9 @@
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
-        <elastic-apm.version>1.31.0</elastic-apm.version>
+
+        <!-- TODO Elastic APM Agent 1.30.x and 1.31.0 clear "trace.id" from org.slf4j.MDC before error page is rendered. -->
+        <elastic-apm.version>1.29.0</elastic-apm.version>
     </properties>
 
     <dependencies><!-- Ordered by scope, groupId, artifactId. -->
