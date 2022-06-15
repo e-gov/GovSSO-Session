@@ -56,13 +56,13 @@
         "name_translations": {
           "et": "Teenusenimi A",
           "en": "Service name A",
-          "fr": "Название службы A"
+          "ru": "Название службы A"
         },
         "short_name": "Teenus A",
         "short_name_translations": {
           "et": "Teenus A",
           "en": "Service A",
-          "fr": "Название A"
+          "ru": "Название A"
         },
         "institution": {
           "registry_code": "70000001",

@@ -12,8 +12,4 @@ public class Metadata {
     private OidcClient oidcClient = new OidcClient();
     private boolean displayUserConsent;
     private List<String> skipUserConsentClientIds;
-
-    public boolean skipContinuationView() {
-        return !this.displayUserConsent;
-    }
 }

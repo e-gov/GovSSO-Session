@@ -314,10 +314,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("вход в <span translate=\"no\"> Название службы A </span> электронную услугу"))
-                .body(containsString("использует решение единого входа (SSO)."))
-                .body(containsString("12/07/1961"))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Вход в услугу <span translate=\"no\"> Название службы A </span>"))
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("12.07.1961"))
+                .body(containsString("html lang=\"ru\""));
     }
 
     @Test
@@ -341,8 +341,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Технический сбой услуги. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"ru\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -541,10 +541,10 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("вход в <span translate=\"no\"> Название службы A </span> электронную услугу"))
-                .body(containsString("использует решение единого входа (SSO)."))
-                .body(containsString("12/07/1961"))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Вход в услугу <span translate=\"no\"> Название службы A </span>"))
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("12.07.1961"))
+                .body(containsString("html lang=\"ru\""));
     }
 
     @Test

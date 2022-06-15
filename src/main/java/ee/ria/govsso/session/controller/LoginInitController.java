@@ -107,7 +107,7 @@ public class LoginInitController {
                 return reauthenticate(loginRequestInfo, request, response);
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
-            } else if (skipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
+            } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 return acceptLogin(loginRequestInfo, idToken);
             } else {
                 return openSessionContinuationView(loginRequestInfo, idToken);
@@ -255,8 +255,8 @@ public class LoginInitController {
         return model;
     }
 
-    private boolean skipContinuationView(Metadata metadata, List<Consent> consents) {
-        if (metadata.skipContinuationView()) {
+    private boolean shouldSkipContinuationView(Metadata metadata, List<Consent> consents) {
+        if (!metadata.isDisplayUserConsent()) {
             return true;
         } else if (metadata.getSkipUserConsentClientIds() == null) {
             return false;

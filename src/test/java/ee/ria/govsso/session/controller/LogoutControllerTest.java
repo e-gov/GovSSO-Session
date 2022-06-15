@@ -205,9 +205,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из <span translate=\"no\"> Teenusenimi A </span>"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Вы вышли из услуги <span translate=\"no\"> Название службы A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Вы авторизованы в следующих услугах:(?:.*\\r*\\n*)*Название службы B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"ru\""));
 
     }
 
@@ -235,8 +235,8 @@ class LogoutControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500)
                 .body(containsString("Ошибка аутентификации."))
-                .body(containsString("произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Технический сбой услуги. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"ru\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -478,9 +478,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("Вы вышли из <span translate=\"no\"> Teenusenimi A </span>"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*У вас все еще есть активные сеансы в следующих приложениях:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
-                .body(containsString("html lang=\"fr\""));
+                .body(containsString("Вы вышли из услуги <span translate=\"no\"> Название службы A </span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Вы авторизованы в следующих <strong> 1 </strong> услугах:(?:.*\\r*\\n*)*Название службы B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"ru\""));
 
     }
 
