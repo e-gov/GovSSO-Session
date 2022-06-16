@@ -8,3 +8,9 @@ echo 'Adding client A'
 
 echo 'Adding client B'
 ./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000002' './institution-b.json' 'client-b' './client-b.json'
+
+echo 'Adding client C'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000001' './institution-a.json' 'client-c' './client-c.json'
+
+echo 'Adding client D'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000002' './institution-b.json' 'client-d' './client-d.json'

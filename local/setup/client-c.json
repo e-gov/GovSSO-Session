@@ -1,0 +1,54 @@
+{
+  "client_id": "client-c",
+  "client_name": {
+    "et": "Teenusenimi C",
+    "en": "Service name C",
+    "ru": "Название службы C"
+  },
+  "client_short_name": {
+    "et": "Teenus C",
+    "en": "Service C",
+    "ru": "Название C"
+  },
+  "institution_metainfo": {
+    "registry_code": "70000001",
+    "type": {
+      "type": "public"
+    },
+    "name": "Institution A"
+  },
+  "redirect_uris": [
+    "https://clientc.localhost:11443/login/oauth2/code/govsso"
+  ],
+  "post_logout_redirect_uris": [
+    "https://clientc.localhost:11443"
+  ],
+  "backchannel_logout_uri": "https://clientc.localhost:11443/backchannellogout",
+  "scope": [
+    "openid",
+    "phone"
+  ],
+  "secret": "secretc",
+  "description": "This is a sample client. Intended for use in development environment only.",
+  "info_notification_emails": [
+    "notifications.clientc@example.org"
+  ],
+  "client_contacts": [
+    {
+      "name": "Contact 1",
+      "email": "contact1.clientc@example.org",
+      "phone": "+37270000001",
+      "department": "Department 1"
+    },
+    {
+      "name": "Contact 2",
+      "email": "contact2.clientc@example.org",
+      "phone": "+37270000001",
+      "department": "Department 2"
+    }
+  ],
+  "sla_notification_emails": [
+    "slanotifications.clientc@example.org"
+  ],
+  "is_user_consent_required": false
+}
