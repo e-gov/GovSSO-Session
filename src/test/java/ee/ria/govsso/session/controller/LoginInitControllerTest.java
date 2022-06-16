@@ -661,7 +661,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .header("Location", equalTo("https://hydra.localhost:9000/oauth2/auth?scope=openid&prompt=consent&response_type=code&client_id=openIdDemo&redirect_uri=https://hydra.localhost:9000/oauth/response&state=049d71ea-30cd-4a74-8dcd-47156055d364&nonce=5210b42a-2362-420b-bb81-54796da8c814&ui_locales=et"))
                 .extract().detailedCookie("oauth2_authentication_session_insecure");
 
-        assertThat(invalidatedHydraCookie.getMaxAge(), equalTo(0));
+        assertThat(invalidatedHydraCookie.getMaxAge(), equalTo(0L));
     }
 
     @Test

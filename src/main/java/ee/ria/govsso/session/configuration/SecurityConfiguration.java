@@ -2,10 +2,11 @@ package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.header.HeaderWriter;
@@ -19,13 +20,13 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @EnableWebSecurity
 @Configuration
 @RequiredArgsConstructor
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration {
 
     public static final String COOKIE_NAME_XSRF_TOKEN = "__Host-XSRF-TOKEN";
     private final SecurityConfigurationProperties securityConfigurationProperties;
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .securityContext().disable()
                 .anonymous().disable()
@@ -45,6 +46,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .httpStrictTransportSecurity()
                 .includeSubDomains(true)
                 .maxAgeInSeconds(186 * 24 * 60 * 60);
+        return httpSecurity.build();
     }
 
     private CsrfTokenRepository csrfTokenRepository() {
