@@ -168,6 +168,8 @@ services:
       - govsso.alerts.static-alert.message-templates[0].locale=et
       - govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO documentation</a>!
       - govsso.alerts.static-alert.message-templates[1].locale=en
+      - govsso.alerts.static-alert.message-templates[2].message=Это тестовая среда, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GOVSSO</a>!
+      - govsso.alerts.static-alert.message-templates[2].locale=ru
       - govsso.alerts.enabled=true
       - ELASTIC_APM_ENABLED=false
       - BPL_DEBUG_ENABLED=true
