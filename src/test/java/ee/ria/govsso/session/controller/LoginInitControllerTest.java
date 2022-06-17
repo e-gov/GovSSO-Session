@@ -161,7 +161,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -194,7 +194,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A</span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -227,7 +227,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -283,7 +283,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A </span> sisselogimine"))
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A</span> sisselogimine"))
                 .body(containsString("kasutab ühekordse sisselogimise"))
                 .body(containsString("Eesnimi3"))
                 .body(containsString("test1234"))
@@ -314,7 +314,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Вход в услугу <span translate=\"no\"> Название службы A </span>"))
+                .body(containsString("Вход в услугу <span translate=\"no\">Название службы A</span>"))
                 .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("html lang=\"ru\""));
@@ -371,7 +371,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Logging in to <span translate=\"no\"> Service name A </span>"))
+                .body(containsString("Logging in to <span translate=\"no\">Service name A</span>"))
                 .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>) solution"))
                 .body(containsString("7/12/1961"))
                 .body(containsString("html lang=\"en\""));
@@ -541,7 +541,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Вход в услугу <span translate=\"no\"> Название службы A </span>"))
+                .body(containsString("Вход в услугу <span translate=\"no\">Название службы A</span>"))
                 .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("html lang=\"ru\""));
@@ -596,8 +596,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </strong> sisselogimine"))
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</strong> sisselogimine"))
+                .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
     }
 
@@ -623,8 +623,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine"))
-                .body(containsString("Teenusesse <strong translate=\"no\"> Teenusenimi A </strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
+                .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A</strong> sisselogimine"))
+                .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
                 .body(not(containsString("data:image/svg+xml;base64,testlogo")));
     }
 
