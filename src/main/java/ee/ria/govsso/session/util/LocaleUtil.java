@@ -86,6 +86,7 @@ public class LocaleUtil {
         return locales.stream()
                 .filter(SUPPORTED_LANGUAGES)
                 .findFirst()
+                .map(locale -> locale.toLowerCase(Locale.ROOT))
                 .orElse(DEFAULT_LOCALE);
     }
 
