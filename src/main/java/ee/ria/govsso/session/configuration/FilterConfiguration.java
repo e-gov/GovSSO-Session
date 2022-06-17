@@ -16,7 +16,7 @@ public class FilterConfiguration {
     public FilterRegistrationBean<RequestCorrelationFilter> requestCorrelationFilter(BuildProperties buildProperties, GitProperties gitProperties) {
         FilterRegistrationBean<RequestCorrelationFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new RequestCorrelationFilter(buildProperties, gitProperties));
-        registrationBean.setOrder(Ordered.LOWEST_PRECEDENCE - 1);
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Ensure that logging attributes are set as early as possible.
         return registrationBean;
     }
 
