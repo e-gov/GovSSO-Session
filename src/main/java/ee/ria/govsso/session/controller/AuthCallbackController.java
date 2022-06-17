@@ -52,12 +52,14 @@ public class AuthCallbackController {
             HttpServletRequest request) {
 
         RequestUtil.setFlowTraceId(ssoCookie.getLoginChallenge());
-        validateSsoCookie(state, ssoCookie);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
+
+        validateSsoCookie(state, ssoCookie);
 
         if (error != null) {
             LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
             request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+
             LoginRejectResponse response = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
             statisticsLogger.logReject(loginRequestInfo, START_SESSION);
             return new RedirectView(response.getRedirectTo().toString());
@@ -68,6 +70,7 @@ public class AuthCallbackController {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+
         SignedJWT idToken = taraService.requestIdToken(code);
         verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());

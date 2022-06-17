@@ -50,6 +50,8 @@ import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 
@@ -80,6 +82,7 @@ public class LoginInitController {
         RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+        // At first AUTHENTICATION_REQUEST_TYPE stays null until additional logic below has decided which path to take.
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
         if (language == null && localeCookie == null) {
@@ -101,8 +104,10 @@ public class LoginInitController {
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
+            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             return authenticateWithTara(loginRequestInfo, response);
         } else {
+            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
             List<Consent> consents = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
             JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
             if (idToken == null) {
@@ -281,6 +286,8 @@ public class LoginInitController {
         hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
         CookieUtil.deleteHydraSessionCookie(request, response);
+
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
     }
 
