@@ -147,6 +147,7 @@ services:
         limits:
           memory: 650M
     environment:
+      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
       - management.endpoints.web.exposure.include=*
       - server.port=15443
       - govsso.base-url=https://gateway.localhost:13443/

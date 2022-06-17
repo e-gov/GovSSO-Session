@@ -49,6 +49,7 @@ public class AlertsServiceTest extends BaseTest {
         assertThat(alert.getEndTime(), equalTo("3031-01-01T12:00:00Z"));
         assertThat(alert.getAlertMessage("et"), equalTo("Alert 1 message et"));
         assertThat(alert.getAlertMessage("en"), equalTo("Alert 1 message en"));
+        assertThat(alert.getAlertMessage("ru"), equalTo("Alert 1 message ru"));
         assertThat(alert.getLoginAlert().isEnabled(), is(true));
     }
 

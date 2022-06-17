@@ -14,6 +14,10 @@
         {
           "message": "Alert 1 message en",
           "locale": "en"
+        },
+        {
+          "message": "Alert 1 message ru",
+          "locale": "ru"
         }
       ]
     },
