@@ -11,6 +11,7 @@ public class ConsentRequestInfo {
     //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getConsentRequest, Ory Hydra response is deserialized into this class.
 
     private String challenge;
+    private String loginChallenge;
     private String[] requestedScope;
     private Client client;
     private Context context;

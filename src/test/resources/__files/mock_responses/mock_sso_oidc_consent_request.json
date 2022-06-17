@@ -1,5 +1,6 @@
 {
   "challenge": "aaabbbcccdddeeefff00011122233344",
+  "login_challenge": "abcdeff098aadfccabcdeff098aadfcc",
   "requested_scope": [
     "openid"
   ],
