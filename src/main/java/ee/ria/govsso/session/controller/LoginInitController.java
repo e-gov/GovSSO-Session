@@ -21,6 +21,7 @@ import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import ee.ria.govsso.session.util.PromptUtil;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,7 @@ public class LoginInitController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 

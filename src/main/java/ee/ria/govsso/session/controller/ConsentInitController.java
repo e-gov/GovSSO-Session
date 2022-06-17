@@ -3,6 +3,7 @@ package ee.ria.govsso.session.controller;
 import ee.ria.govsso.session.service.hydra.ConsentAcceptResponse;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -29,6 +30,8 @@ public class ConsentInitController {
             @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge) {
 
         ConsentRequestInfo consentRequestInfo = hydraService.fetchConsentRequestInfo(consentChallenge);
+        RequestUtil.setFlowTraceId(consentRequestInfo.getLoginChallenge());
+
         ConsentAcceptResponse response = hydraService.acceptConsent(consentChallenge, consentRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }

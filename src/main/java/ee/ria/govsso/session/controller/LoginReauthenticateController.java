@@ -5,6 +5,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.util.CookieUtil;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ public class LoginReauthenticateController {
                                             HttpServletRequest request,
                                             HttpServletResponse response) {
 
+        RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         if (loginRequestInfo.getSubject().isEmpty()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Hydra login request subject must not be empty.");

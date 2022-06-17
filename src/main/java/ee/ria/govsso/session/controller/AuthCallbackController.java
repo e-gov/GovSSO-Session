@@ -13,6 +13,7 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieValue;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ public class AuthCallbackController {
             @SsoCookieValue SsoCookie ssoCookie,
             HttpServletRequest request) {
 
+        RequestUtil.setFlowTraceId(ssoCookie.getLoginChallenge());
         validateSsoCookie(state, ssoCookie);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
 

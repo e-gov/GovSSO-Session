@@ -34,6 +34,11 @@
     <dependencies><!-- Ordered by scope, groupId, artifactId. -->
         <dependency>
             <groupId>co.elastic.apm</groupId>
+            <artifactId>apm-agent-api</artifactId>
+            <version>${elastic-apm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>co.elastic.apm</groupId>
             <artifactId>apm-agent-attach</artifactId>
             <version>${elastic-apm.version}</version>
         </dependency>

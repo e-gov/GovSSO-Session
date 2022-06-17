@@ -8,6 +8,7 @@ import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LogoutAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ public class LogoutController {
                                    @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
                                    @RequestParam(name = "lang", required = false) String language) {
 
+        RequestUtil.setFlowTraceId(logoutChallenge);
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
@@ -88,6 +90,7 @@ public class LogoutController {
     public RedirectView endSession(@ModelAttribute("logoutChallenge")
                                    @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
 
+        RequestUtil.setFlowTraceId(logoutChallenge);
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
         validateLogoutRequestInfo(logoutRequestInfo);
 
@@ -99,6 +102,7 @@ public class LogoutController {
     public RedirectView continueSession(@ModelAttribute("logoutChallenge")
                                         @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge) {
 
+        RequestUtil.setFlowTraceId(logoutChallenge);
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
         validateLogoutRequestInfo(logoutRequestInfo);
 
