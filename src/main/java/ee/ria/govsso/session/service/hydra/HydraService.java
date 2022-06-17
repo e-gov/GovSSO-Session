@@ -397,7 +397,6 @@ public class HydraService {
     private boolean isNbfValid(JWT idToken) throws ParseException {
         Date idTokenDate = idToken.getJWTClaimsSet().getNotBeforeTime();
         Date currentDate = new Date();
-
         long diffInMillis = Math.abs(currentDate.getTime() - idTokenDate.getTime());
         long diffInSeconds = TimeUnit.SECONDS.convert(diffInMillis, TimeUnit.MILLISECONDS);
         long maxDurationInSeconds = TimeUnit.SECONDS.convert(ssoConfigurationProperties.getSessionMaxDurationHours(), TimeUnit.HOURS);
