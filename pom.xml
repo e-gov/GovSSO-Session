@@ -13,6 +13,7 @@
     <groupId>ee.ria.govsso</groupId>
     <artifactId>govsso-session</artifactId>
     <version>0.5.0</version>
+    <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.7.0/reference/htmlsingle/#howto.traditional-deployment.war -->
     <packaging>war</packaging>
 
     <name>GOVSSO Session Service</name>
@@ -106,7 +107,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-        <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.6.3/reference/htmlsingle/#howto.traditional-deployment.war -->
+        <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.7.0/reference/htmlsingle/#howto.traditional-deployment.war -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
@@ -152,6 +153,7 @@
     </dependencies>
 
     <build>
+        <!-- Produce artifact name without version, so it would be easier to reference in pipeline. -->
         <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>

@@ -12,6 +12,8 @@ management:
       exposure:
         include: configprops,env,health,info
   info:
+    os:
+      enabled: true
     java:
       enabled: true
     git:

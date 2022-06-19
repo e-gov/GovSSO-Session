@@ -15,7 +15,7 @@ public class Application extends SpringBootServletInitializer {
         SpringApplication.run(Application.class, args);
     }
 
-    // Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.6.3/reference/htmlsingle/#howto.traditional-deployment.war
+    // Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.7.0/reference/htmlsingle/#howto.traditional-deployment.war
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
         ElasticApmAttacher.attach();
