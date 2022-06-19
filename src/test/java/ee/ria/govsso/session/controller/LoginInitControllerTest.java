@@ -1374,7 +1374,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Teenusesse <span translate=\"no\"> Teenusenimi A&lt;1&gt;2&amp;3 </span> sisselogimine"));
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> sisselogimine"));
     }
 
     @Nested
