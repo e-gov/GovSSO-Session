@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Disabled // TODO: Does not work since @Retryable exceptions are not thrown out of method.
+@Disabled("TODO: Does not work since @Retryable exceptions are not thrown out of method.") // TODO: Does not work since @Retryable exceptions are not thrown out of method.
 @SpringBootTest(properties = "govsso.tara.issuer-url=https://tara.localhost:10001")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class TaraTLSValidationTest {
