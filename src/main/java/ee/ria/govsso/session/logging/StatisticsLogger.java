@@ -126,13 +126,13 @@ public class StatisticsLogger {
         @JsonProperty("institution.sector")
         private String sector;
 
-        @JsonProperty("session_id")
+        @JsonProperty("session.id")
         private String sessionId;
 
-        @JsonProperty("session_start_time")
+        @JsonProperty("session.start_time")
         private Date sessionStartTime;
 
-        @JsonProperty("session_duration")
+        @JsonProperty("session.duration")
         private Long sessionDuration;
 
         @JsonProperty("authentication.country")
