@@ -223,6 +223,8 @@ public class LoginInitController {
     private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
         ModelAndView model = new ModelAndView("authView");
         JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
+        String[] requestedScopes = loginRequestInfo.getRequestedScope();
+
         if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
             String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
 
@@ -230,7 +232,8 @@ public class LoginInitController {
             model.addObject("familyName", profileAttributes.get("family_name"));
             if (profileAttributes.get("date_of_birth") != null)
                 model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
-            model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
+            if (List.of(requestedScopes).contains("phone"))
+                model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
             model.addObject("subject", loginRequestInfo.getSubject());
             model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
             model.addObject("loginChallenge", loginRequestInfo.getChallenge());
