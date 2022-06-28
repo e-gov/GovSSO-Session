@@ -38,15 +38,20 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
 import org.thymeleaf.util.ArrayUtils;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -79,13 +84,18 @@ public class LoginInitController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        List<String> locales = Stream.of(language, localeCookie)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        LocaleUtil.setLocale(LocaleUtil.getFirstSupportedOrDefaultLocale(locales));
+
         RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
         // At first AUTHENTICATION_REQUEST_TYPE stays null until additional logic below has decided which path to take.
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
-        if (language == null && localeCookie == null) {
+        if (language == null && LocaleUtil.localeFromHydraIsNotNull(loginRequestInfo)) {
             LocaleUtil.setLocale(loginRequestInfo);
         }
 

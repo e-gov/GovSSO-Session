@@ -242,7 +242,7 @@ class LogoutControllerTest extends BaseTest {
     }
 
     @Test
-    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInEnglish() {
+    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInRussian() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -272,14 +272,14 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body(containsString("You have been logged out from <span translate=\"no\">Service name A</span>"))
-                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"))
-                .body(containsString("html lang=\"en\""));
+                .body(containsString("Вы вышли из услуги <span translate=\"no\">Название службы A</span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Вы авторизованы в следующих услугах:(?:.*\\r*\\n*)*Название службы B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"ru\""));
 
     }
 
     @Test
-    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInEnglish() {
+    void logoutInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInRussian() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -302,9 +302,9 @@ class LogoutControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(500)
-                .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."))
-                .body(containsString("html lang=\"en\""));
+                .body(containsString("Ошибка аутентификации."))
+                .body(containsString("Технический сбой услуги. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"ru\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -413,7 +413,7 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(200)
                 .body(containsString("Olete välja logitud <span translate=\"no\">Teenusenimi A</span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
-                .body(containsString("html lang=\"unknown\""));
+                .body(containsString("html lang=\"et\""));
     }
 
     @Test
@@ -481,7 +481,42 @@ class LogoutControllerTest extends BaseTest {
                 .body(containsString("Вы вышли из услуги <span translate=\"no\">Название службы A</span>"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Вы авторизованы в следующих <strong>1</strong> услугах:(?:.*\\r*\\n*)*Название службы B(?:.*\\r*\\n*)*"))
                 .body(containsString("html lang=\"ru\""));
+    }
 
+    @Test
+    void logoutInit_WhenLocaleFromHydraIsUnknownAndLocaleFromCookieIsEnglish_OpensViewInEnglish() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_unknown_locale.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .cookie("__Host-LOCALE", "en")
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("You have been logged out from <span translate=\"no\">Service name A</span>"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*You are still logged in to the following services:(?:.*\\r*\\n*)*Service name B(?:.*\\r*\\n*)*"))
+                .body(containsString("html lang=\"en\""));
     }
 
     @Test

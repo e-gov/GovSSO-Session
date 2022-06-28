@@ -33,7 +33,10 @@ import javax.validation.constraints.Pattern;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 
@@ -57,11 +60,16 @@ public class LogoutController {
                                    @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
                                    @RequestParam(name = "lang", required = false) String language) {
 
+        List<String> locales = Stream.of(language, localeCookie)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        LocaleUtil.setLocale(LocaleUtil.getFirstSupportedOrDefaultLocale(locales));
+
         RequestUtil.setFlowTraceId(logoutChallenge);
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
-        if (language == null && localeCookie == null) {
+        if (language == null && LocaleUtil.localeFromHydraIsNotNull(logoutRequestInfo)) {
             LocaleUtil.setLocale(logoutRequestInfo);
         }
 

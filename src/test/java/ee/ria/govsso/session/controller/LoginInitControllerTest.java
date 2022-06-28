@@ -465,7 +465,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(containsString("kasutab ühekordse sisselogimise"))
-                .body(containsString("html lang=\"unknown\""));
+                .body(containsString("html lang=\"et\""));
     }
 
     @Test
@@ -498,7 +498,7 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInEnglish() {
+    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_OpensViewInRussian() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -520,12 +520,12 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>) solution"))
-                .body(containsString("html lang=\"en\""));
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("html lang=\"ru\""));
     }
 
     @Test
-    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInEnglish() {
+    void loginInit_WhenLocaleFromCookieIsEnglishAndLocaleFromHydraIsRussian_ErrorMessageIsInRussian() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -545,9 +545,9 @@ public class LoginInitControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(500)
-                .body(containsString("Authentication error."))
-                .body(containsString("An unexpected error occurred. Please try again later."))
-                .body(containsString("html lang=\"en\""));
+                .body(containsString("Ошибка аутентификации."))
+                .body(containsString("Технический сбой услуги. Пожалуйста, попробуйте позже."))
+                .body(containsString("html lang=\"ru\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
@@ -578,6 +578,35 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("html lang=\"ru\""));
+    }
+
+    @Test
+    void loginInit_WhenLocaleFromHydraIsUnknownAndLocaleFromCookieIsEnglish_OpensViewInEnglish() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_unknown_locale.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .cookie("__Host-LOCALE", "en")
+                .get("/login/init")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Logging in to <span translate=\"no\">Service name A</span>"))
+                .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>)"))
+                .body(containsString("7/12/1961"))
+                .body(containsString("html lang=\"en\""));
     }
 
     @Test

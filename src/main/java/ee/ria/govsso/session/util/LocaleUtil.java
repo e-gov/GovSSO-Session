@@ -26,6 +26,7 @@ import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import static java.util.regex.Pattern.compile;
@@ -56,7 +57,7 @@ public class LocaleUtil {
         setLocale(requestedLocale);
     }
 
-    private void setLocale(String requestedLocale) {
+    public void setLocale(String requestedLocale) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         Locale locale = StringUtils.parseLocaleString(requestedLocale);
@@ -82,12 +83,44 @@ public class LocaleUtil {
         return getFirstSupportedOrDefaultLocale(List.of(localeParameter.getValue().split(" ")));
     }
 
-    private String getFirstSupportedOrDefaultLocale(List<String> locales) {
+    public String getFirstSupportedOrDefaultLocale(List<String> locales) {
         return locales.stream()
+                .filter(Objects::nonNull)
                 .filter(SUPPORTED_LANGUAGES)
                 .findFirst()
                 .map(locale -> locale.toLowerCase(Locale.ROOT))
                 .orElse(DEFAULT_LOCALE);
+    }
+
+    public String getFirstSupportedLocaleOrNull(List<String> locales) {
+        return locales.stream()
+                .filter(SUPPORTED_LANGUAGES)
+                .findFirst()
+                .map(locale -> locale.toLowerCase(Locale.ROOT))
+                .orElse(null);
+    }
+
+    public boolean localeFromHydraIsNotNull(LoginRequestInfo loginRequestInfo) {
+        if (loginRequestInfo.getOidcContext() == null) {
+            return false;
+        }
+
+        List<String> locales = loginRequestInfo.getOidcContext().getUiLocales();
+        String localeFromHydra = getFirstSupportedLocaleOrNull(locales);
+
+        return localeFromHydra != null;
+    }
+
+    public boolean localeFromHydraIsNotNull(LogoutRequestInfo logoutRequestInfo) {
+        NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
+        if (localeParameter == null) {
+            return false;
+        }
+
+        List<String> locales = List.of(localeParameter.getValue().split(" "));
+        String localeFromHydra = getFirstSupportedLocaleOrNull(locales);
+
+        return localeFromHydra != null;
     }
 
     public String getTranslatedClientName(Client client) {
