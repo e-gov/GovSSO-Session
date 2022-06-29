@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static java.util.regex.Pattern.compile;
@@ -35,7 +36,16 @@ import static java.util.regex.Pattern.compile;
 @UtilityClass
 public class LocaleUtil {
 
-    public static final String DEFAULT_LOCALE = "et";
+    public static final Locale LOCALE_ESTONIAN = new Locale("et");
+    public static final Locale LOCALE_RUSSIAN = new Locale("ru");
+
+    public static final Locale DEFAULT_LOCALE = LOCALE_ESTONIAN;
+    public static final Set<Locale> SUPPORTED_LOCALES = Set.of(
+            LOCALE_ESTONIAN,
+            Locale.ENGLISH,
+            LOCALE_RUSSIAN);
+
+    public static final String DEFAULT_LANGUAGE = "et";
     private static final Predicate<String> SUPPORTED_LANGUAGES = compile("(?i)(et|en|ru)").asMatchPredicate();
 
     public Locale getLocale() {
@@ -47,87 +57,72 @@ public class LocaleUtil {
         return localeResolver.resolveLocale(request);
     }
 
-    public void setLocale(LoginRequestInfo loginRequestInfo) {
-        String requestedLocale = getFirstSupportedOrDefaultLocale(loginRequestInfo);
-        setLocale(requestedLocale);
+    /*
+     * 1) If request parameter `lang` has successfully set a valid locale (LocaleChangeInterceptor calls
+     *    localeResolver.setLocale), then don't perform additional steps.
+     * 2) Try setting locale based on Hydra request parameter `ui_locales`.
+     * 3) Fall back to locale parsed from cookie (CookieLocaleResolver), if it is valid.
+     * 4) Fall back to default locale (configured with CookieLocaleResolver).
+     */
+
+    public void setLocaleIfUnset(HttpServletRequest request, HttpServletResponse response, LoginRequestInfo loginRequestInfo) {
+        if (!SupportedLocaleContextResolver.isLocaleExplicitlySet(request)) {
+            String locale = getFirstSupportedLocale(loginRequestInfo);
+            setLocale(request, response, locale);
+        }
     }
 
-    public void setLocale(LogoutRequestInfo logoutRequestInfo) {
-        String requestedLocale = getFirstSupportedOrDefaultLocale(logoutRequestInfo);
-        setLocale(requestedLocale);
+    public void setLocaleIfUnset(HttpServletRequest request, HttpServletResponse response, LogoutRequestInfo logoutRequestInfo) {
+        if (!SupportedLocaleContextResolver.isLocaleExplicitlySet(request)) {
+            String locale = getFirstSupportedLocale(logoutRequestInfo);
+            setLocale(request, response, locale);
+        }
     }
 
-    public void setLocale(String requestedLocale) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
+    private void setLocale(HttpServletRequest request, HttpServletResponse response, String requestedLocale) {
+        if (requestedLocale == null) {
+            return;
+        }
         Locale locale = StringUtils.parseLocaleString(requestedLocale);
         LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
+
         Assert.notNull(localeResolver, "No LocaleResolver found in request: not in a DispatcherServlet request?");
         localeResolver.setLocale(request, response, locale);
     }
 
-    private String getFirstSupportedOrDefaultLocale(LoginRequestInfo loginRequestInfo) {
+    private String getFirstSupportedLocale(LoginRequestInfo loginRequestInfo) {
         if (loginRequestInfo.getOidcContext() == null) {
-            return DEFAULT_LOCALE;
+            return null;
         }
 
-        return getFirstSupportedOrDefaultLocale(loginRequestInfo.getOidcContext().getUiLocales());
+        List<String> locales = loginRequestInfo.getOidcContext().getUiLocales();
+        return getFirstSupportedLocale(locales);
     }
 
-    private String getFirstSupportedOrDefaultLocale(LogoutRequestInfo logoutRequestInfo) {
+    private String getFirstSupportedLocale(LogoutRequestInfo logoutRequestInfo) {
         NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
         if (localeParameter == null) {
-            return DEFAULT_LOCALE;
+            return null;
         }
 
-        return getFirstSupportedOrDefaultLocale(List.of(localeParameter.getValue().split(" ")));
+        List<String> locales = List.of(localeParameter.getValue().split(" "));
+        return getFirstSupportedLocale(locales);
     }
 
-    public String getFirstSupportedOrDefaultLocale(List<String> locales) {
+    private String getFirstSupportedLocale(List<String> locales) {
         return locales.stream()
                 .filter(Objects::nonNull)
-                .filter(SUPPORTED_LANGUAGES)
-                .findFirst()
-                .map(locale -> locale.toLowerCase(Locale.ROOT))
-                .orElse(DEFAULT_LOCALE);
-    }
-
-    public String getFirstSupportedLocaleOrNull(List<String> locales) {
-        return locales.stream()
                 .filter(SUPPORTED_LANGUAGES)
                 .findFirst()
                 .map(locale -> locale.toLowerCase(Locale.ROOT))
                 .orElse(null);
     }
 
-    public boolean localeFromHydraIsNotNull(LoginRequestInfo loginRequestInfo) {
-        if (loginRequestInfo.getOidcContext() == null) {
-            return false;
-        }
-
-        List<String> locales = loginRequestInfo.getOidcContext().getUiLocales();
-        String localeFromHydra = getFirstSupportedLocaleOrNull(locales);
-
-        return localeFromHydra != null;
-    }
-
-    public boolean localeFromHydraIsNotNull(LogoutRequestInfo logoutRequestInfo) {
-        NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
-        if (localeParameter == null) {
-            return false;
-        }
-
-        List<String> locales = List.of(localeParameter.getValue().split(" "));
-        String localeFromHydra = getFirstSupportedLocaleOrNull(locales);
-
-        return localeFromHydra != null;
-    }
-
     public String getTranslatedClientName(Client client) {
         Locale locale = getLocale();
 
         Map<String, String> nameTranslations = client.getMetadata().getOidcClient().getNameTranslations();
-        String translatedName = nameTranslations.get(DEFAULT_LOCALE);
+        String translatedName = nameTranslations.get(DEFAULT_LANGUAGE);
         if (nameTranslations.containsKey(locale.getLanguage()))
             translatedName = nameTranslations.get(locale.getLanguage());
         return translatedName;

@@ -21,7 +21,7 @@ public class Alert {
 
     public void setLoginAlert(LoginAlert loginAlert) {
         this.loginAlert = loginAlert;
-        this.defaultMessage = getAlertMessage(LocaleUtil.DEFAULT_LOCALE);
+        this.defaultMessage = getAlertMessage(LocaleUtil.DEFAULT_LANGUAGE);
     }
 
     public boolean isActive() {

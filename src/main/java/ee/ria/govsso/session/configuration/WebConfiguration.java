@@ -2,6 +2,8 @@ package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.session.SsoCookieArgumentResolver;
 import ee.ria.govsso.session.session.SsoCookieSigner;
+import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.SupportedLocaleContextResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,9 +22,6 @@ import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 import java.util.List;
-import java.util.Locale;
-
-import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LOCALE;
 
 @Slf4j
 @EnableRetry
@@ -44,8 +43,11 @@ public class WebConfiguration implements WebMvcConfigurer {
         CookieLocaleResolver resolver = new CookieLocaleResolver();
         resolver.setCookieName("__Host-LOCALE");
         resolver.setCookieSecure(true);
-        resolver.setDefaultLocale(new Locale(DEFAULT_LOCALE));
-        return resolver;
+
+        // Setting default locale prevents CookieLocaleResolver from falling back to request.getLocale()
+        resolver.setDefaultLocale(LocaleUtil.DEFAULT_LOCALE);
+
+        return new SupportedLocaleContextResolver(resolver, LocaleUtil.SUPPORTED_LOCALES, LocaleUtil.DEFAULT_LOCALE);
     }
 
     @Bean
@@ -60,7 +62,7 @@ public class WebConfiguration implements WebMvcConfigurer {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasename("messages");
         messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setDefaultLocale(new Locale(DEFAULT_LOCALE));
+        messageSource.setDefaultLocale(LocaleUtil.DEFAULT_LOCALE);
         return messageSource;
     }
 

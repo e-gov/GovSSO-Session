@@ -31,27 +31,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
 import org.thymeleaf.util.ArrayUtils;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -79,15 +73,8 @@ public class LoginInitController {
     public ModelAndView loginInit(
             @RequestParam(name = "login_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
-            @RequestParam(name = "lang", required = false) String language,
-            @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
             HttpServletRequest request,
             HttpServletResponse response) {
-
-        List<String> locales = Stream.of(language, localeCookie)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        LocaleUtil.setLocale(LocaleUtil.getFirstSupportedOrDefaultLocale(locales));
 
         RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
@@ -95,9 +82,7 @@ public class LoginInitController {
         // At first AUTHENTICATION_REQUEST_TYPE stays null until additional logic below has decided which path to take.
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
-        if (language == null && LocaleUtil.localeFromHydraIsNotNull(loginRequestInfo)) {
-            LocaleUtil.setLocale(loginRequestInfo);
-        }
+        LocaleUtil.setLocaleIfUnset(request, response, loginRequestInfo);
 
         validateLoginRequestInfo(loginRequestInfo);
 

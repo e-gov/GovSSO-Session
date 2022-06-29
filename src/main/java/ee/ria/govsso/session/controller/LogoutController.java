@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,14 +28,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.HtmlUtils;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 
@@ -57,21 +55,14 @@ public class LogoutController {
     @GetMapping(value = LOGOUT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView logoutInit(@RequestParam(name = "logout_challenge")
                                    @Pattern(regexp = REGEXP_LOGOUT_CHALLENGE) String logoutChallenge,
-                                   @CookieValue(value = "__Host-LOCALE", required = false) String localeCookie,
-                                   @RequestParam(name = "lang", required = false) String language) {
-
-        List<String> locales = Stream.of(language, localeCookie)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        LocaleUtil.setLocale(LocaleUtil.getFirstSupportedOrDefaultLocale(locales));
+                                   HttpServletRequest request,
+                                   HttpServletResponse response) {
 
         RequestUtil.setFlowTraceId(logoutChallenge);
         LogoutRequestInfo logoutRequestInfo = hydraService.fetchLogoutRequestInfo(logoutChallenge);
 
         // Set locale as early as possible, so it could be used by error messages as much as possible.
-        if (language == null && LocaleUtil.localeFromHydraIsNotNull(logoutRequestInfo)) {
-            LocaleUtil.setLocale(logoutRequestInfo);
-        }
+        LocaleUtil.setLocaleIfUnset(request, response, logoutRequestInfo);
 
         validateLogoutRequestInfo(logoutRequestInfo);
 

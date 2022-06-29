@@ -492,7 +492,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(500)
                 .body(containsString("Kasutaja tuvastamine ebaõnnestus."))
                 .body(containsString("Protsess ebaõnnestus tehnilise vea tõttu. Palun proovige mõne aja pärast uuesti."))
-                .body(containsString("html lang=\"unknown\""));
+                .body(containsString("html lang=\"et\""));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 500 Internal Server Error from GET");
     }
