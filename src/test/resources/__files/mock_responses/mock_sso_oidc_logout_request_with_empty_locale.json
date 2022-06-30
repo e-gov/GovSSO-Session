@@ -1,0 +1,59 @@
+{
+  "challenge": "3c3ef85a-3d8b-4ea2-bb53-b66bc5bd1931",
+  "subject": "Isikukood3",
+  "sid": "97f38419-c541-40e9-8d55-ad223ea1f46a",
+  "request_url": "/oauth2/sessions/logout?ui_locales=&id_token_hint=eyJhbGciOiJSUzI1NiIsImtpZCI6InB1YmxpYzo3ZmFiZDRhOC0zZTY2LTRhNmQtODBiNy1kNGIyMDZjYzc4ZDAiLCJ0eXAiOiJKV1QifQ.eyJhY3IiOiJoaWdoIiwiYW1yIjpbIm1JRCJdLCJhdF9oYXNoIjoibk1fZGpiMXNqY0szUEJJN3lhRDZkQSIsImF1ZCI6WyJjbGllbnQtYSJdLCJhdXRoX3RpbWUiOjE2NDM3MjA5NjksImJpcnRoZGF0ZSI6IjE5NjEtMDctMTIiLCJleHAiOjE2NDM3MjQ1NjksImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMiLCJnaXZlbl9uYW1lIjoiRWVzbmltaTMiLCJpYXQiOjE2NDM3MjA5NjksImlzcyI6Imh0dHA6Ly9nYXRld2F5LmxvY2FsaG9zdDoxMzA4MC8iLCJqdGkiOiJmODI4M2VmYi01YjUyLTQ3M2MtOWQzNy0zYTQxN2E2ZDQxNDQiLCJub25jZSI6Im9YVm9CTjNZUUdDeVNZMVM3UXB0d3hORkQtVWd5b21CLXl1NEI2R3NUUHciLCJyYXQiOjE2NDM3MjA5NjcsInNpZCI6Ijk3ZjM4NDE5LWM1NDEtNDBlOS04ZDU1LWFkMjIzZWExZjQ2YSIsInN1YiI6IklzaWt1a29vZDMifQ.PkI610a2GnGhV57iFlVlljMuKWoYHnwuj6ETdRmWKC-kNJgRjZsaYzxmCX5HrCpnAGS11-GeSemBDI2y9Rht5iRLExcpci3cDi2GvpeLHkRqIzKzmZG436hofN05gqByz7nOozasKyP-JlLt35QR0GP-GzM301MNWmA11P_pC6U4YGC4tJcY2LTHxdfhAsuPUXmHbZ6JCkKByXa6jZ1ZXxreAg2KtZz5UckM66PuC70bDhjoc-12ru2Y2myQDlV2aPey4dvElqkTrdvy1i4BlRuLTOBPrlcOLEl-CX1Xt16QVXQrbvaOua8VPy4fve4x_J8XbpOxbTM69s-cN0pSRVFsNoFEkipd3Z4RRj9C8mQ7lGQ7De2eiUx08J3bzTY5KSo2wkpS4wLLCKKivgR16aIXCEEomV345B78F6x73fzFBc-Br6BP0TLlwPzRicwt_g5L5onyC0LKlcrtEtzketUYy6TvBCVljjlRpBp-R5ZmqeGGZx0U7wDU_sKa0IoQrODHNPvjBcKU0xYx5tqax02wZLzaN3fhqDkJZU0PGFuY0p9Cvyq843emn0FjQ9mv7cz5EET5xbjyi5BLFzjndRTO1Pa-zXHarwa27NeR19TVkQI2zehyJb2PPMMuvOL9yzXdZmHvYbEgdivkdfUerAmzic0HDE21mMwue_RDFTI&post_logout_redirect_uri=https://clienta.localhost:11443/logout",
+  "rp_initiated": true,
+  "client": {
+    "client_id": "client-a",
+    "client_name": "Teenusenimi A",
+    "redirect_uris": [
+      "https://clienta.localhost:11443/login/oauth2/code/govsso"
+    ],
+    "grant_types": [],
+    "response_types": [
+      "code"
+    ],
+    "scope": "openid",
+    "audience": [],
+    "owner": "",
+    "policy_uri": "",
+    "allowed_cors_origins": [],
+    "tos_uri": "",
+    "client_uri": "",
+    "logo_uri": "",
+    "contacts": [],
+    "client_secret_expires_at": 0,
+    "subject_type": "public",
+    "jwks": {},
+    "token_endpoint_auth_method": "client_secret_basic",
+    "userinfo_signed_response_alg": "none",
+    "created_at": "2022-02-01T12:58:24Z",
+    "updated_at": "2022-02-01T12:58:24.223105Z",
+    "post_logout_redirect_uris": [
+      "https://clienta.localhost:11443"
+    ],
+    "backchannel_logout_uri": "https://clienta.localhost:11443/oauth/logout",
+    "metadata": {
+      "display_user_consent": false,
+      "oidc_client": {
+        "name": "Teenusenimi A",
+        "name_translations": {
+          "et": "Teenusenimi A",
+          "en": "Service name A",
+          "ru": "Название службы A"
+        },
+        "short_name": "Teenus A",
+        "short_name_translations": {
+          "et": "Teenus A",
+          "en": "Service A",
+          "ru": "Название A"
+        },
+        "institution": {
+          "registry_code": "70000001",
+          "sector": "public"
+        }
+      }
+    }
+  }
+}

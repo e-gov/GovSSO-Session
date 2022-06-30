@@ -91,7 +91,7 @@ public class LocaleUtil {
     }
 
     private String getFirstSupportedLocale(LoginRequestInfo loginRequestInfo) {
-        if (loginRequestInfo.getOidcContext() == null) {
+        if (loginRequestInfo.getOidcContext() == null || loginRequestInfo.getOidcContext().getUiLocales() == null) {
             return null;
         }
 
@@ -101,7 +101,7 @@ public class LocaleUtil {
 
     private String getFirstSupportedLocale(LogoutRequestInfo logoutRequestInfo) {
         NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
-        if (localeParameter == null) {
+        if (localeParameter == null || localeParameter.getValue() == null) {
             return null;
         }
 
