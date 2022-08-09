@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 # Recursively remove all directories from current path
 cd "$(command dirname -- "${0}")" || exit
 rm -rf ./*/

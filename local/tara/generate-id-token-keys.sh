@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 destinationFolder="id-token"
 keyFileName="id-token-issuer.localhost"
 

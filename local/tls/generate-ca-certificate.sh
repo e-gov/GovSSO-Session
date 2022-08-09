@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 caName=$1
 if [ -z "$caName" ]; then
   echo "\$caName is empty"

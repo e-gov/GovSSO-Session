@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 ca=$1
 if [ -z "$ca" ]; then
   echo "\$ca is empty"

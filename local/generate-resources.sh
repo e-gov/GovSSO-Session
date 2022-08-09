@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 cd tara || exit
 ./generate-id-token-keys.sh
 

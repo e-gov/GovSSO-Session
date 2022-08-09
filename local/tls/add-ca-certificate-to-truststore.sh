@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 application=$1
 alias=$2
 certPath=$3
