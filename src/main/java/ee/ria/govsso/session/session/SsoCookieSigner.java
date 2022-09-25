@@ -9,7 +9,6 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jose.util.StandardCharset;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
@@ -34,10 +33,12 @@ import static org.springframework.boot.web.server.Cookie.SameSite.LAX;
 public class SsoCookieSigner {
     private final SecurityConfigurationProperties securityProperties;
     private final JWSSigner signer;
+    private final JWSVerifier verifier;
 
     public SsoCookieSigner(SecurityConfigurationProperties securityProperties) {
         this.securityProperties = securityProperties;
         this.signer = setUpSigner(securityProperties);
+        this.verifier = setUpVerifier(securityProperties);
     }
 
     private MACSigner setUpSigner(SecurityConfigurationProperties securityProperties) {
@@ -48,27 +49,37 @@ public class SsoCookieSigner {
         }
     }
 
-    public SsoCookie parseAndVerifyCookie(@NonNull String ssoCookieValue) {
+    private MACVerifier setUpVerifier(SecurityConfigurationProperties securityProperties) {
         try {
-            JWSObject jwsObject = JWSObject.parse(ssoCookieValue);
-            String signingSecret = securityProperties.getCookieSigningSecret();
-            JWSVerifier verifier = new MACVerifier(signingSecret.getBytes(StandardCharset.UTF_8));
+            return new MACVerifier(securityProperties.getCookieSigningSecret());
+        } catch (Exception ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Unable to setup cookie verifier", ex);
+        }
+    }
+
+    public SsoCookie parseAndVerifyCookie(@NonNull String ssoCookieValue) {
+        JWSObject jwsObject;
+        try {
+            jwsObject = JWSObject.parse(ssoCookieValue);
+        } catch (ParseException ex) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Unable to parse SsoCookie", ex);
+        }
+
+        try {
             if (!jwsObject.verify(verifier)) {
                 throw new SsoException(ErrorCode.USER_INPUT, "Invalid SsoCookie signature");
             }
-
-            Payload payload = jwsObject.getPayload();
-            Map<String, Object> ssoObjectMap = payload.toJSONObject();
-            String loginChallenge = (String) ssoObjectMap.get(COOKIE_VALUE_LOGIN_CHALLENGE);
-            String taraState = (String) ssoObjectMap.get(COOKIE_VALUE_TARA_STATE);
-            String taraNonce = (String) ssoObjectMap.get(COOKIE_VALUE_TARA_NONCE);
-
-            return new SsoCookie(loginChallenge, taraState, taraNonce);
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Unable to parse SsoCookie", ex);
         } catch (IllegalStateException | JOSEException ex) {
             throw new SsoException(ErrorCode.USER_INPUT, "Unable to verify SsoCookie signature", ex);
         }
+
+        Payload payload = jwsObject.getPayload();
+        Map<String, Object> ssoObjectMap = payload.toJSONObject();
+        String loginChallenge = (String) ssoObjectMap.get(COOKIE_VALUE_LOGIN_CHALLENGE);
+        String taraState = (String) ssoObjectMap.get(COOKIE_VALUE_TARA_STATE);
+        String taraNonce = (String) ssoObjectMap.get(COOKIE_VALUE_TARA_NONCE);
+
+        return new SsoCookie(loginChallenge, taraState, taraNonce);
     }
 
     public String getSignedCookieValue(SsoCookie ssoCookie) {
