@@ -16,7 +16,7 @@
     <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.7.0/reference/htmlsingle/#howto.traditional-deployment.war -->
     <packaging>war</packaging>
 
-    <name>GOVSSO Session Service</name>
+    <name>GovSSO Session Service</name>
     <licenses>
         <license>
             <name>MIT</name>

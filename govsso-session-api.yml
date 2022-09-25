@@ -1,6 +1,6 @@
 openapi: '3.0.3'
 info:
-  title: GOVSSO Session Service
+  title: GovSSO Session Service
   version: 0.1.0
 servers:
   - url: https://session.localhost:15443

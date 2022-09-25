@@ -15,7 +15,7 @@ hydra janitor \
 
 psql --file "${basedir}/row_counts.sql"
 
-# Call GOVSSO custom data clean-up script
+# Call GovSSO custom data clean-up script
 psql --echo-all --file "${basedir}/delete_rows.sql"
 
 psql --file "${basedir}/row_counts.sql"

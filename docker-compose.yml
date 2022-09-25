@@ -165,11 +165,11 @@ services:
       - govsso.tara.tls.trust-store-password=changeit
       - govsso.admin.tls.trust-store-location=file:/var/certs/session.localhost.admin.truststore.p12
       - govsso.admin.tls.trust-store-password=changeit
-      - govsso.alerts.static-alert.message-templates[0].message=Tegemist on kohaliku arenduskeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO dokumentatsioonis</a>!
+      - govsso.alerts.static-alert.message-templates[0].message=Tegemist on kohaliku arenduskeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO dokumentatsioonis</a>!
       - govsso.alerts.static-alert.message-templates[0].locale=et
-      - govsso.alerts.static-alert.message-templates[1].message=This is a local development environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO documentation</a>!
+      - govsso.alerts.static-alert.message-templates[1].message=This is a local development environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO documentation</a>!
       - govsso.alerts.static-alert.message-templates[1].locale=en
-      - govsso.alerts.static-alert.message-templates[2].message=Это локальная платформа разработки, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GOVSSO</a>!
+      - govsso.alerts.static-alert.message-templates[2].message=Это локальная платформа разработки, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GovSSO</a>!
       - govsso.alerts.static-alert.message-templates[2].locale=ru
       - govsso.alerts.enabled=true
       - ELASTIC_APM_ENABLED=false

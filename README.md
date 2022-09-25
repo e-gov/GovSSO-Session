@@ -1,9 +1,9 @@
 <img src="src/main/resources/static/assets/eu_regional_development_fund_horizontal.jpg" width="350" height="200" alt="European Union European Regional Development Fund"/>
 
-# GOVSSO Session Service
+# GovSSO Session Service
 
-GOVSSO Session is a webapp that integrates with the [Ory Hydra OIDC server](https://github.com/ory/hydra)
-implementation. GOVSSO Session provides [login](https://www.ory.sh/hydra/docs/concepts/login)
+GovSSO Session is a webapp that integrates with the [Ory Hydra OIDC server](https://github.com/ory/hydra)
+implementation. GovSSO Session provides [login](https://www.ory.sh/hydra/docs/concepts/login)
 , [consent](https://www.ory.sh/hydra/docs/concepts/login) and [logout](https://www.ory.sh/docs/hydra/concepts/logout)
 flow implementations.
 
@@ -29,7 +29,7 @@ flow implementations.
    docker compose build
    ```
 
-## Running GOVSSO Session Service Locally and Dependencies in Docker Compose
+## Running GovSSO Session Service Locally and Dependencies in Docker Compose
 
 1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from GOVSSO-Session
    when it's running locally (not in Docker Compose). It's not needed for web browsers as popular browsers already have
@@ -223,11 +223,11 @@ flow implementations.
 Where x denotes index. Example:
 
 ````
-govsso.alerts.static-alert.message-templates[0].message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO dokumentatsioonis</a>!
+govsso.alerts.static-alert.message-templates[0].message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO dokumentatsioonis</a>!
 govsso.alerts.static-alert.message-templates[0].locale=et
-govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GOVSSO documentation</a>!
+govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO documentation</a>!
 govsso.alerts.static-alert.message-templates[1].locale=en
-govsso.alerts.static-alert.message-templates[2].message=Это тестовая среда, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GOVSSO</a>!
+govsso.alerts.static-alert.message-templates[2].message=Это тестовая среда, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GovSSO</a>!
 govsso.alerts.static-alert.message-templates[2].locale=ru
 ````
 
