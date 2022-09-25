@@ -68,6 +68,7 @@ class SsoCookieSignerTest extends BaseTest {
     @ParameterizedTest
     @ValueSource(strings = {"", " ", ".", "..", SSO_COOKIE_HS256_HEADER, SSO_COOKIE_HS256_HEADER + ".",
             SSO_COOKIE_HS256_HEADER + "." + SSO_COOKIE_PAYLOAD,
+            SSO_COOKIE_HS256_HEADER + "." + SSO_COOKIE_PAYLOAD + ".",
             SSO_COOKIE_NO_ALG_HEADER + "." + SSO_COOKIE_PAYLOAD + "." + SSO_COOKIE_HS256_SIGNATURE
     })
     void parseAndVerifyCookie_WhenParseException_ThrowsUserInputError(String ssoCookieValue) {
@@ -81,7 +82,6 @@ class SsoCookieSignerTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            SSO_COOKIE_HS256_HEADER + "." + SSO_COOKIE_PAYLOAD + ".",
             SSO_COOKIE_HS256_HEADER + "." + SSO_COOKIE_PAYLOAD + ".1VkCp8iizvHS2syiuLW3Dsg2ePeX7OIu1WIK1F9uWcQ",
             SSO_COOKIE_HS256_HEADER + ".¤." + SSO_COOKIE_HS256_SIGNATURE,
             SSO_COOKIE_HS384_HEADER + "." + SSO_COOKIE_PAYLOAD + "." + SSO_COOKIE_HS256_SIGNATURE,
