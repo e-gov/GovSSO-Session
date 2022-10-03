@@ -115,7 +115,7 @@ class SsoCookieSignerTest extends BaseTest {
 
         var ssoCookieValue = ssoCookieSigner.getSignedCookieValue(SSO_COOKIE);
 
-        String cookieWithCorrectParameters = "__Host-GOVSSO=%s; Path=/; Max-Age=%s; Expires=.*; Secure; HttpOnly; SameSite=Lax"
+        String cookieWithCorrectParameters = "__Host-AUTH=%s; Path=/; Max-Age=%s; Expires=.*; Secure; HttpOnly; SameSite=Lax"
                 .formatted(VALID_SIGNATURE_SSO_COOKIE_VALUE, securityConfigurationProperties.getCookieMaxAgeSeconds());
         assertThat(ssoCookieValue, matchesRegex(cookieWithCorrectParameters));
     }

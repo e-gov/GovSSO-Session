@@ -10,7 +10,7 @@ import static org.springframework.util.Assert.hasText;
 @Builder
 public class SsoCookie {
 
-    public static final String COOKIE_NAME_GOVSSO = "__Host-GOVSSO";
+    public static final String COOKIE_NAME_GOVSSO = "__Host-AUTH";
     public static final String COOKIE_VALUE_LOGIN_CHALLENGE = "login_challenge";
     public static final String COOKIE_VALUE_TARA_STATE = "tara_state";
     public static final String COOKIE_VALUE_TARA_NONCE = "tara_nonce";
