@@ -26,10 +26,10 @@ spring:
     banner-mode: off
   codec:
     # https://www.ory.sh/docs/hydra/reference/api#operation/listSubjectConsentSessions by default returns 100 consents
-    #  (see https://github.com/ory/hydra/blob/v1.11.8/consent/handler.go#L161 ). 10 KiB logo is 13656 bytes in Base64.
-    #  One consent JSON is ~17100 bytes. Increase Spring WebClient codec buffer limit from 256 KiB to 2 MiB to
+    #  (see https://github.com/ory/hydra/blob/v1.11.8/consent/handler.go#L161 ). 100 KiB logo is 136560 bytes in Base64.
+    #  One consent JSON is ~140000 bytes. Increase Spring WebClient codec buffer limit from 256 KiB to 20 MiB to
     #  accommodate 100 consents with max logo size.
-    max-in-memory-size: 2097152
+    max-in-memory-size: 20971520
 
 server:
   # Use same port as docker-compose-all.yml.
