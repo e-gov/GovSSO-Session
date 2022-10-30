@@ -71,7 +71,7 @@ public class LogoutController {
         String requestClientId = logoutRequestInfo.getClient().getClientId();
         List<Consent> consents = hydraService.getConsents(subject, sessionId);
 
-        if (consents.isEmpty() || consentExistsOnlyForRequestClient(consents, requestClientId)) {
+        if (consentDoesNotExistOrExistsOnlyForRequestClient(consents, requestClientId)) {
             LogoutAcceptResponse logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
             return new ModelAndView("redirect:" + logoutAcceptResponse.getRedirectTo());
         }
@@ -137,12 +137,9 @@ public class LogoutController {
         return postLogoutRedirectUris.get(0).getValue();
     }
 
-    private boolean consentExistsOnlyForRequestClient(List<Consent> consents, String requestClientId) {
-        if (consents.size() == 1) {
-            String consentClientId = consents.get(0).getConsentRequest().getClient().getClientId();
-            return consentClientId.equals(requestClientId);
-        }
-        return false;
+    private boolean consentDoesNotExistOrExistsOnlyForRequestClient(List<Consent> consents, String requestClientId) {
+        return consents.stream().allMatch(consent ->
+                consent.getConsentRequest().getClient().getClientId().equals(requestClientId));
     }
 
     private ModelAndView getLogoutView(LogoutRequestInfo logoutRequestInfo, List<Consent> consents) {
