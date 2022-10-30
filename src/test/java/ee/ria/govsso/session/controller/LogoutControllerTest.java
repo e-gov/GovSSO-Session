@@ -38,7 +38,7 @@ class LogoutControllerTest extends BaseTest {
     private final SsoCookieSigner ssoCookieSigner;
 
     @Test
-    void logoutInit_WhenValidSingleClientLogoutRequest_ReturnsRedirect() {
+    void logoutInit_WhenValidLogoutRequestWithOneClientConsents_ReturnsRedirect() {
         SsoCookie ssoCookie = createSsoCookie();
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
@@ -51,7 +51,7 @@ class LogoutControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_one_client.json")));
 
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
@@ -777,7 +777,7 @@ class LogoutControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_one_client.json")));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -863,7 +863,7 @@ class LogoutControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_one_client.json")));
 
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
@@ -896,7 +896,7 @@ class LogoutControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_single_consent.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_one_client.json")));
 
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/logout/accept?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
                 .willReturn(aResponse()
