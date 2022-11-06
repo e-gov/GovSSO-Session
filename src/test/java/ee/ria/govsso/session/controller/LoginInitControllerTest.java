@@ -348,7 +348,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(containsString("Вход в услугу <span translate=\"no\">Название службы A</span>"))
-                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - <i>single sign-on</i></span>)"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("html lang=\"ru\""));
     }
@@ -520,7 +520,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - <i>single sign-on</i></span>)"))
                 .body(containsString("html lang=\"ru\""));
     }
 
@@ -575,7 +575,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(containsString("Вход в услугу <span translate=\"no\">Название службы A</span>"))
-                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - single sign-on</span>)"))
+                .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - <i>single sign-on</i></span>)"))
                 .body(containsString("12.07.1961"))
                 .body(containsString("html lang=\"ru\""));
     }
