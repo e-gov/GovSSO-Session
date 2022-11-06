@@ -11,10 +11,7 @@
             <div class="c-footer__col">
                 <div class="c-footer__block">
                     <div class="c-footer__block-logo">
-                        <img th:alt="#{label.footer.alt}" th:if="${#messages.msgOrNull('logo.footer.cef') != null}"
-                             th:src="#{logo.footer.cef}">
-                        <div th:if="${#messages.msgOrNull('logo.footer.cef') == null}"
-                             th:utext="#{label.footer.alt}"></div>
+                        <div th:utext="#{label.footer.alt}"></div>
                     </div>
                 </div>
             </div>
