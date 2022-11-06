@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.4</version>
+        <version>2.7.5</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -43,7 +43,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
-                <version>9.25.4</version>
+                <version>9.25.6</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>9.43.1</version>
+            <version>10.1</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -148,7 +148,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8</artifactId>
-            <version>2.34.0</version>
+            <version>2.35.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
