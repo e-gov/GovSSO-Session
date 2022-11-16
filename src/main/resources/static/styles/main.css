@@ -567,6 +567,11 @@ body {
 	display: block
 }
 
+.c-tab-login__warning-item {
+	 font-weight: bold;
+	 white-space: pre-line;
+ }
+
 .c-tab-login__static-warning {
 	display: block
 }
