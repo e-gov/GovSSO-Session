@@ -193,7 +193,7 @@ public class HydraService {
         request.setAcr(jwtClaimsSet.getStringClaim("acr"));
         request.setSubject(jwtClaimsSet.getSubject());
         request.setContext(context);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
         request.setRefreshRememberFor(true);
 
@@ -276,7 +276,7 @@ public class HydraService {
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
         request.setRemember(true);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setRememberFor(ssoConfigurationProperties.getConsentRequestRememberForInSeconds());
 
         JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
         Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");
@@ -399,7 +399,7 @@ public class HydraService {
         Date currentDate = new Date();
         long diffInMillis = Math.abs(currentDate.getTime() - idTokenDate.getTime());
         long diffInSeconds = TimeUnit.SECONDS.convert(diffInMillis, TimeUnit.MILLISECONDS);
-        long maxDurationInSeconds = TimeUnit.SECONDS.convert(ssoConfigurationProperties.getSessionMaxDurationHours(), TimeUnit.HOURS);
+        long maxDurationInSeconds = TimeUnit.SECONDS.convert(ssoConfigurationProperties.sessionMaxDurationHours(), TimeUnit.HOURS);
 
         return diffInSeconds <= maxDurationInSeconds;
     }

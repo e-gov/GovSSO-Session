@@ -29,6 +29,7 @@ govsso:
   base-url: https://gateway.localhost:8000
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 1000000
+  consent-request-remember-for-minutes: 75
   hydra:
     admin-url: https://hydra.localhost:9000
     tls:

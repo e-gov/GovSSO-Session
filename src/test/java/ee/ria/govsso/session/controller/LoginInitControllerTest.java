@@ -1441,7 +1441,7 @@ public class LoginInitControllerTest extends BaseTest {
 
     @Nested
     @NestedTestConfiguration(OVERRIDE)
-    @TestPropertySource(properties = {"govsso.session-max-duration-hours=1"})
+    @TestPropertySource(properties = {"govsso.session-max-duration-hours=1", "govsso.consent-request-remember-for-minutes=60"})
     class MaxSessionDurationOneHourTests extends BaseTest {
 
         @BeforeEach

@@ -52,6 +52,7 @@ govsso:
   # NB! Hydra database clean-up functionality will remove session data older than 24 hours, so
   # setting this value over 24 also requires increasing Hydra database clean-up time limit.
   session-max-duration-hours: 12
+  consent-request-remember-for-minutes: 75
   hydra:
     admin-url: https://hydra.localhost:14445/
     tls:

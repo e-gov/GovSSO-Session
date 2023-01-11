@@ -134,6 +134,7 @@ flow implementations.
 | `govsso.base-url` | Yes | | Base URL of the SSO gateway service, for example: https://gateway.localhost:13443/ |
 | `govsso.session-max-update-interval-minutes` | Yes | | Sets how long the authentication should be remembered for in SSO OIDC service. NB! Must be the same as `ttl/id_token` value in Ory Hydra configuration. NB! Ory Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 1440 (24 hours) also requires increasing Hydra database clean-up time limit. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. NB! Ory Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 24 also requires increasing Hydra database clean-up time limit. |
+| `consent-request-remember-for-minutes` | No | 75 | Sets how long the consent should be remembered for in SSO OIDC service. NB! Must be the same as `govsso.session-max-update-interval-minutes` and Ory Hydra configuration `ttl/login_consent_request` value in minutes added together. |
 
 <a name="hydra_integration_conf"></a>
 
