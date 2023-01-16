@@ -27,6 +27,42 @@
             xhr.send();
         }
     </script>
+    <script type="application/javascript">
+        function receiveMessage(event) {
+            console.log("Received event", event);
+            for (let iframe of document.getElementsByTagName("iframe")) {
+                console.log("Deleting iframe " + iframe.src);
+                iframe.remove();
+            }
+        }
+        window.addEventListener("message", receiveMessage, true);
+    </script>
+    <script type="application/javascript">
+        function iframeGatewayPostMessage() {
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", "https://gateway.localhost:52443/post-message.html");
+            iframe.style.display = "none";
+            document.body.append(iframe);
+        }
+        function iframeClientGatewayPostMessage() {
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", "https://clienta.localhost:51443/redirect-gateway-post-message");
+            iframe.style.display = "none";
+            document.body.append(iframe);
+        }
+        function iframeGatewayClientPostMessage() {
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", "https://gateway.localhost:52443/redirect-client-post-message");
+            iframe.style.display = "none";
+            document.body.append(iframe);
+        }
+        function iframeClientGatewayClientPostMessage() {
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", "https://clienta.localhost:51443/redirect-client-post-message");
+            iframe.style.display = "none";
+            document.body.append(iframe);
+        }
+    </script>
 </head>
 <body>
     <h1>clienta.localhost</h1>
@@ -108,5 +144,12 @@
             Sec-Fetch-Mode: cors<br/>
             Sec-Fetch-Site: cross-site</li>
     </ul>
+    <h2>iframe: redirect to different domain</h2>
+    <p>
+        <button onclick="iframeGatewayPostMessage();">Gateway</button><br/>
+        <button onclick="iframeClientGatewayPostMessage();">Client -> Gateway</button><br/>
+        <button onclick="iframeGatewayClientPostMessage();">Gateway -> Client</button><br/>
+        <button onclick="iframeClientGatewayClientPostMessage();">Client -> Gateway -> Client</button><br/>
+    </p>
 </body>
 </html>
