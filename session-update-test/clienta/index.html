@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <title>clienta.localhost</title>
     <script type="application/javascript">
-        function performFetch(mode) {
+        function performFetch(resource, method, mode) {
             (async () => {
-                await fetch('/redirect', {
-                    method: 'GET',
+                await fetch(resource, {
+                    method: method,
                     credentials: 'include',
                     mode: mode
                 }).then(function (response) {
@@ -20,9 +20,9 @@
                 });
             })();
         }
-        function performXMLHttpRequest() {
+        function performXMLHttpRequest(resource, method) {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', '/redirect', true);
+            xhr.open(method, resource, true);
             xhr.withCredentials = true;
             xhr.send();
         }
@@ -33,11 +33,16 @@
     <p>
         <button onclick="window.location.href = 'https://clienta.localhost:51443/setcookies';">set cookies on clienta</button><br/>
         <button onclick="window.location.href = 'https://gateway.localhost:52443/setcookies';">set cookies on gateway</button><br/>
-        <button onclick="performFetch('cors');">perform background Fetch to gateway (mode: cors)</button><br/>
-        <button onclick="performFetch('no-cors');">perform background Fetch to gateway (mode: no-cors)</button><br/>
-        <button onclick="performXMLHttpRequest();">perform background XMLHttpRequest to gateway</button><br/>
     </p>
-    <h2>Browser behaviour</h2>
+    <h2>Background request to same domain, which redirects to different domain and back</h2>
+    <p>
+        <button onclick="performFetch('https://clienta.localhost:51443/redirect', 'GET', 'cors');">Fetch (GET, cors)</button><br/>
+        <button onclick="performFetch('https://clienta.localhost:51443/redirect', 'GET', 'no-cors');">Fetch (GET, no-cors)</button><br/>
+        <button onclick="performXMLHttpRequest('https://clienta.localhost:51443/redirect', 'GET');">XMLHttpRequest (GET)</button><br/>
+        <button onclick="performFetch('https://clienta.localhost:51443/redirect', 'POST', 'cors');">Fetch (POST, cors)</button><br/>
+        <button onclick="performFetch('https://clienta.localhost:51443/redirect', 'POST', 'no-cors');">Fetch (POST, no-cors)</button><br/>
+        <button onclick="performXMLHttpRequest('https://clienta.localhost:51443/redirect', 'POST');">XMLHttpRequest (POST)</button><br/>
+    </p>
     <ul>
         <li><strong>1st request to same domain</strong><br/>
             Cookie: __Host-SessionSameSiteStrict=a<br/>
@@ -54,7 +59,7 @@
         <li><strong>2nd request redirected to different domain</strong><br/>
             Cookie: __Host-SessionSameSiteNone=b - Firefox release version doesn't include (Firefox nightly includes with GOVSSO-Client, but not here?), Chrome incognito doesn't include<br/>
             Cookie: __Host-FixedSameSiteNone=b - Firefox release version doesn't include (Firefox nightly includes with GOVSSO-Client, but not here?), Chrome incognito doesn't include<br/>
-            Origin: https://clienta.localhost:51443<br/>
+            Origin: https://clienta.localhost:51443 - not included on no-cors<br/>
             Sec-Fetch-Dest: empty<br/>
             Sec-Fetch-Mode: cors<br/>
             Sec-Fetch-Site: cross-site</li>
@@ -67,7 +72,38 @@
             Cookie: __Host-FixedSameSiteLax=a - Firefox doesn't include<br/>
             Cookie: __Host-FixedSameSiteNone=a<br/>
             Cookie: __Host-FixedSameSiteMissing=a<br/>
-            Origin: null<br/>
+            Origin: null - not included on no-cors<br/>
+            Sec-Fetch-Dest: empty<br/>
+            Sec-Fetch-Mode: cors<br/>
+            Sec-Fetch-Site: cross-site</li>
+    </ul>
+    <h2>Background request to different domain which redirects back</h2>
+    <p>
+        <button onclick="performFetch('https://gateway.localhost:52443/redirect', 'GET', 'cors');">Fetch (GET, cors)</button><br/>
+        <button onclick="performFetch('https://gateway.localhost:52443/redirect', 'GET', 'no-cors');">Fetch (GET, no-cors)</button><br/>
+        <button onclick="performXMLHttpRequest('https://gateway.localhost:52443/redirect', 'GET');">XMLHttpRequest (GET)</button><br/>
+        <button onclick="performFetch('https://gateway.localhost:52443/redirect', 'POST', 'cors');">Fetch (POST, cors)</button><br/>
+        <button onclick="performFetch('https://gateway.localhost:52443/redirect', 'POST', 'no-cors');">Fetch (POST, no-cors)</button><br/>
+        <button onclick="performXMLHttpRequest('https://gateway.localhost:52443/redirect', 'POST');">XMLHttpRequest (POST)</button><br/>
+    </p>
+    <ul>
+        <li><strong>1st request to different domain</strong><br/>
+            Cookie: __Host-SessionSameSiteNone=b - Firefox doesn't include, Chrome incognito doesn't include<br/>
+            Cookie: __Host-FixedSameSiteNone=b - Firefox doesn't include, Chrome incognito doesn't include<br/>
+            Origin: https://clienta.localhost:51443 - not included on no-cors<br/>
+            Sec-Fetch-Dest: empty<br/>
+            Sec-Fetch-Mode: cors<br/>
+            Sec-Fetch-Site: cross-site</li>
+        <li><strong>2nd request redirected back to same domain</strong><br/>
+            Cookie: __Host-SessionSameSiteStrict=a - Firefox doesn't include<br/>
+            Cookie: __Host-SessionSameSiteLax=a - Firefox doesn't include<br/>
+            Cookie: __Host-SessionSameSiteNone=a<br/>
+            Cookie: __Host-SessionSameSiteMissing=a<br/>
+            Cookie: __Host-FixedSameSiteStrict=a - Firefox doesn't include<br/>
+            Cookie: __Host-FixedSameSiteLax=a - Firefox doesn't include<br/>
+            Cookie: __Host-FixedSameSiteNone=a<br/>
+            Cookie: __Host-FixedSameSiteMissing=a<br/>
+            Origin: null - not included on no-cors<br/>
             Sec-Fetch-Dest: empty<br/>
             Sec-Fetch-Mode: cors<br/>
             Sec-Fetch-Site: cross-site</li>
