@@ -1,0 +1,31 @@
+version: '3'
+services:
+
+  # Reuses TLS certificates from govsso-session/local/tls, therefore container names and hostnames are also same
+  # (clienta, gateway), not more generic (host1, host2).
+
+  clienta:
+    image: nginx:1.23-alpine-slim
+    networks:
+      default:
+        aliases:
+          - clienta.localhost
+    ports:
+      - '51443:51443'
+    volumes:
+      - ../local/tls/clienta:/var/certs:ro
+      - ./clienta:/usr/share/nginx/html:ro
+      - ./nginx-clienta.conf:/etc/nginx/nginx.conf:ro
+
+  gateway:
+    image: nginx:1.23-alpine-slim
+    networks:
+      default:
+        aliases:
+          - gateway.localhost
+    ports:
+      - '52443:52443'
+    volumes:
+      - ../local/tls/gateway:/var/certs:ro
+      - ./gateway:/usr/share/nginx/html:ro
+      - ./nginx-gateway.conf:/etc/nginx/nginx.conf:ro
