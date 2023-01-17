@@ -13,6 +13,7 @@ import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
+import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
@@ -57,6 +59,9 @@ public class ContinueSessionController {
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
 
+        if (!CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
+            throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
+        }
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
             oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});

@@ -193,7 +193,7 @@ public class HydraService {
         request.setAcr(jwtClaimsSet.getStringClaim("acr"));
         request.setSubject(jwtClaimsSet.getSubject());
         request.setContext(context);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
         request.setRefreshRememberFor(true);
 
@@ -276,7 +276,7 @@ public class HydraService {
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
         request.setRemember(true);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
 
         JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
         Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");

@@ -69,9 +69,9 @@ public class RefreshTokenHookController {
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder()
                 .sessionId(sessionId)
                 .refreshRememberFor(true)
-                .rememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds())
+                .rememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds())
                 .refreshConsentRememberFor(true)
-                .consentRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalSeconds());
+                .consentRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
         if (idTokenClaims.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
             responseBuilder
                     .givenName(profileAttributes.get("given_name").toString())

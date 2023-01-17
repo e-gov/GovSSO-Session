@@ -32,7 +32,7 @@ public class SsoConfigurationProperties {
                 "Max update interval must be at least 1 minute and must be less than max duration.");
     }
 
-    public int getSessionMaxUpdateIntervalSeconds() {
+    public int getSessionMaxUpdateIntervalInSeconds() {
         return sessionMaxUpdateIntervalMinutes * 60;
     }
 

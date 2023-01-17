@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
+import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
@@ -106,7 +107,11 @@ public class LoginInitController {
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 return acceptLogin(loginRequestInfo, idToken);
             } else {
-                return openSessionContinuationView(loginRequestInfo, idToken);
+                if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
+                    return openSessionContinuationView(loginRequestInfo, idToken);
+                } else {
+                    throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
+                }
             }
         }
     }
@@ -128,15 +133,15 @@ public class LoginInitController {
         if (!Arrays.asList(requestedScopes).contains("openid") ||
                 !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
                 requestedScopes.length > 2) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
+            throw new SsoException(USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
         }
 
         if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
             if (oidcContext.getAcrValues().length > 1) {
-                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
+                throw new SsoException(USER_INPUT, "acrValues must contain only 1 value");
 
             } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
-                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
+                throw new SsoException(USER_INPUT, "acrValues must be one of low/substantial/high");
             }
         }
     }
@@ -144,11 +149,11 @@ public class LoginInitController {
     private void validateLoginRequestInfoForAuthenticationAndContinuation(LoginRequestInfo loginRequestInfo, Prompt prompt) {
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
         if (oidcContext != null && oidcContext.getIdTokenHintClaims() != null) {
-            throw new SsoException(ErrorCode.USER_INPUT, "id_token_hint_claims must be null");
+            throw new SsoException(USER_INPUT, "id_token_hint_claims must be null");
         }
 
         if (prompt != Prompt.CONSENT) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Request URL must contain prompt=consent");
+            throw new SsoException(USER_INPUT, "Request URL must contain prompt=consent");
         }
     }
 

@@ -55,7 +55,7 @@ import static org.springframework.test.context.NestedTestConfiguration.Enclosing
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LoginInitControllerTest extends BaseTest {
-
+    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
 
@@ -155,6 +155,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -188,6 +189,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -221,6 +223,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -254,6 +257,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -287,6 +291,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -318,6 +323,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get("/login/init")
                 .then()
@@ -373,6 +379,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .param("lang", "en")
                 .cookie("__Host-LOCALE", "et")
@@ -433,6 +440,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .param("lang", "unknown")
                 .cookie("__Host-LOCALE", "unknown")
@@ -490,6 +498,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .cookie("__Host-LOCALE", "en")
                 .get("/login/init")
@@ -545,6 +554,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get("/login/init")
                 .then()
@@ -573,6 +583,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .cookie("__Host-LOCALE", "en")
                 .get("/login/init")
@@ -1196,6 +1207,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
@@ -1203,6 +1215,61 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(200)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> sisselogimine"));
+    }
+
+    @Test
+    void loginInit_WhenSessionContinuationWithoutOidcSessionCookie_ThrowsUserInputError() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Unable to continue session! Oidc session cookie not found.");
+    }
+
+    @Test
+    void loginInit_WhenSessionContinuationWithoutOidcSessionCookieValue_ThrowsUserInputError() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie("oauth2_authentication_session_insecure", "")
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Unable to continue session! Oidc session cookie not found.");
     }
 
     @Nested
@@ -1268,6 +1335,7 @@ public class LoginInitControllerTest extends BaseTest {
 
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .cookie(MOCK_OIDC_SESSION_COOKIE)
                     .when()
                     .get(LOGIN_INIT_REQUEST_MAPPING)
                     .then()

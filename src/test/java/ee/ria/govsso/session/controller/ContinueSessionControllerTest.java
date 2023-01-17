@@ -1,6 +1,7 @@
 package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.BaseTest;
+import io.restassured.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
@@ -21,6 +22,7 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ContinueSessionControllerTest extends BaseTest {
+    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
 
     @Test
     void continueSession_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
@@ -44,6 +46,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -121,6 +124,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -143,6 +147,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -177,6 +182,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .header(ORIGIN, "https://clienta.localhost:11443")
@@ -204,6 +210,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -227,6 +234,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -250,6 +258,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -279,6 +288,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -302,6 +312,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -325,6 +336,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -348,6 +360,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -371,6 +384,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -394,6 +408,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -417,6 +432,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -428,5 +444,52 @@ class ContinueSessionControllerTest extends BaseTest {
                 .body("error", equalTo("USER_INPUT"));
 
         assertErrorIsLogged("SsoException: acrValues must be one of low/substantial/high");
+    }
+
+    @Test
+    void loginInit_WhenSessionContinuationWithoutOidcSessionCookie_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Unable to continue session! Oidc session cookie not found.");
+    }
+
+    @Test
+    void loginInit_WhenSessionContinuationWithoutOidcSessionCookieValue_ThrowsUserInputError() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie("oauth2_authentication_session_insecure", "")
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .cookies(emptyMap())
+                .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Unable to continue session! Oidc session cookie not found.");
     }
 }
