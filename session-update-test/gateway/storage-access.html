@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>gateway.localhost</title>
+</head>
+<body>
+    <h1>gateway.localhost</h1>
+    <button onclick="init()">Trigger</button>
+    <script>
+        function redirect() {
+            window.location.href = new URLSearchParams(new URL(window.location.href).searchParams).get('next');
+        }
+        function requestAccess() {
+            document.requestStorageAccess().then(
+                () => {
+                    console.log("requestStorageAccess -> 👍")
+                    redirect();
+                },
+                () => {
+                    console.log("requestStorageAccess -> 👎")
+                    redirect();
+                }
+            );
+        }
+        function init() {
+            document.hasStorageAccess().then(hasStorageAccess => {
+                if (hasStorageAccess) {
+                    console.log("hasStorageAccess -> 👍")
+                    redirect();
+                } else {
+                    console.log("hasStorageAccess -> 👎")
+                    requestAccess();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

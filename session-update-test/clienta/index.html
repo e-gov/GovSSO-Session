@@ -38,35 +38,44 @@
         window.addEventListener("message", receiveMessage, true);
     </script>
     <script type="application/javascript">
-        function iframeGatewayPostMessage() {
+        function createIframe(src) {
             const iframe = document.createElement("iframe");
-            iframe.setAttribute("src", "https://gateway.localhost:52443/post-message.html");
-            iframe.style.display = "none";
+            iframe.setAttribute("src", src);
+            //iframe.style.display = "none";
+            iframe.style.width = "640px";
+            iframe.style.height = "480px";
             document.body.append(iframe);
+        }
+
+        function iframeGatewayPostMessage() {
+            createIframe("https://gateway.localhost:52443/post-message.html");
         }
         function iframeClientGatewayPostMessage() {
-            const iframe = document.createElement("iframe");
-            iframe.setAttribute("src", "https://clienta.localhost:51443/redirect-gateway-post-message");
-            iframe.style.display = "none";
-            document.body.append(iframe);
+            createIframe("https://clienta.localhost:51443/redirect-gateway-post-message");
         }
         function iframeGatewayClientPostMessage() {
-            const iframe = document.createElement("iframe");
-            iframe.setAttribute("src", "https://gateway.localhost:52443/redirect-client-post-message");
-            iframe.style.display = "none";
-            document.body.append(iframe);
+            createIframe("https://gateway.localhost:52443/redirect-client-post-message");
         }
         function iframeClientGatewayClientPostMessage() {
-            const iframe = document.createElement("iframe");
-            iframe.setAttribute("src", "https://clienta.localhost:51443/redirect-client-post-message");
-            iframe.style.display = "none";
-            document.body.append(iframe);
+            createIframe("https://clienta.localhost:51443/redirect-client-post-message");
+        }
+        function iframeStorageAccessGatewayPostMessage() {
+            const next = "https://gateway.localhost:52443/post-message.html";
+            alert("Press \"trigger\" in the iframe below");
+            createIframe("https://gateway.localhost:52443/storage-access.html?next=" + encodeURIComponent(next));
+        }
+        function iframeStorageAccessGatewayClientPostMessage() {
+            const next = "https://gateway.localhost:52443/redirect-client-post-message";
+            alert("Press \"trigger\" in the iframe below");
+            createIframe("https://gateway.localhost:52443/storage-access.html?next=" + encodeURIComponent(next));
         }
     </script>
 </head>
 <body>
     <h1>clienta.localhost</h1>
     <p>
+        <button onclick="requestAccess()">Request access (Storage access API)</button><br/>
+        Storage access API status: <div id="status">Unset</div><br/>
         <button onclick="window.location.href = 'https://clienta.localhost:51443/setcookies';">set cookies on clienta</button><br/>
         <button onclick="window.location.href = 'https://gateway.localhost:52443/setcookies';">set cookies on gateway</button><br/>
     </p>
@@ -150,6 +159,8 @@
         <button onclick="iframeClientGatewayPostMessage();">Client -> Gateway</button><br/>
         <button onclick="iframeGatewayClientPostMessage();">Gateway -> Client</button><br/>
         <button onclick="iframeClientGatewayClientPostMessage();">Client -> Gateway -> Client</button><br/>
+        <button onclick="iframeStorageAccessGatewayPostMessage();">Storage access -> Gateway</button><br/>
+        <button onclick="iframeStorageAccessGatewayClientPostMessage();">Sorage access -> Gateway -> Client</button><br/>
     </p>
 </body>
 </html>
