@@ -32,8 +32,7 @@
         <spring-boot.build-image.builder>paketobuildpacks/builder:tiny</spring-boot.build-image.builder>
         <spring-boot.build-image.imageName>${project.artifactId}:latest</spring-boot.build-image.imageName><!-- Use "latest" tag instead of version tag. -->
 
-        <!-- TODO Elastic APM Agent 1.30.x and 1.31.0 clear "trace.id" from org.slf4j.MDC before error page is rendered. -->
-        <elastic-apm.version>1.29.0</elastic-apm.version>
+        <elastic-apm.version>1.36.0</elastic-apm.version>
     </properties>
 
     <!-- TODO Remove when oauth2-oidc-sdk includes nimbus-jose-jwt >= 9.25.4 which fixes
