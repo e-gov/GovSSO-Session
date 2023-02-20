@@ -43,6 +43,8 @@ webfinger:
     supported_scope:
       - openid
       - phone
+oauth2:
+  refresh_token_hook: https://gateway.localhost:13443/token/refresh
 urls:
   login: https://gateway.localhost:13443/login/init
   consent: https://gateway.localhost:13443/consent/init
@@ -66,8 +68,8 @@ client.tls:
 strategies:
   scope: exact
 ttl:
-  access_token: 1s
-  refresh_token: 1s
+  access_token: 15m
+  refresh_token: 15m
   # NB! ttl/id_token value must be the same as govsso.session-max-update-interval-minutes value in GOVSSO-Session configuration.
   id_token: 15m
   auth_code: 30s

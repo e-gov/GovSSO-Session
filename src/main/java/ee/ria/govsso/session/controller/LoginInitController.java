@@ -92,7 +92,7 @@ public class LoginInitController {
         }
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
-        if (prompt == Prompt.NONE) {
+        if (prompt == Prompt.NONE) { // TODO: No longer supported?
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, UPDATE_SESSION);
             return updateSession(loginRequestInfo);
         }
@@ -132,8 +132,8 @@ public class LoginInitController {
         }
 
         if (!Arrays.asList(requestedScopes).contains("openid") ||
-                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
-                requestedScopes.length > 2) {
+                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone|offline_access)$")) ||
+                requestedScopes.length > 3) {
             throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
         }
 

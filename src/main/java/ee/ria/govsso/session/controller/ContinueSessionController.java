@@ -87,8 +87,8 @@ public class ContinueSessionController {
         }
 
         if (!Arrays.asList(requestedScopes).contains("openid") ||
-                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
-                requestedScopes.length > 2) {
+                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone|offline_access)$")) ||
+                requestedScopes.length > 3) {
             throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
         }
         if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
