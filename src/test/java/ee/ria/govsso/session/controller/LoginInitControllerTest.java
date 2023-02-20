@@ -271,29 +271,6 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenQueryParamPresentWithPromptNoneAsValue_IgnoresGivenQueryParamAndCreatesSessionAndRedirects() {
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_query_param_value_as_prompt_none.json")));
-
-        String ssoCookieValue = given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(302)
-                .header("Location", Matchers.matchesRegex("https:\\/\\/tara.localhost:10000\\/oidc\\/authorize\\?ui_locales=et&scope=openid\\+phone&acr_values=high&response_type=code&govsso_login_challenge=abcdeff098aadfccabcdeff098aadfcc&redirect_uri=https%3A%2F%2Fgateway.localhost%3A8000%2Flogin%2Ftaracallback&state=.*&nonce=.*&client_id=testclient123"))
-                .extract().cookie(COOKIE_NAME_GOVSSO);
-
-        SsoCookie ssoCookie = ssoCookieSigner.parseAndVerifyCookie(ssoCookieValue);
-        assertThat(ssoCookie.getLoginChallenge(), equalTo(TEST_LOGIN_CHALLENGE));
-    }
-
-    @Test
     void loginInit_WhenFetchLoginRequestInfoWithoutLogoIsSuccessful_CreatesSessionAndOpensView() {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -727,32 +704,6 @@ public class LoginInitControllerTest extends BaseTest {
     }
 
     @Test
-    void loginInit_WhenUpdateSessionAndConsentsAreMissing_ThrowsTechnicalGeneralError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_id_token_hint.json")));
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_missing.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap())
-                .body("error", equalTo("TECHNICAL_GENERAL"));
-
-        assertErrorIsLogged("SsoException: No valid consent requests found");
-    }
-
-    @Test
     void loginInit_WhenConsentsRequestRespondsWith500_ThrowsTechnicalGeneralError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -1120,38 +1071,6 @@ public class LoginInitControllerTest extends BaseTest {
                         .maxAge(securityConfigurationProperties.getCookieMaxAgeSeconds()));
     }
 
-    // TODO This test will stop working on 2038-xx-xx. Change it to be independent of current time.
-    @Test
-    void loginInit_WhenPromptNone_ExtendSession() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(302)
-                .cookies(emptyMap())
-                .header("Location", Matchers.matchesRegex("https://clienta.localhost:11443/auth/login/test"));
-    }
-
     @Test
     void loginInit_WhenPromptValueIsInvalid_ThrowsUserInputError() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
@@ -1192,159 +1111,6 @@ public class LoginInitControllerTest extends BaseTest {
                 .body("error", equalTo("USER_INPUT"));
 
         assertErrorIsLogged("SsoException: Request URL contains more than 1 prompt values");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_SubjectEmpty_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_subject_empty.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Subject cannot be empty for session update");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_OidcContextMissing_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_oidc_context_missing.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Oidc context cannot be empty for session update");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_TokenMissing_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_token_missing.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Id token cannot be empty for session update");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_AudienceDoesNotMatchRequestClientId_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_mismatching_client_id.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Id token audiences must contain request client id");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_TokenSessionIdDoesNotMatchWithRequestSessionId_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_mismatching_token_session_id.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Id token session id must equal request session id");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_TokenExpired_ThrowsUserInputError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none_token_expired.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .cookies(emptyMap())
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: Id token must not be expired");
-    }
-
-    @Test
-    void loginInit_WhenPromptNone_WhenConsentsIdTokenAcrValueLowerThanLoginRequestInfoAcrValue_ThrowsTechnicalGeneralError() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_prompt_none.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .cookies(emptyMap())
-                .body("error", equalTo("TECHNICAL_GENERAL"));
-
-        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
     }
 
     @Test

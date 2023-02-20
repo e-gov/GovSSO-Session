@@ -13,6 +13,7 @@ import org.springframework.security.web.header.HeaderWriter;
 
 import static ee.ria.govsso.session.controller.ConsentInitController.CONSENT_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.LoginInitController.LOGIN_INIT_REQUEST_MAPPING;
+import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS;
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static org.springframework.http.HttpHeaders.ORIGIN;
@@ -35,7 +36,9 @@ public class SecurityConfiguration {
                 .servletApi().disable()
                 .httpBasic().disable()
                 .sessionManagement().disable()
-                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
+                .csrf(csrf -> csrf
+                        .ignoringAntMatchers(TOKEN_REFRESH_REQUEST_MAPPING)
+                        .csrfTokenRepository(csrfTokenRepository()))
                 .headers()
                 .addHeaderWriter(relaxedCorsHeaderWriter())
                 .xssProtection().xssProtectionEnabled(false)

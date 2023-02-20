@@ -8,14 +8,5 @@ import lombok.Data;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Consent {
 
-    private ConsentRequest consentRequest;
-
-    @Data
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class ConsentRequest {
-
-        private String loginSessionId;
-        private Context context;
-        private Client client;
-    }
+    private ConsentRequestInfo consentRequest;
 }

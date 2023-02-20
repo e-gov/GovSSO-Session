@@ -76,7 +76,7 @@ public class AuthCallbackController {
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
 
         LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
-        statisticsLogger.logAccept(loginRequestInfo, idToken, AuthenticationRequestType.START_SESSION);
+        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
 

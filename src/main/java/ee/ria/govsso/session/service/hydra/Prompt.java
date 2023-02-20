@@ -7,7 +7,6 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public enum Prompt {
-    NONE("none"),
     CONSENT("consent");
 
     private static final Map<String, Prompt> promptNameMap;

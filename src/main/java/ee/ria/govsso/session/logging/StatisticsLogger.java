@@ -3,7 +3,10 @@ package ee.ria.govsso.session.logging;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.jwt.JWT;
 import ee.ria.govsso.session.error.ErrorCode;
+import ee.ria.govsso.session.service.hydra.Client;
+import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.OidcContext;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -13,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.ArrayUtils;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Locale;
@@ -28,6 +32,7 @@ import static net.logstash.logback.marker.Markers.appendFields;
 @Component
 public class StatisticsLogger {
     public static final String LOGIN_REQUEST_INFO = "LOGIN_REQUEST_INFO";
+    public static final String CONSENT_REQUEST_INFO = "CONSENT_REQUEST_INFO";
     public static final String AUTHENTICATION_REQUEST_TYPE = "AUTHENTICATION_REQUEST_TYPE";
     private final Map<String, String> authenticationTypes = Map.of(
             "smartid", "SMART_ID",
@@ -36,17 +41,24 @@ public class StatisticsLogger {
             "eidas", "EIDAS");
 
     @SneakyThrows
-    public void logAccept(@NonNull LoginRequestInfo loginRequestInfo, @NonNull JWT taraIdToken, @NonNull AuthenticationRequestType requestType) {
-        var client = loginRequestInfo.getClient();
+    public void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull LoginRequestInfo loginRequestInfo) {
+        logAccept(requestType, taraIdToken, loginRequestInfo.getClient(), loginRequestInfo.getSessionId(), loginRequestInfo.getOidcContext());
+    }
+
+    @SneakyThrows
+    public void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
+        logAccept(requestType, taraIdToken, consentRequestInfo.getClient(), sessionId, consentRequestInfo.getOidcContext());
+    }
+
+    private void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull Client client, @NonNull String sessionId, OidcContext oidcContext) throws ParseException {
         var institution = client.getMetadata().getOidcClient().getInstitution();
         var claims = taraIdToken.getJWTClaimsSet();
         var subject = claims.getSubject();
         var country = subject.substring(0, 2);
         var idCode = subject.substring(2);
-        var sid = loginRequestInfo.getSessionId();
+        var sid = sessionId;
         var iat = claims.getIssueTime();
         var sessionTime = Instant.now().getEpochSecond() - iat.toInstant().getEpochSecond();
-        var oidcContext = loginRequestInfo.getOidcContext();
         var acrValues = oidcContext != null ? oidcContext.getAcrValues() : null;
         var grantedAcr = claims.getStringClaim("acr").toUpperCase(Locale.ROOT);
         var amr = stream(claims.getStringArrayClaim("amr"))
@@ -68,9 +80,10 @@ public class StatisticsLogger {
                 .grantedAcr(grantedAcr)
                 .build();
         amr.ifPresent(sessionStatistics::setAuthenticationType);
-        if (!ArrayUtils.isEmpty(acrValues) && StringUtils.isNotBlank(acrValues[0])) {
+        if (!requestType.equals(AuthenticationRequestType.UPDATE_SESSION) && !ArrayUtils.isEmpty(acrValues) && StringUtils.isNotBlank(acrValues[0])) {
             sessionStatistics.setRequestedAcr(acrValues[0].toUpperCase(Locale.ROOT));
         }
+
 
         log.info(appendFields(sessionStatistics), "Statistics");
     }
@@ -92,10 +105,9 @@ public class StatisticsLogger {
         log.info(appendFields(sessionStatistics), "Statistics");
     }
 
-    public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType) {
-        var client = loginRequestInfo.getClient();
+    public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull Client
+            client, @NonNull String sid, AuthenticationRequestType requestType) {
         var institution = client.getMetadata().getOidcClient().getInstitution();
-        var sid = loginRequestInfo.getSessionId();
 
         SessionStatistics sessionStatistics = SessionStatistics.builder()
                 .clientId(client.getClientId())

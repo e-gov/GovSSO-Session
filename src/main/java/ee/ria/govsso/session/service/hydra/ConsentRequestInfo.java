@@ -12,8 +12,10 @@ public class ConsentRequestInfo {
 
     private String challenge;
     private String loginChallenge;
+    private String loginSessionId;
     private String[] requestedScope;
     private Client client;
     private Context context;
+    private OidcContext oidcContext;
 
 }

@@ -71,7 +71,7 @@ public class ContinueSessionController {
 
         validateIdToken(loginRequestInfo, idToken);
         LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken);
-        statisticsLogger.logAccept(loginRequestInfo, idToken, AuthenticationRequestType.CONTINUE_SESSION);
+        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
 

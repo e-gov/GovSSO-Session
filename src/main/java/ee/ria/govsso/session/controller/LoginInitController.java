@@ -42,7 +42,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,6 @@ import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
-import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 
 @Slf4j
@@ -92,10 +90,6 @@ public class LoginInitController {
         }
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
-        if (prompt == Prompt.NONE) {
-            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, UPDATE_SESSION);
-            return updateSession(loginRequestInfo);
-        }
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
@@ -144,49 +138,6 @@ public class LoginInitController {
             } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
                 throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
             }
-        }
-    }
-
-    private ModelAndView updateSession(LoginRequestInfo loginRequestInfo) {
-        validateLoginRequestInfoAgainstToken(loginRequestInfo);
-        List<Consent> consents = hydraService.getConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
-        if (idToken == null) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
-        }
-
-        validateIdToken(loginRequestInfo, idToken);
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
-        statisticsLogger.logAccept(loginRequestInfo, idToken, UPDATE_SESSION);
-        return new ModelAndView("redirect:" + response.getRedirectTo());
-    }
-
-    private void validateLoginRequestInfoAgainstToken(LoginRequestInfo loginRequestInfo) {
-        if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Subject cannot be empty for session update");
-        }
-        if (loginRequestInfo.getOidcContext() == null) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Oidc context cannot be empty for session update");
-        }
-
-        Map<String, Object> idTokenHintClaims = loginRequestInfo.getOidcContext().getIdTokenHintClaims();
-        if (idTokenHintClaims == null || idTokenHintClaims.isEmpty()) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Id token cannot be empty for session update");
-        }
-
-        @SuppressWarnings("unchecked")
-        List<String> audiences = (List<String>) idTokenHintClaims.get("aud");
-        if (!audiences.contains(loginRequestInfo.getClient().getClientId())) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Id token audiences must contain request client id");
-        }
-        if (!idTokenHintClaims.get("sid").equals(loginRequestInfo.getSessionId())) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Id token session id must equal request session id"); // TODO: Re-Authenticate?
-        }
-
-        Integer tokenExpirationDateInSeconds = (Integer) idTokenHintClaims.get("exp");
-        Instant tokenExpirationTime = Instant.ofEpochSecond(tokenExpirationDateInSeconds);
-        if (Instant.now().isAfter(tokenExpirationTime)) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Id token must not be expired");
         }
     }
 
@@ -243,7 +194,7 @@ public class LoginInitController {
 
     private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken) {
         LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
-        statisticsLogger.logAccept(loginRequestInfo, idToken, StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION);
+        statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
@@ -287,12 +238,6 @@ public class LoginInitController {
 
         statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
-    }
-
-    private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
-        }
     }
 
     private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, JWT idToken) {

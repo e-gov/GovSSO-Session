@@ -6,7 +6,13 @@
       },
       "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
       "client": {
-        "client_id": "client-a"
+        "client_id": "client-a",
+        "metadata": {
+          "oidc_client": {
+            "institution": {
+            }
+          }
+        }
       }
     }
   },
@@ -17,7 +23,13 @@
       },
       "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
       "client": {
-        "client_id": "client-b"
+        "client_id": "client-b",
+        "metadata": {
+          "oidc_client": {
+            "institution": {
+            }
+          }
+        }
       }
     }
   }
