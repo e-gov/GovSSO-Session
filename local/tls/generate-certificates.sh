@@ -2,9 +2,7 @@
 
 set -eu
 
-# Recursively remove all directories from current path
 cd "$(command dirname -- "${0}")" || exit
-rm -rf ./*/
 
 ./generate-ca-certificate.sh 'govsso'
 
@@ -21,12 +19,11 @@ rm -rf ./*/
 ./generate-ca-certificate.sh 'tara'
 ./generate-certificate.sh 'tara-ca' 'tara'
 
-mkdir -p "ldap"
 # Get SK LDAP CA certificate
-curl http://c.sk.ee/ldapca.crt --output ldap/sk-ldap-ca.crt
+[[ -f ldap/sk-ldap-ca.crt.pem ]] || (mkdir -p "ldap" && curl http://c.sk.ee/ldapca.crt --output ldap/sk-ldap-ca.crt.pem)
 
 ./generate-truststore.sh 'govsso-ca' 'admin'
-./add-ca-certificate-to-truststore.sh 'admin' 'sk-ldap-ca' './ldap/sk-ldap-ca.crt'
+./add-ca-certificate-to-truststore.sh 'admin' 'sk-ldap-ca' './ldap/sk-ldap-ca.crt.pem'
 
 ./generate-truststore.sh 'govsso-ca' 'clienta'
 ./generate-truststore.sh 'govsso-ca' 'clientb'
@@ -42,12 +39,10 @@ cp ./hydra-db/hydra-db.localhost.key ../hydra-db
 cp ./admin-db/admin-db.localhost.crt ../admin-db
 cp ./admin-db/admin-db.localhost.key ../admin-db
 
-# Remove all existing PKCS12 files and copy all session PKCS12 files to main resources
-rm -f ../../src/main/resources/*.p12
+# Copy all session PKCS12 files to main resources
 cp session/*.p12 ../../src/main/resources
 
-# Remove all existing PKCS12 files and copy required PKCS12 files to test resources
-rm -f ../../src/test/resources/*.p12
+# Copy required PKCS12 files to test resources
 cp './session/session.localhost.keystore.p12' '../../src/test/resources'
 cp './session/session.localhost.admin.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.tara.truststore.p12' '../../src/test/resources'

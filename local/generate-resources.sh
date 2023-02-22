@@ -6,6 +6,9 @@ cd tara || exit
 ./generate-id-token-keys.sh
 
 cd ../tls || exit
+./clean-certificates.sh
+
+cd ../tls || exit
 ./generate-certificates.sh
 
 echo "--------------------------- All resources generated"
