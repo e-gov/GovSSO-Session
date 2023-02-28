@@ -21,7 +21,7 @@
     "https://clientd.localhost:11443/login/oauth2/code/govsso"
   ],
   "post_logout_redirect_uris": [
-    "https://clientd.localhost:11443"
+    "https://clientd.localhost:11443/?show-post-logout-message"
   ],
   "backchannel_logout_uri": "https://clientd.localhost:11443/backchannellogout",
   "scope": [

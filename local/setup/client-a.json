@@ -22,7 +22,7 @@
     "https://clienta.localhost:11443/login/oauth2/code/govsso"
   ],
   "post_logout_redirect_uris": [
-    "https://clienta.localhost:11443"
+    "https://clienta.localhost:11443/?show-post-logout-message"
   ],
   "backchannel_logout_uri": "https://clienta.localhost:11443/backchannellogout",
   "scope": [
