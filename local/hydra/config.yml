@@ -44,7 +44,7 @@ webfinger:
       - openid
       - phone
 oauth2:
-  refresh_token_hook: https://gateway.localhost:13443/token/refresh
+  refresh_token_hook: https://session.localhost:15443/token/refresh
 urls:
   login: https://gateway.localhost:13443/login/init
   consent: https://gateway.localhost:13443/consent/init

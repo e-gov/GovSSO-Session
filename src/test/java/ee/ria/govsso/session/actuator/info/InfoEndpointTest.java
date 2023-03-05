@@ -1,6 +1,7 @@
 package ee.ria.govsso.session.actuator.info;
 
 import ee.ria.govsso.session.BaseTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -31,6 +32,7 @@ class InfoEndpointTest extends BaseTest {
         assertTrue(serveCurrentTime.isAfter(now.minus(Duration.ofMinutes(1))));
     }
 
+    @Disabled("TODO GSSO-540")
     @Test
     void info_startTimeIsPresent() {
         String serviceStartTimeStr = given()

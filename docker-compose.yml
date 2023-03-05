@@ -125,6 +125,7 @@ services:
       - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
       - SSL_CERT_FILE=/var/certs/govsso-ca.localhost.crt
       - HTTPS_PROXY=https://outproxy.localhost:8443
+      - NO_PROXY=session.localhost:15443
     networks:
       default:
         aliases:

@@ -27,7 +27,8 @@
   "backchannel_logout_uri": "https://clientb.localhost:12443/oauth2/back-channel-logout/govsso",
   "scope": [
     "openid",
-    "phone"
+    "phone",
+    "offline_access"
   ],
   "secret": "secretb",
   "description": "This is a sample client. Intended for use in development environment only.",
