@@ -28,10 +28,10 @@ services:
     environment:
       - server.port=11443
       - spring.application.name=Client A
-      - govsso.client-id=client-a
-      - govsso.client-secret=secreta
-      - govsso.issuer-uri=https://gateway.localhost:13443/
-      - govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
+      - spring.security.oauth2.client.registration.govsso.client-id=client-a
+      - spring.security.oauth2.client.registration.govsso.client-secret=secreta
+      - spring.security.oauth2.client.registration.govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=https://gateway.localhost:13443/
       - govsso.post-logout-redirect-uri=https://clienta.localhost:11443/?show-post-logout-message
       - govsso.logo=client-a.svg
       - server.ssl.key-store-type=PKCS12
@@ -66,10 +66,10 @@ services:
     environment:
       - server.port=12443
       - spring.application.name=Client B
-      - govsso.client-id=client-b
-      - govsso.client-secret=secretb
-      - govsso.issuer-uri=https://gateway.localhost:13443/
-      - govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
+      - spring.security.oauth2.client.registration.govsso.client-id=client-b
+      - spring.security.oauth2.client.registration.govsso.client-secret=secretb
+      - spring.security.oauth2.client.registration.govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
+      - spring.security.oauth2.client.provider.govsso.issuer-uri=https://gateway.localhost:13443/
       - govsso.post-logout-redirect-uri=https://clientb.localhost:12443/?show-post-logout-message
       - govsso.logo=client-b.svg
       - server.ssl.key-store-type=PKCS12
