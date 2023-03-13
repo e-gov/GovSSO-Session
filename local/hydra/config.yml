@@ -9,7 +9,7 @@ serve:
     key:
       path: /var/certs/hydra.localhost.key
   cookies:
-    same_site_mode: None
+    same_site_mode: Lax
   public:
     access_log:
       disable_for_health: true
