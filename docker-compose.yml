@@ -112,7 +112,7 @@ services:
 
   hydra: # Map to host ports 14xxx.
     # TODO Temporarily a fork is used until all pull requests are merged upstream.
-    image: oryd/hydra:feature-govsso # hydra:v1.10.7 image doesn't have shell, -sqlite image does.
+    image: oryd/hydra:feature-govsso # hydra:v1.11.10 image doesn't have shell, -sqlite image does.
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/govsso-hydra/config.yml all'
     depends_on:
       - hydra-db
