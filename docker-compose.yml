@@ -30,15 +30,15 @@ services:
       - spring.application.name=Client A
       - govsso.client-id=client-a
       - govsso.client-secret=secreta
-      - govsso.issuer-uri=https://gateway.localhost:13443/
       - govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clienta.localhost:11443/?show-post-logout-message
-      - govsso.logo=client-a.svg
+      - govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.trust-store=file:/var/certs/clienta.localhost.truststore.p12
+      - govsso.trust-store-password=changeit
+      - example-client.logo=client-a.svg
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=/var/certs/clienta.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
-      - server.ssl.trust-store=/var/certs/clienta.localhost.truststore.p12
-      - server.ssl.trust-store-password=changeit
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
@@ -68,15 +68,15 @@ services:
       - spring.application.name=Client B
       - govsso.client-id=client-b
       - govsso.client-secret=secretb
-      - govsso.issuer-uri=https://gateway.localhost:13443/
       - govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clientb.localhost:12443/?show-post-logout-message
-      - govsso.logo=client-b.svg
+      - govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.trust-store=file:/var/certs/clientb.localhost.truststore.p12
+      - govsso.trust-store-password=changeit
+      - example-client.logo=client-b.svg
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=/var/certs/clientb.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
-      - server.ssl.truststore=/var/certs/clientb.localhost.truststore.p12
-      - server.ssl.truststore-password=changeit
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
