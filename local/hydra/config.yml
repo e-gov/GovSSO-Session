@@ -68,7 +68,7 @@ client.tls:
 strategies:
   scope: exact
 ttl:
-  access_token: 15m
+  access_token: 1s
   refresh_token: 15m
   # NB! ttl/id_token value must be the same as govsso.session-max-update-interval-minutes value in GOVSSO-Session configuration.
   id_token: 15m
