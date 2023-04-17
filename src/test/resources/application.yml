@@ -26,7 +26,7 @@ spring:
     banner-mode: off
 
 govsso:
-  base-url: https://gateway.localhost:8000
+  base-url: https://inproxy.localhost:8000
   session-max-update-interval-minutes: 15
   session-max-duration-hours: 1000000
   hydra:

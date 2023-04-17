@@ -45,7 +45,7 @@ server:
 govsso:
   # By default, use URL-s accessible from host machine ("localhost") to support "Running GovSSO Session Service Locally
   #  and Dependencies in Docker Compose" workflow in README.md.
-  base-url: https://gateway.localhost:13443/
+  base-url: https://inproxy.localhost:13443/
   # NB! Hydra database clean-up functionality will remove session data older than 24 hours, so
   # setting this value over 1440 (24 hours) also requires increasing Hydra database clean-up time limit.
   session-max-update-interval-minutes: 15

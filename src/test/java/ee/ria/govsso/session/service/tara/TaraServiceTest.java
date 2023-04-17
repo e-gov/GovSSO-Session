@@ -72,7 +72,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         assertThat(authenticationRequest.getState().getValue(), hasLength(43));
         assertThat(authenticationRequest.getNonce().getValue(), hasLength(43));
         assertThat(authenticationRequest.getEndpointURI().toString(), equalTo(TARA_MOCK_URL + "/oidc/authorize"));
-        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo(GATEWAY_MOCK_URL + "/login/taracallback"));
+        assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo(INPROXY_MOCK_URL + "/login/taracallback"));
         assertThat(authenticationRequest.getCustomParameter("govsso_login_challenge").get(0), equalTo(TEST_LOGIN_CHALLENGE));
         assertThat(authenticationRequest.getACRValues().get(0).toString(), equalTo("high"));
         assertThat(authenticationRequest.getUILocales(), nullValue());

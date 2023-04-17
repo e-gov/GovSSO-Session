@@ -20,7 +20,7 @@ services:
     image: govsso-client:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
-      - gateway
+      - inproxy
     deploy:
       resources:
         limits:
@@ -32,7 +32,7 @@ services:
       - govsso.client-secret=secreta
       - govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clienta.localhost:11443/?show-post-logout-message
-      - govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.issuer-uri=https://inproxy.localhost:13443/
       - govsso.trust-store=file:/var/certs/clienta.localhost.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-a.svg
@@ -58,7 +58,7 @@ services:
     image: govsso-client:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
-      - gateway
+      - inproxy
     deploy:
       resources:
         limits:
@@ -70,7 +70,7 @@ services:
       - govsso.client-secret=secretb
       - govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clientb.localhost:12443/?show-post-logout-message
-      - govsso.issuer-uri=https://gateway.localhost:13443/
+      - govsso.issuer-uri=https://inproxy.localhost:13443/
       - govsso.trust-store=file:/var/certs/clientb.localhost.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-b.svg
@@ -92,23 +92,42 @@ services:
       - ./local/tls/clientb/clientb.localhost.keystore.p12:/var/certs/clientb.localhost.keystore.p12:ro
       - ./local/tls/clientb/clientb.localhost.truststore.p12:/var/certs/clientb.localhost.truststore.p12:ro
 
-  gateway: # Map to host ports 13xxx.
-    build:
-      context: local/gateway
-      args:
-        ENABLED_MODULES: headers-more
+  inproxy: # Map to host ports 13xxx.
+    # First follow GOVSSO-InProxy README.md to build this Docker image.
+    image: govsso-inproxy:latest
     depends_on:
       - hydra
       - session
+    deploy:
+      resources:
+        limits:
+          memory: 650M
+    environment:
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=file:/var/certs/inproxy.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+      - spring.cloud.gateway.httpclient.ssl.trustedX509Certificates=file:/var/certs/govsso-ca.localhost.crt
+      - govsso-inproxy.admin.base-url=https://admin.localhost:443
+      - govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
+      - govsso-inproxy.admin.tls.trust-store-password=changeit
+      - GOVSSO_HYDRA_URL=https://hydra.localhost:8443
+      - GOVSSO_SESSION_URL=https://session.localhost:15443
+      - ELASTIC_APM_ENABLED=false
+      - BPL_DEBUG_ENABLED=true
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=10
     networks:
       default:
         aliases:
-          - gateway.localhost
+          - inproxy.localhost
     ports:
+      - '13000:8000'
       - '13443:13443'
+    restart: unless-stopped
     volumes:
-      - ./local/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./local/tls/gateway:/var/certs:ro
+      - ./local/tls/govsso-ca/govsso-ca.localhost.crt:/var/certs/govsso-ca.localhost.crt:ro
+      - ./local/tls/inproxy/inproxy.localhost.admin.truststore.p12:/var/certs/inproxy.localhost.admin.truststore.p12:ro
+      - ./local/tls/inproxy/inproxy.localhost.keystore.p12:/var/certs/inproxy.localhost.keystore.p12:ro
 
   hydra: # Map to host ports 14xxx.
     # TODO Temporarily a fork is used until all pull requests are merged upstream.
@@ -153,8 +172,8 @@ services:
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
       - management.endpoints.web.exposure.include=*
       - server.port=15443
-      - govsso.base-url=https://gateway.localhost:13443/
-      # Has to point to hydra ADMIN port and should ignore reverse proxy (gateway).
+      - govsso.base-url=https://inproxy.localhost:13443/
+      # Has to point to hydra ADMIN port and should ignore reverse proxy (inproxy).
       - govsso.hydra.admin-url=https://hydra.localhost:4445/
       - govsso.tara.issuer-url=https://tara.localhost:16443
       - govsso.admin.host-url=https://admin.localhost:443/

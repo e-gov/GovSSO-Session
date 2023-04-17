@@ -46,12 +46,12 @@ webfinger:
 oauth2:
   refresh_token_hook: https://session.localhost:15443/admin/token-refresh
 urls:
-  login: https://gateway.localhost:13443/login/init
-  consent: https://gateway.localhost:13443/consent/init
-  logout: https://gateway.localhost:13443/logout/init
-  error: https://gateway.localhost:13443/error/oidc
+  login: https://inproxy.localhost:13443/login/init
+  consent: https://inproxy.localhost:13443/consent/init
+  logout: https://inproxy.localhost:13443/logout/init
+  error: https://inproxy.localhost:13443/error/oidc
   self:
-    issuer: https://gateway.localhost:13443/
+    issuer: https://inproxy.localhost:13443/
 client.tls:
   min_version: tls12
   max_version: tls13

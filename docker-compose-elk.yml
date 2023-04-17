@@ -2,10 +2,25 @@ version: '3.8'
 # 3.8 required for depends_on condition support, although not officially listed in https://docs.docker.com/compose/compose-file/compose-versioning/#version-38
 services:
 
-  gateway:
+  inproxy:
+    environment:
+      - LOG_FILE_LEVEL=INFO
+      - LOG_HOME=/var/log/govsso-inproxy
+      - ELASTIC_APM_ENABLED=true
+      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVICE_NAME=govsso-inproxy
+      - ELASTIC_APM_HOSTNAME=inproxy.localhost
+      - ELASTIC_APM_ENVIRONMENT=dev-local
+      - ELASTIC_APM_VERIFY_SERVER_CERT=false
+      - ELASTIC_APM_METRICS_INTERVAL=10s
+      - ELASTIC_APM_CLOUD_PROVIDER=NONE
+      - ELASTIC_APM_APPLICATION_PACKAGES=ee.ria.govsso.inproxy
+      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/actuator/*
     labels:
       - co.elastic.logs/enabled=true
-      - co.elastic.logs/module=nginx
+    user: root
+    volumes:
+      - govsso-inproxy-logs:/var/log/govsso-inproxy:rw
 
   hydra:
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && mkdir -p /var/log/govsso-hydra && chmod 750 /var/log/govsso-hydra && hydra serve --config /etc/govsso-hydra/config.yml all 2>&1 | tee -a /var/log/govsso-hydra/hydra-1.log'
@@ -160,5 +175,7 @@ volumes:
     name: govsso-enduserselfservice-logs
   govsso-hydra-logs:
     name: govsso-hydra-logs
+  govsso-inproxy-logs:
+    name: govsso-inproxy-logs
   govsso-session-logs:
     name: govsso-session-logs
