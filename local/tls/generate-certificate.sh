@@ -62,14 +62,6 @@ openssl pkcs12 \
   -passout pass:changeit \
   -out "$applicationName/$host.keystore.p12"
 
-# Add CA certificate to application keystore
-keytool -noprompt \
-  -importcert \
-  -alias "$ca.localhost" \
-  -file "$ca/$ca.localhost.crt" \
-  -storepass changeit \
-  -keystore "$applicationName/$host.keystore.p12"
-
 # TODO: Find a better solution than making the keys readable by everyone.
 # Make the files readable by all users inside containers. Required for 'ory' user in hydra container.
 chmod 644 "$applicationName"/*
