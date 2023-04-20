@@ -132,6 +132,7 @@ public class HydraService {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
                 .queryParam("subject", subject)
+                .queryParam("login_session_id", sessionId)
                 .toUriString();
 
         try {
@@ -141,7 +142,6 @@ public class HydraService {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToFlux(Consent.class)
-                    .filter(c -> c.getConsentRequest().getLoginSessionId().equals(sessionId))
                     .collectList()
                     .blockOptional().orElseThrow();
 

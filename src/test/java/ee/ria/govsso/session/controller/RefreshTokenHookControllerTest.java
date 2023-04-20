@@ -42,7 +42,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest();
         hookRequest.setSubject("testSubject");
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=testSubject"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -65,7 +65,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest();
         hookRequest.setSubject("testSubject");
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=testSubject"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
