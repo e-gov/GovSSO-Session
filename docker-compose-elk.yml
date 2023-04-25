@@ -64,6 +64,26 @@ services:
       - co.elastic.logs/enabled=true
       - co.elastic.logs/module=postgresql
 
+  enduserselfservice:
+    environment:
+      - LOG_FILE_LEVEL=INFO
+      - LOG_HOME=/var/log/govsso-enduserselfservice
+      - ELASTIC_APM_ENABLED=true
+      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVICE_NAME=govsso-enduserselfservice
+      - ELASTIC_APM_HOSTNAME=enduserselfservice.localhost
+      - ELASTIC_APM_ENVIRONMENT=dev-local
+      - ELASTIC_APM_VERIFY_SERVER_CERT=false
+      - ELASTIC_APM_METRICS_INTERVAL=10s
+      - ELASTIC_APM_CLOUD_PROVIDER=NONE
+      - ELASTIC_APM_APPLICATION_PACKAGES=ee.ria.govsso.enduserselfservice
+      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/actuator/*
+    labels:
+      - co.elastic.logs/enabled=true
+    user: root
+    volumes:
+      - govsso-enduserselfservice-logs:/var/log/govsso-enduserselfservice:rw
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
     environment:
@@ -136,6 +156,8 @@ services:
 volumes:
   govsso-admin-logs:
     name: govsso-admin-logs
+  govsso-enduserselfservice-logs:
+    name: govsso-enduserselfservice-logs
   govsso-hydra-logs:
     name: govsso-hydra-logs
   govsso-session-logs:

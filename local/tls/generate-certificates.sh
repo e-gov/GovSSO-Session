@@ -15,6 +15,7 @@ cd "$(command dirname -- "${0}")" || exit
 ./generate-certificate.sh 'govsso-ca' 'hydra-db'
 ./generate-certificate.sh 'govsso-ca' 'admin-db'
 ./generate-certificate.sh 'govsso-ca' 'outproxy'
+./generate-certificate.sh 'govsso-ca' 'enduserselfservice'
 
 ./generate-ca-certificate.sh 'tara'
 ./generate-certificate.sh 'tara-ca' 'tara'
@@ -31,6 +32,9 @@ cd "$(command dirname -- "${0}")" || exit
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.admin.truststore.p12'
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.hydra.truststore.p12'
 ./generate-truststore.sh 'tara-ca' 'session' 'session.localhost.tara.truststore.p12'
+
+./generate-truststore.sh 'govsso-ca' 'enduserselfservice' 'enduserselfservice.localhost.session.truststore.p12'
+./generate-truststore.sh 'tara-ca' 'enduserselfservice' 'enduserselfservice.localhost.tara.truststore.p12'
 
 # Copying these files, because postgres TLS configuration requires cert and key file setting of permissions
 # in Dockerfile thus these files must be reachable from Dockerfile context.

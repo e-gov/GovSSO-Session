@@ -373,6 +373,45 @@ services:
       - ./local/tls/hydra/hydra.localhost.crt:/var/certs/hydra.localhost.crt:ro
       - ./local/tls/hydra/hydra.localhost.key:/var/certs/hydra.localhost.key:ro
 
+  enduserselfservice: # Map to host ports 25xxx.
+    # First follow GOVSSO-EndUserSelfService README.md to build this Docker image.
+    image: govsso-enduserselfservice:latest
+    entrypoint: bash -c 'sleep 15 && /cnb/process/web'
+    depends_on:
+      - session
+      - tara
+    deploy:
+      resources:
+        limits:
+          memory: 650M
+    environment:
+      - server.ssl.key-store-type=PKCS12
+      - server.ssl.key-store=file:/var/certs/enduserselfservice.localhost.keystore.p12
+      - server.ssl.key-store-password=changeit
+      - govsso-enduserselfservice.session.base-url=https://session.localhost:15443/
+      - govsso-enduserselfservice.session.tls.trust-store=file:/var/certs/enduserselfservice.localhost.session.truststore.p12
+      - govsso-enduserselfservice.session.tls.trust-store-password=changeit
+      - tara.client-id=govsso-enduserselfservice
+      - tara.client-secret=secret
+      - tara.issuer-uri=https://tara.localhost:16443/
+      - tara.redirect-uri=https://enduserselfservice.localhost:25443/login/oauth2/code/tara
+      - tara.trust-store=file:/var/certs/enduserselfservice.localhost.tara.truststore.p12
+      - tara.trust-store-password=changeit
+      - ELASTIC_APM_ENABLED=false
+      - BPL_DEBUG_ENABLED=true
+      # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
+      - BPL_JVM_THREAD_COUNT=10
+    networks:
+      default:
+        aliases:
+          - enduserselfservice.localhost
+    ports:
+      - '25000:8000'
+      - '25443:25443'
+    restart: unless-stopped
+    volumes:
+      - ./local/tls/enduserselfservice:/var/certs:ro
+
 volumes:
   hydra-db-data:
   admin-db-data:
