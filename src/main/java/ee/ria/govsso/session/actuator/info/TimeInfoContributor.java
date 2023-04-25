@@ -9,13 +9,12 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
-class TimeInfoContributor implements InfoContributor {
+public class TimeInfoContributor implements InfoContributor {
 
     private final MeterRegistry meterRegistry;
 
@@ -33,6 +32,6 @@ class TimeInfoContributor implements InfoContributor {
         }
         long startTimeEpochMilli = Double.valueOf(startTime.value(TimeUnit.MILLISECONDS)).longValue();
         Instant startTimeInstant = Instant.ofEpochMilli(startTimeEpochMilli);
-        return OffsetDateTime.ofInstant(startTimeInstant, ZoneId.of("UTC"));
+        return OffsetDateTime.ofInstant(startTimeInstant, ZoneOffset.UTC);
     }
 }
