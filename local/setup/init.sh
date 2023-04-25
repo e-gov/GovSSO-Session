@@ -1,4 +1,5 @@
 #!/bin/sh
+set -u
 
 echo 'Check - is admin service API to be ready to accept requests...'
 ./wait-for.sh $ADMIN_SERVICE_URL --timeout=300 -- echo "the $ADMIN_SERVICE_URL is up" || { echo "the $ADMIN_SERVICE_URL is not available"; exit 1; }

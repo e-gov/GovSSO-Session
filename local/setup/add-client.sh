@@ -1,4 +1,5 @@
 #!/bin/sh
+set -u
 
 adminServiceUrl=$1
 adminServiceUsername=$2
