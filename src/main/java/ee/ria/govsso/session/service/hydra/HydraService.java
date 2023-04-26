@@ -307,7 +307,7 @@ public class HydraService {
         return response;
     }
 
-    public void deleteConsentByClientSession(String clientId, String subject, String loginSessionId) {
+    public void expireConsentByClientSession(String clientId, String subject, String loginSessionId) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
                 .queryParam("client", clientId)
@@ -316,7 +316,7 @@ public class HydraService {
                 .queryParam("all", false)
                 .queryParam("trigger_backchannel_logout", true)
                 .toUriString();
-        deleteConsent(uri);
+        handleConsentRequest(uri, HttpMethod.PUT);
     }
 
     public void deleteConsentBySubjectSession(String subject, String loginSessionId) {
@@ -327,13 +327,13 @@ public class HydraService {
                 .queryParam("all", true)
                 .queryParam("trigger_backchannel_logout", true)
                 .toUriString();
-        deleteConsent(uri);
+        handleConsentRequest(uri, HttpMethod.DELETE);
     }
 
-    private void deleteConsent(String uri) {
+    private void handleConsentRequest(String uri, HttpMethod method) {
         try {
             requestLogger.logRequest(uri, HttpMethod.DELETE.name());
-            ResponseEntity<Void> responseEntity = webclient.delete()
+            ResponseEntity<Void> responseEntity = webclient.method(method)
                     .uri(uri)
                     .retrieve()
                     .toBodilessEntity()
@@ -341,7 +341,7 @@ public class HydraService {
 
             requestLogger.logResponse(HttpStatus.OK.value(), responseEntity);
         } catch (Exception ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to delete Hydra consent", ex);
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to %s Hydra consent".formatted(method == HttpMethod.DELETE ? "delete" : "expire"), ex);
         }
     }
 

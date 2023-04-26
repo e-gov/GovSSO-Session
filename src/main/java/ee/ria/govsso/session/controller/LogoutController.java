@@ -80,7 +80,7 @@ public class LogoutController {
                 .filter(c -> c.getConsentRequest().getClient().getClientId().equals(requestClientId))
                 .findFirst();
         if (clientConsent.isPresent()) {
-            hydraService.deleteConsentByClientSession(requestClientId, subject, sessionId);
+            hydraService.expireConsentByClientSession(requestClientId, subject, sessionId);
         }
         return getLogoutView(logoutRequestInfo, consents);
     }
