@@ -40,7 +40,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static com.nimbusds.jose.JWSAlgorithm.RS384;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
@@ -163,7 +162,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody(signedTokenResponse.toJSONObject().toJSONString())
-                        .withFixedDelay(DEFAULT_HTTP_CONNECT_TIMEOUT + 100))); // TODO: Configurable
+                        .withFixedDelay(taraConfigurationProperties.connectTimeoutMilliseconds() + 100)));
 
         SsoException ssoException = assertThrows(SsoException.class, () -> taraService.requestIdToken("code"));
 

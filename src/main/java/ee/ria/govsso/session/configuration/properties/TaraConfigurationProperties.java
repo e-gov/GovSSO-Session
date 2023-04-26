@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.net.URL;
 
 @Validated
@@ -20,6 +21,12 @@ public record TaraConfigurationProperties(
         String clientId,
         @NotBlank
         String clientSecret,
+        @DefaultValue("5000")
+        @PositiveOrZero
+        Integer connectTimeoutMilliseconds,
+        @DefaultValue("5000")
+        @PositiveOrZero
+        Integer readTimeoutMilliseconds,
         @DefaultValue("10")
         Integer maxClockSkewSeconds,
         TlsConfigurationProperties tls) {

@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.net.URL;
 
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
 import static com.nimbusds.oauth2.sdk.GrantType.AUTHORIZATION_CODE;
 import static com.nimbusds.oauth2.sdk.ResponseType.CODE;
@@ -100,8 +98,8 @@ public class TaraMetadataService {
         WellKnownPathComposeStrategy strategy = issuerUrl.endsWith("/") ? POSTFIX : INFIX;
         OIDCProviderConfigurationRequest request = new OIDCProviderConfigurationRequest(issuer, strategy);
         HTTPRequest httpRequest = request.toHTTPRequest();
-        httpRequest.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT); // TODO: Configurable
-        httpRequest.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT); // TODO: Configurable
+        httpRequest.setConnectTimeout(taraConfigurationProperties.connectTimeoutMilliseconds());
+        httpRequest.setReadTimeout(taraConfigurationProperties.readTimeoutMilliseconds());
         httpRequest.setSSLSocketFactory(trustContext.getSocketFactory());
 
         requestLogger.logRequest(request.getEndpointURI().toString(), httpRequest.getMethod().toString());
@@ -144,8 +142,9 @@ public class TaraMetadataService {
     }
 
     JWKSet requestJWKSet(OIDCProviderMetadata metadata) throws IOException, java.text.ParseException {
-        DefaultResourceRetriever rr = new DefaultResourceRetriever(DEFAULT_HTTP_CONNECT_TIMEOUT, // TODO: Configurable
-                DEFAULT_HTTP_READ_TIMEOUT, // TODO: Configurable
+        DefaultResourceRetriever rr = new DefaultResourceRetriever(
+                taraConfigurationProperties.connectTimeoutMilliseconds(),
+                taraConfigurationProperties.readTimeoutMilliseconds(),
                 DEFAULT_HTTP_SIZE_LIMIT,
                 true,
                 trustContext.getSocketFactory());

@@ -48,8 +48,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT;
 import static com.nimbusds.oauth2.sdk.ResponseType.Value.CODE;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.OPENID;
 import static com.nimbusds.openid.connect.sdk.OIDCScopeValue.PHONE;
@@ -89,8 +87,8 @@ public class TaraService {
         try {
             TokenRequest tokenRequest = createTokenRequest(code);
             HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
-            httpRequest.setConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT); // TODO: Configurable
-            httpRequest.setReadTimeout(DEFAULT_HTTP_READ_TIMEOUT); // TODO: Configurable
+            httpRequest.setConnectTimeout(taraConfigurationProperties.connectTimeoutMilliseconds());
+            httpRequest.setReadTimeout(taraConfigurationProperties.readTimeoutMilliseconds());
             httpRequest.setSSLSocketFactory(trustContext.getSocketFactory());
 
             requestLogger.logRequest(httpRequest.getURL().toString(), httpRequest.getMethod().name());
