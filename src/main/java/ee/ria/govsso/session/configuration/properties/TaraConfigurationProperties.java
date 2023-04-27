@@ -28,6 +28,7 @@ public record TaraConfigurationProperties(
         @PositiveOrZero
         Integer readTimeoutMilliseconds,
         @DefaultValue("10")
+        @PositiveOrZero
         Integer maxClockSkewSeconds,
         TlsConfigurationProperties tls) {
 
@@ -40,7 +41,7 @@ public record TaraConfigurationProperties(
             @NotBlank
             String trustStorePassword,
             @DefaultValue("PKCS12")
-            @NotNull
+            @NotBlank
             String trustStoreType,
             String defaultProtocol) {
     }

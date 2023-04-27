@@ -27,7 +27,7 @@ public record HydraConfigurationProperties(
             @NotBlank
             String trustStorePassword,
             @DefaultValue("PKCS12")
-            @NotNull
+            @NotBlank
             String trustStoreType) {
     }
 }

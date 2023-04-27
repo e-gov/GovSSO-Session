@@ -27,7 +27,7 @@ public record AdminConfigurationProperties(
             @NotBlank
             String trustStorePassword,
             @DefaultValue("PKCS12")
-            @NotNull
+            @NotBlank
             String trustStoreType) {
     }
 }
