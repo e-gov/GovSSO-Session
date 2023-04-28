@@ -128,16 +128,37 @@ public class HydraService {
         }
     }
 
-    public List<Consent> getConsents(String subject, String sessionId) {
-        String uri = UriComponentsBuilder
+    public List<Consent> getValidConsents(String subject, String sessionId) {
+        List<Consent> consents = getConsents(subject, sessionId, false);
+        if (consents.isEmpty()) {
+            return Collections.emptyList();
+        }
+        var taraIdToken = consents.get(0).getConsentRequest().getContext().getTaraIdToken();
+        if (!consents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(taraIdToken))) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
+        }
+        return consents;
+    }
+
+    public List<Consent> getConsents(String subject, boolean includeExpired) {
+        return getConsents(subject, null, includeExpired);
+    }
+
+    private List<Consent> getConsents(String subject, String sessionId, boolean includeExpired) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
-                .queryParam("subject", subject)
-                .queryParam("login_session_id", sessionId)
-                .toUriString();
+                .queryParam("subject", subject);
+        if (includeExpired) {
+            uriBuilder.queryParam("include_expired", includeExpired);
+        }
+        if (sessionId != null) {
+            uriBuilder.queryParam("login_session_id", sessionId);
+        }
+        String uri = uriBuilder.toUriString();
 
         try {
             requestLogger.logRequest(uri, HttpMethod.GET.name());
-            List<Consent> validConsents = webclient.get()
+            List<Consent> consents = webclient.get()
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
@@ -145,17 +166,8 @@ public class HydraService {
                     .collectList()
                     .blockOptional().orElseThrow();
 
-            requestLogger.logResponse(HttpStatus.OK.value(), validConsents);
-            if (validConsents.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            var taraIdToken = validConsents.get(0).getConsentRequest().getContext().getTaraIdToken();
-            if (!validConsents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(taraIdToken))) {
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
-            }
-
-            return validConsents;
+            requestLogger.logResponse(HttpStatus.OK.value(), consents);
+            return consents;
         } catch (WebClientResponseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra consents list", ex);
         }
@@ -305,6 +317,16 @@ public class HydraService {
 
         requestLogger.logResponse(HttpStatus.OK.value(), response);
         return response;
+    }
+
+    public void deleteConsentBySubject(String subject) {
+        String uri = UriComponentsBuilder
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
+                .queryParam("subject", subject)
+                .queryParam("all", true)
+                .queryParam("trigger_backchannel_logout", true)
+                .toUriString();
+        handleConsentRequest(uri, HttpMethod.DELETE);
     }
 
     public void expireConsentByClientSession(String clientId, String subject, String loginSessionId) {

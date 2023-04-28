@@ -55,7 +55,7 @@ public class RefreshTokenHookController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session was not found");
         }
 
-        List<Consent> consents = hydraService.getConsents(hookRequest.getSubject(), sessionId);
+        List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         ConsentRequestInfo consentRequestInfo = getConsentRequestByClientId(consents, hookRequest.getClientId());
 

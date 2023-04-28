@@ -11,6 +11,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.header.HeaderWriter;
 
+import static ee.ria.govsso.session.controller.AdminController.ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING;
+import static ee.ria.govsso.session.controller.AdminController.ADMIN_SESSIONS_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.ConsentInitController.CONSENT_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.LoginInitController.LOGIN_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
@@ -37,7 +39,7 @@ public class SecurityConfiguration {
                 .httpBasic().disable()
                 .sessionManagement().disable()
                 .csrf(csrf -> csrf
-                        .ignoringAntMatchers(TOKEN_REFRESH_REQUEST_MAPPING)
+                        .ignoringAntMatchers(TOKEN_REFRESH_REQUEST_MAPPING, ADMIN_SESSIONS_REQUEST_MAPPING, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING)
                         .csrfTokenRepository(csrfTokenRepository()))
                 .headers()
                 .addHeaderWriter(relaxedCorsHeaderWriter())

@@ -9,4 +9,6 @@ import lombok.Data;
 public class Context {
 
     private String taraIdToken;
+    private String ipAddress = ""; // TODO: Remove after GSSO-619
+    private String userAgent = ""; // TODO: Remove after GSSO-620
 }

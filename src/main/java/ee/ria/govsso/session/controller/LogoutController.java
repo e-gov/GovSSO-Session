@@ -69,7 +69,7 @@ public class LogoutController {
         String subject = logoutRequestInfo.getSubject();
         String sessionId = logoutRequestInfo.getSessionId();
         String requestClientId = logoutRequestInfo.getClient().getClientId();
-        List<Consent> consents = hydraService.getConsents(subject, sessionId);
+        List<Consent> consents = hydraService.getValidConsents(subject, sessionId);
 
         if (consentDoesNotExistOrExistsOnlyForRequestClient(consents, requestClientId)) {
             LogoutAcceptResponse logoutAcceptResponse = hydraService.acceptLogout(logoutChallenge);
