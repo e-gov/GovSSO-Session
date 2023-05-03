@@ -1,3 +1,12 @@
+server:
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: govsso-session
+  main:
+    banner-mode: off
+
 management:
   endpoint:
     health:
@@ -18,12 +27,6 @@ management:
       enabled: true
     git:
       mode: full
-
-spring:
-  application:
-    name: govsso-session
-  main:
-    banner-mode: off
 
 govsso:
   base-url: https://inproxy.localhost:8000

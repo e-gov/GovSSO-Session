@@ -16,12 +16,11 @@ import java.io.IOException;
 
 public class RequestCorrelationFilter extends OncePerRequestFilter {
 
-    private static final String MDC_ATTRIBUTE_KEY_VERSION = "service.version";
-    private static final String MDC_ATTRIBUTE_KEY_CLIENT_IP = "client.ip";
-    private static final String MDC_ATTRIBUTE_KEY_REQUEST_TRACE_ID = "trace.id";
+    public static final String MDC_ATTRIBUTE_KEY_CLIENT_IP = "client.ip";
     public static final String MDC_ATTRIBUTE_KEY_FLOW_TRACE_ID = "labels.govsso_trace_id";
     public static final String REQUEST_ATTRIBUTE_NAME_REQUEST_ID = "requestId";
-
+    private static final String MDC_ATTRIBUTE_KEY_VERSION = "service.version";
+    private static final String MDC_ATTRIBUTE_KEY_REQUEST_TRACE_ID = "trace.id";
     private final String version;
 
     public RequestCorrelationFilter(BuildProperties buildProperties, GitProperties gitProperties) {

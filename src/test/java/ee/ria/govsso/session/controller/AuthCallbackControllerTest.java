@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -33,8 +34,10 @@ import java.util.Date;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_REQUEST_MAPPING;
@@ -692,6 +695,45 @@ class AuthCallbackControllerTest extends BaseTest {
                 .statusCode(302)
                 .headers(emptyMap())
                 .header("Location", Matchers.containsString("auth/login/test"));
+    }
+
+    @Test
+    void authCallback_WhenXForwardedForHeaderIsSet_ContextContainsIpAddress() {
+        SsoCookie ssoCookie = createSsoCookie();
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high", TEST_LOGIN_CHALLENGE);
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request.json")));
+
+        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody(tokenResponse.toJSONObject().toJSONString())));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .param("code", TEST_CODE)
+                .param("state", ssoCookie.getTaraAuthenticationRequestState())
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .header("X-Forwarded-For", "111.111.111.111")
+                .when()
+                .get(CALLBACK_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/login/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .withRequestBody(matchingJsonPath("$.context.ip_address", WireMock.equalTo("111.111.111.111"))));
     }
 
     private SsoCookie createSsoCookie() {

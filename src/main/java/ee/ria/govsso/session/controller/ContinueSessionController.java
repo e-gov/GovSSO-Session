@@ -75,9 +75,7 @@ public class ContinueSessionController {
         }
 
         validateIdToken(loginRequestInfo, idToken);
-        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken);
-        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
-        return new RedirectView(response.getRedirectTo().toString());
+        return acceptLogin(loginChallenge, loginRequestInfo, idToken, request.getRemoteAddr());
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -128,5 +126,11 @@ public class ContinueSessionController {
 
     private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {
         return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
+    }
+
+    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, ipAddress);
+        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
+        return new RedirectView(response.getRedirectTo().toString());
     }
 }

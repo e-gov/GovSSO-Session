@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import ee.ria.govsso.session.BaseTest;
 import io.restassured.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.ContinueSessionController.AUTH_VIEW_REQUEST_MAPPING;
@@ -193,6 +196,43 @@ class ContinueSessionControllerTest extends BaseTest {
                 .statusCode(302)
                 .headers(emptyMap())
                 .header("Location", Matchers.containsString("/auth/login/test"));
+    }
+
+    @Test
+    void continueSession_WhenXForwardedForHeaderIsSet_ContextContainsIpAddress() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
+                .header("X-Forwarded-For", "111.111.111.111")
+                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .post(AUTH_VIEW_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("/auth/login/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .withRequestBody(matchingJsonPath("$.context.ip_address", WireMock.equalTo("111.111.111.111"))));
     }
 
     @Test

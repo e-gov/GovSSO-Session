@@ -105,7 +105,7 @@ public class LoginInitController {
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
-                return acceptLogin(loginRequestInfo, idToken);
+                return acceptLogin(loginRequestInfo, idToken, request.getRemoteAddr());
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                     return openSessionContinuationView(loginRequestInfo, idToken);
@@ -197,8 +197,8 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress);
         statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }

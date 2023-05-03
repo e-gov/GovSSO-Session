@@ -75,9 +75,7 @@ public class AuthCallbackController {
         verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
 
-        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken);
-        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
-        return new RedirectView(response.getRedirectTo().toString());
+        return acceptLogin(ssoCookie, loginRequestInfo, idToken, request.getRemoteAddr());
     }
 
     @SneakyThrows
@@ -106,5 +104,11 @@ public class AuthCallbackController {
         if (ssoCookie.getTaraAuthenticationRequestNonce() == null || ssoCookie.getTaraAuthenticationRequestNonce().isBlank()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Session tara authentication request nonce must not be null");
         }
+    }
+
+    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, String ipAddress) {
+        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, ipAddress);
+        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
+        return new RedirectView(response.getRedirectTo().toString());
     }
 }
