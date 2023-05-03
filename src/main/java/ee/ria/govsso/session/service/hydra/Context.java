@@ -10,5 +10,5 @@ public class Context {
 
     private String taraIdToken;
     private String ipAddress;
-    private String userAgent = ""; // TODO: Remove after GSSO-620
+    private String userAgent;
 }

@@ -18,11 +18,13 @@ import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
 
@@ -52,6 +54,7 @@ public class ContinueSessionController {
     public RedirectView continueSession(
             @ModelAttribute("loginChallenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
+            @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
             HttpServletRequest request) {
 
         RequestUtil.setFlowTraceId(loginChallenge);
@@ -75,7 +78,7 @@ public class ContinueSessionController {
         }
 
         validateIdToken(loginRequestInfo, idToken);
-        return acceptLogin(loginChallenge, loginRequestInfo, idToken, request.getRemoteAddr());
+        return acceptLogin(loginChallenge, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -128,8 +131,8 @@ public class ContinueSessionController {
         return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
     }
 
-    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, ipAddress);
+    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, ipAddress, userAgent);
         statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }

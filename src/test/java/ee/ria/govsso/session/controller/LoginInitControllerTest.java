@@ -25,6 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +37,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
@@ -53,6 +56,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 @Slf4j
@@ -61,6 +65,13 @@ public class LoginInitControllerTest extends BaseTest {
     private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
+
+    static Stream<Arguments> contextHeaders() {
+        return Stream.of(
+                arguments("X-Forwarded-For", "111.111.111.111", "$.context.ip_address"),
+                arguments("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36", "$.context.user_agent")
+        );
+    }
 
     @BeforeEach
     public void setupExpectedResponseSpec() {
@@ -1275,8 +1286,9 @@ public class LoginInitControllerTest extends BaseTest {
         assertErrorIsLogged("SsoException: Unable to continue session! Oidc session cookie not found.");
     }
 
-    @Test
-    void loginInit_WhenXForwardedForHeaderIsSet_ContextContainsIpAddress() {
+    @ParameterizedTest
+    @MethodSource("contextHeaders")
+    void loginInit_WhenHeaderIsSet_ContextContainsHeaderValue(String headerName, String expectedContextValue, String expectedContextJsonPath) {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -1298,7 +1310,7 @@ public class LoginInitControllerTest extends BaseTest {
 
 
         given()
-                .header("X-Forwarded-For", "111.111.111.111")
+                .header(headerName, expectedContextValue)
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
@@ -1309,7 +1321,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .header("Location", Matchers.matchesRegex("https://clienta.localhost:11443/auth/login/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .withRequestBody(matchingJsonPath("$.context.ip_address", WireMock.equalTo("111.111.111.111"))));
+                .withRequestBody(matchingJsonPath(expectedContextJsonPath, WireMock.equalTo(expectedContextValue))));
     }
 
     @Nested

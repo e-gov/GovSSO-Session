@@ -189,7 +189,7 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress) {
+    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress, String userAgent) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login/accept")
                 .queryParam("login_challenge", loginChallenge)
@@ -200,6 +200,7 @@ public class HydraService {
         Context context = new Context();
         context.setTaraIdToken(idToken.getParsedString());
         context.setIpAddress(ipAddress);
+        context.setUserAgent(userAgent);
 
         LoginAcceptRequest request = new LoginAcceptRequest();
         request.setRemember(true);

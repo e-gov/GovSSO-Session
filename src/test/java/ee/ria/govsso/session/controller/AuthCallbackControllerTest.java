@@ -23,6 +23,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -31,6 +33,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -44,6 +47,7 @@ import static ee.ria.govsso.session.controller.AuthCallbackController.CALLBACK_R
 import static io.restassured.RestAssured.given;
 import static java.util.Collections.emptyMap;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
@@ -54,6 +58,13 @@ class AuthCallbackControllerTest extends BaseTest {
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final TaraService taraService;
     private final SsoCookieSigner ssoCookieSigner;
+
+    static Stream<Arguments> contextHeaders() {
+        return Stream.of(
+                arguments("X-Forwarded-For", "111.111.111.111", "$.context.ip_address"),
+                arguments("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36", "$.context.user_agent")
+        );
+    }
 
     @BeforeAll
     static void setUp() {
@@ -697,8 +708,9 @@ class AuthCallbackControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/login/test"));
     }
 
-    @Test
-    void authCallback_WhenXForwardedForHeaderIsSet_ContextContainsIpAddress() {
+    @ParameterizedTest
+    @MethodSource("contextHeaders")
+    void authCallback_WhenHeaderIsSet_ContextContainsHeaderValue(String headerName, String expectedContextValue, String expectedContextJsonPath) {
         SsoCookie ssoCookie = createSsoCookie();
         OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high", TEST_LOGIN_CHALLENGE);
 
@@ -724,7 +736,7 @@ class AuthCallbackControllerTest extends BaseTest {
                 .param("code", TEST_CODE)
                 .param("state", ssoCookie.getTaraAuthenticationRequestState())
                 .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
-                .header("X-Forwarded-For", "111.111.111.111")
+                .header(headerName, expectedContextValue)
                 .when()
                 .get(CALLBACK_REQUEST_MAPPING)
                 .then()
@@ -733,7 +745,7 @@ class AuthCallbackControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/login/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .withRequestBody(matchingJsonPath("$.context.ip_address", WireMock.equalTo("111.111.111.111"))));
+                .withRequestBody(matchingJsonPath(expectedContextJsonPath, WireMock.equalTo(expectedContextValue))));
     }
 
     private SsoCookie createSsoCookie() {

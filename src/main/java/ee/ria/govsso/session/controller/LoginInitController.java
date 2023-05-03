@@ -32,6 +32,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
@@ -72,6 +73,7 @@ public class LoginInitController {
     public ModelAndView loginInit(
             @RequestParam(name = "login_challenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
+            @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
             HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -105,7 +107,7 @@ public class LoginInitController {
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
-                return acceptLogin(loginRequestInfo, idToken, request.getRemoteAddr());
+                return acceptLogin(loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                     return openSessionContinuationView(loginRequestInfo, idToken);
@@ -197,8 +199,8 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress, userAgent);
         statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }

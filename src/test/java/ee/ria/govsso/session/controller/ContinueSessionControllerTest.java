@@ -7,7 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -20,12 +25,20 @@ import static ee.ria.govsso.session.controller.ContinueSessionController.AUTH_VI
 import static io.restassured.RestAssured.given;
 import static java.util.Collections.emptyMap;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ContinueSessionControllerTest extends BaseTest {
     private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
+
+    static Stream<Arguments> contextHeaders() {
+        return Stream.of(
+                arguments("X-Forwarded-For", "111.111.111.111", "$.context.ip_address"),
+                arguments("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36", "$.context.user_agent")
+        );
+    }
 
     @Test
     void continueSession_WhenFetchLoginRequestInfoIsSuccessful_CreatesSessionAndRedirects() {
@@ -198,8 +211,9 @@ class ContinueSessionControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("/auth/login/test"));
     }
 
-    @Test
-    void continueSession_WhenXForwardedForHeaderIsSet_ContextContainsIpAddress() {
+    @ParameterizedTest
+    @MethodSource("contextHeaders")
+    void continueSession_WhenHeaderIsSet_ContextContainsHeaderValue(String headerName, String expectedContextValue, String expectedContextJsonPath) {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -221,7 +235,7 @@ class ContinueSessionControllerTest extends BaseTest {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
-                .header("X-Forwarded-For", "111.111.111.111")
+                .header(headerName, expectedContextValue)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -232,7 +246,7 @@ class ContinueSessionControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("/auth/login/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .withRequestBody(matchingJsonPath("$.context.ip_address", WireMock.equalTo("111.111.111.111"))));
+                .withRequestBody(matchingJsonPath(expectedContextJsonPath, WireMock.equalTo(expectedContextValue))));
     }
 
     @Test

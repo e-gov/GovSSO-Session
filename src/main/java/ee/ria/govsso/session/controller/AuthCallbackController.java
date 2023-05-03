@@ -17,10 +17,12 @@ import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
@@ -48,6 +50,7 @@ public class AuthCallbackController {
             @RequestParam(name = "code", required = false) @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
             @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
             @RequestParam(name = "error", required = false) @Pattern(regexp = "user_cancel", message = "the only supported value is: 'user_cancel'") String error,
+            @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
             @SsoCookieValue SsoCookie ssoCookie,
             HttpServletRequest request) {
 
@@ -75,7 +78,7 @@ public class AuthCallbackController {
         verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
 
-        return acceptLogin(ssoCookie, loginRequestInfo, idToken, request.getRemoteAddr());
+        return acceptLogin(ssoCookie, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
     }
 
     @SneakyThrows
@@ -106,8 +109,8 @@ public class AuthCallbackController {
         }
     }
 
-    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, String ipAddress) {
-        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, ipAddress);
+    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, String ipAddress, String userAgent) {
+        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, ipAddress, userAgent);
         statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
