@@ -55,5 +55,5 @@
   "sla_notification_emails": [
     "slanotifications.clientc@example.org"
   ],
-  "is_user_consent_required": false
+  "is_user_consent_required": true
 }

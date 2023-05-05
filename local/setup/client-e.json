@@ -1,0 +1,58 @@
+{
+  "client_id": "client-e",
+  "client_name": {
+    "et": "Teenusenimi E",
+    "en": "Service name E",
+    "ru": "Название службы E"
+  },
+  "client_short_name": {
+    "et": "Teenus E",
+    "en": "Service E",
+    "ru": "Название E"
+  },
+  "institution_metainfo": {
+    "registry_code": "70000001",
+    "type": {
+      "type": "public"
+    },
+    "name": "Institution A"
+  },
+  "redirect_uris": [
+    "https://cliente.localhost:11443/login/oauth2/code/govsso"
+  ],
+  "token_request_allowed_ip_addresses": [
+    "0.0.0.0/0",
+    "::/0"
+  ],
+  "post_logout_redirect_uris": [
+    "https://cliente.localhost:11443/?show-post-logout-message"
+  ],
+  "backchannel_logout_uri": "https://cliente.localhost:11443/oauth2/back-channel-logout/govsso",
+  "scope": [
+    "openid",
+    "phone"
+  ],
+  "secret": "secrete",
+  "description": "This is a sample client. Intended for use in development environment only.",
+  "info_notification_emails": [
+    "notifications.cliente@example.org"
+  ],
+  "client_contacts": [
+    {
+      "name": "Contact 1",
+      "email": "contact1.cliente@example.org",
+      "phone": "+37270000001",
+      "department": "Department 1"
+    },
+    {
+      "name": "Contact 2",
+      "email": "contact2.cliente@example.org",
+      "phone": "+37270000001",
+      "department": "Department 2"
+    }
+  ],
+  "sla_notification_emails": [
+    "slanotifications.cliente@example.org"
+  ],
+  "is_user_consent_required": false
+}
