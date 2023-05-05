@@ -21,6 +21,10 @@
   "redirect_uris": [
     "https://clienta.localhost:11443/login/oauth2/code/govsso"
   ],
+  "token_request_allowed_ip_addresses": [
+    "0.0.0.0/0",
+    "::/0"
+  ],
   "post_logout_redirect_uris": [
     "https://clienta.localhost:11443/?show-post-logout-message"
   ],
