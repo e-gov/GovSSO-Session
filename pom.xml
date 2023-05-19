@@ -7,7 +7,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <!-- TODO GSSO-534 Upgrade to Spring Boot 3.x -->
-        <version>2.7.11</version>
+        <version>2.7.12</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -33,10 +33,10 @@
         <spring-boot.build-image.builder>paketobuildpacks/builder:tiny</spring-boot.build-image.builder>
         <spring-boot.build-image.imageName>${project.artifactId}:latest</spring-boot.build-image.imageName><!-- Use "latest" tag instead of version tag. -->
 
-        <elastic-apm.version>1.37.0</elastic-apm.version>
-        <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
+        <elastic-apm.version>1.38.0</elastic-apm.version>
+        <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
         <logstash-logback-encoder.version>7.3</logstash-logback-encoder.version>
-        <nimbus-oauth2-oidc-sdk.version>10.8</nimbus-oauth2-oidc-sdk.version>
+        <nimbus-oauth2-oidc-sdk.version>10.9.1</nimbus-oauth2-oidc-sdk.version>
         <wiremock.version>2.35.0</wiremock.version>
     </properties>
 
