@@ -107,7 +107,10 @@ services:
       - server.ssl.key-store=file:/var/certs/inproxy.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
       - spring.cloud.gateway.httpclient.ssl.trustedX509Certificates=file:/var/certs/govsso-ca.localhost.crt
+      - spring.cloud.discovery.client.simple.instances.hydra[0].uri=https://hydra.localhost:8443
+      - spring.cloud.discovery.client.simple.instances.session[0].uri=https://session.localhost:15443
       - govsso-inproxy.admin.base-url=https://admin.localhost:443
+      - govsso-inproxy.admin.token-request-allowed-ip-addresses-storage-path=/tmp/ipaddresses
       - govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
       - govsso-inproxy.admin.tls.trust-store-password=changeit
       - GOVSSO_HYDRA_URL=https://hydra.localhost:8443
