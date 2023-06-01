@@ -410,9 +410,13 @@ services:
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=file:/var/certs/enduserselfservice.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
-      - govsso-enduserselfservice.session.base-url=https://session.localhost:15443/
-      - govsso-enduserselfservice.session.tls.trust-store=file:/var/certs/enduserselfservice.localhost.session.truststore.p12
-      - govsso-enduserselfservice.session.tls.trust-store-password=changeit
+      - ignite.ssl-context-factory.key-store-file-path=/var/certs/enduserselfservice.localhost.keystore.p12
+      - ignite.ssl-context-factory.key-store-password=changeit
+      - ignite.ssl-context-factory.trust-store-file-path=/var/certs/enduserselfservice.localhost.ignite.truststore.p12
+      - ignite.ssl-context-factory.trust-store-password=changeit
+      - govsso-enduserselfservice.govsso-session.base-url=https://session.localhost:15443/
+      - govsso-enduserselfservice.govsso-session.tls.trust-store=file:/var/certs/enduserselfservice.localhost.session.truststore.p12
+      - govsso-enduserselfservice.govsso-session.tls.trust-store-password=changeit
       - tara.client-id=govsso-enduserselfservice
       - tara.client-secret=secret
       - tara.issuer-uri=https://tara.localhost:16443

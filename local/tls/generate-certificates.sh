@@ -35,6 +35,7 @@ cd "$(command dirname -- "${0}")" || exit
 
 ./generate-truststore.sh 'govsso-ca' 'enduserselfservice' 'enduserselfservice.localhost.session.truststore.p12'
 ./generate-truststore.sh 'tara-ca' 'enduserselfservice' 'enduserselfservice.localhost.tara.truststore.p12'
+./generate-truststore.sh 'govsso-ca' 'enduserselfservice' 'enduserselfservice.localhost.ignite.truststore.p12'
 
 ./generate-truststore.sh 'govsso-ca' 'inproxy' 'inproxy.localhost.admin.truststore.p12'
 
