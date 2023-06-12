@@ -414,6 +414,7 @@ services:
       - ignite.ssl-context-factory.key-store-password=changeit
       - ignite.ssl-context-factory.trust-store-file-path=/var/certs/enduserselfservice.localhost.ignite.truststore.p12
       - ignite.ssl-context-factory.trust-store-password=changeit
+      - govsso-enduserselfservice.time.local-zone=Europe/Tallinn
       - govsso-enduserselfservice.govsso-session.base-url=https://session.localhost:15443/
       - govsso-enduserselfservice.govsso-session.tls.trust-store=file:/var/certs/enduserselfservice.localhost.session.truststore.p12
       - govsso-enduserselfservice.govsso-session.tls.trust-store-password=changeit
