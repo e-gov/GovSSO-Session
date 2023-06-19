@@ -32,8 +32,8 @@ flow implementations.
 ## Running GovSSO Session Service Locally and Dependencies in Docker Compose
 
 1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from GOVSSO-Session
-   when it's running locally (not in Docker Compose). It's not needed for web browsers as popular browsers already have
-   built-in support for resolving `*.localhost` subdomains.
+   when it's running locally (not in Docker Compose) or during tests. It's not needed for web browsers as popular
+   browsers already have built-in support for resolving `*.localhost` subdomains.
    **NB! Also add given lines to docker-compose.yml gateway configuration with your local ip address.**
    ```shell
    extra_hosts:
