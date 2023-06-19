@@ -62,7 +62,7 @@ flow implementations.
                  --add-host=hydra.localhost:127.0.0.1 \
                  --add-host=tara.localhost:127.0.0.1 \
                  --add-host=admin.localhost:127.0.0.1 \
-                 maven:3.8.2-openjdk-17 \
+                 maven:3.9-eclipse-temurin-17 \
                  mvn spring-boot:build-image
       ```
       Git Bash users on Windows should add `MSYS_NO_PATHCONV=1` in front of the command.
