@@ -8,6 +8,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,6 +23,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.ParseException;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -131,35 +134,51 @@ public class HydraService {
     }
 
     public Integer getUserSessionCount(String subject) {
-        List<Consent> consents = getConsents(subject, true);
+        List<Consent> consents = getConsentsIncludingPartiallyExpired(subject);
         return consents.stream()
                 .map(c -> c.getConsentRequest().getLoginSessionId())
                 .collect(toSet())
                 .size();
     }
 
-    public List<Consent> getValidConsents(String subject, String sessionId) {
-        List<Consent> consents = getConsents(subject, sessionId, false);
+    public List<Consent> getValidConsentsAtRequestTime(String subject, String sessionId, @NonNull OffsetDateTime validAt) {
+        List<Consent> consents = getConsents(subject, sessionId, IncludeExpiredStrategy.ALL_EXPIRED)
+                .stream()
+                .filter(c -> !validAt.isBefore(c.getRequestedAt()) && !validAt.isAfter(c.getRequestedAt().plusSeconds(c.getRememberFor())))
+                .toList();
         if (consents.isEmpty()) {
             return Collections.emptyList();
         }
+        validateTaraIdToken(consents);
+        return consents;
+    }
+
+    public List<Consent> getValidConsents(String subject, String sessionId) {
+        List<Consent> consents = getConsents(subject, sessionId, IncludeExpiredStrategy.ALL_ACTIVE);
+        if (consents.isEmpty()) {
+            return Collections.emptyList();
+        }
+        validateTaraIdToken(consents);
+        return consents;
+    }
+
+    private static void validateTaraIdToken(List<Consent> consents) {
         var taraIdToken = consents.get(0).getConsentRequest().getContext().getTaraIdToken();
         if (!consents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(taraIdToken))) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
         }
-        return consents;
     }
 
-    public List<Consent> getConsents(String subject, boolean includeExpired) {
-        return getConsents(subject, null, includeExpired);
+    public List<Consent> getConsentsIncludingPartiallyExpired(String subject) {
+        return getConsents(subject, null, IncludeExpiredStrategy.PARTIALLY_EXPIRED);
     }
 
-    private List<Consent> getConsents(String subject, String sessionId, boolean includeExpired) {
+    private List<Consent> getConsents(String subject, String sessionId, IncludeExpiredStrategy includeExpiredStrategy) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/consent")
                 .queryParam("subject", subject);
-        if (includeExpired) {
-            uriBuilder.queryParam("include_expired", includeExpired);
+        if (includeExpiredStrategy != IncludeExpiredStrategy.ALL_ACTIVE) {
+            uriBuilder.queryParam("include_expired", includeExpiredStrategy.name().toLowerCase());
         }
         if (sessionId != null) {
             uriBuilder.queryParam("login_session_id", sessionId);
@@ -300,7 +319,9 @@ public class HydraService {
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
         request.setRemember(true);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
+
+        Duration consentFlowDuration = Duration.between(consentRequestInfo.getRequestedAt(), OffsetDateTime.now());
+        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds() + (int) consentFlowDuration.getSeconds());
 
         JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
         Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");

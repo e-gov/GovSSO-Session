@@ -104,7 +104,7 @@ public class LoginInitController {
             return authenticateWithTara(loginRequestInfo, response);
         } else {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
-            List<Consent> consents = hydraService.getValidConsents(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+            List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
             JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
             if (idToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);

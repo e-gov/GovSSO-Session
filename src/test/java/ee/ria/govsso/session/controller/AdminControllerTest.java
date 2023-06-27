@@ -53,7 +53,7 @@ class AdminControllerTest extends BaseTest {
 
     @Test
     void getBySubject_WhenConsentSessionsFound_ReturnsSessions(@Value("classpath:__files/mock_responses/admin/admin_sessions_subject.json") Resource expectedResult) throws IOException {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=partially_expired".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -93,7 +93,7 @@ class AdminControllerTest extends BaseTest {
     @ParameterizedTest
     @MethodSource("invalidStatusCodes")
     void getBySubject_WhenGetConsentsReturnsInvalidHttpStatus_ReturnsHttp500(int statusCode) {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=partially_expired".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(statusCode)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")

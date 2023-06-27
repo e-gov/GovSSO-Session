@@ -71,5 +71,6 @@
     }
   },
   "request_url": "https://hydra.localhost:9000/oauth2/auth?scope=openid\u0026response_type=code\u0026client_id=openIdDemo\u0026redirect_uri=https://hydra.localhost:9000/oauth/response\u0026state=049d71ea-30cd-4a74-8dcd-47156055d364\u0026nonce=5210b42a-2362-420b-bb81-54796da8c814\u0026ui_locales=et",
-  "session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
+  "session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
+  "requested_at": "2023-01-01T01:00:00Z"
 }

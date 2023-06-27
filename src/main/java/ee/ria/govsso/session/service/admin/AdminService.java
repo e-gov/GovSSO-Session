@@ -30,7 +30,7 @@ public class AdminService {
     private final SsoConfigurationProperties ssoConfigurationProperties;
 
     public List<Session> getSessions(String subject) {
-        List<Consent> consents = hydraService.getConsents(subject, true);
+        List<Consent> consents = hydraService.getConsentsIncludingPartiallyExpired(subject);
         Map<String, List<Consent>> allConsentsBySessionId = groupBySessionId(consents);
         Map<String, Collection<Consent>> latestConsentsForEachClientIdBySessionId = keepOnlyLatestConsentForEachClientIdAndSessionId(allConsentsBySessionId);
 
