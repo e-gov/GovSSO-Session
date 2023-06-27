@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
 import java.net.URL;
+import java.time.OffsetDateTime;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -19,4 +20,5 @@ public class LoginRequestInfo {
     private String[] requestedScope;
     private OidcContext oidcContext;
     private boolean skip;
+    private OffsetDateTime requestedAt;
 }
