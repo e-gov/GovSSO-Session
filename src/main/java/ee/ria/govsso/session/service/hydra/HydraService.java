@@ -219,7 +219,7 @@ public class HydraService {
         request.setContext(context);
         request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
-        request.setRefreshRememberFor(true);
+        request.setExtendSessionLifespan(true);
 
         requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);
         LoginAcceptResponse response = webclient.put()

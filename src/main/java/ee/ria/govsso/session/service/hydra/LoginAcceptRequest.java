@@ -14,6 +14,6 @@ public class LoginAcceptRequest {
     Context context;
     int rememberFor;
     String[] amr;
-    boolean refreshRememberFor;
+    boolean extendSessionLifespan;
 
 }
