@@ -1,17 +1,22 @@
 serve:
   admin:
-    access_log:
+    request_log:
       disable_for_health: true
     port: 4445
   tls:
+    enabled: true
     cert:
       path: /var/certs/hydra.localhost.crt
     key:
       path: /var/certs/hydra.localhost.key
   cookies:
     same_site_mode: Lax
+    names:
+      login_csrf: oauth2_authentication_csrf
+      consent_csrf: oauth2_consent_csrf
+      session: oauth2_authentication_session
   public:
-    access_log:
+    request_log:
       disable_for_health: true
     port: 8443
 hsm:
