@@ -381,7 +381,9 @@ class AuthCallbackControllerTest extends BaseTest {
     @ValueSource(strings = {"",
             "_wBCd",
             "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX+TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg",
-            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLgg"})
+            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_gggggggggggg" +
+                    "256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_" +
+                    "gggggggggggggggggggggggggggggggggggggggggggggggggggggggg"})
     void authCallback_WhenCodeParameterIsInvalid_ThrowsUserInputError(String codeParameter) {
 
         SsoCookie ssoCookie = createSsoCookie();
@@ -397,7 +399,7 @@ class AuthCallbackControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("User input exception: loginCallback.code: must match \"^[A-Za-z0-9\\-_.]{6,87}$\"");
+        assertErrorIsLogged("User input exception: loginCallback.code: must match \"^[A-Za-z0-9\\-_.]{6,255}$\"");
     }
 
     @Test

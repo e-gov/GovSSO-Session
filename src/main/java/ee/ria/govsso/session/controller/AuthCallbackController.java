@@ -47,7 +47,13 @@ public class AuthCallbackController {
 
     @GetMapping(value = CALLBACK_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView loginCallback(
-            @RequestParam(name = "code", required = false) @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,87}$") String code,
+            /* `code` value might be 87 or 94 characters long depending on Hydra version but since the value is only
+             * passed back to Hydra, there is no reason to be too strict about the length being exactly right.
+             *
+             * Minimum length of 6 is required to support TARA-Mock. Once GOVSSO-Mock starts supporting TARA mode and
+             * starts being used in place of TARA-Mock, it can be increased to something a bit higher, although it has
+             * little importance in practice. */
+            @RequestParam(name = "code", required = false) @Pattern(regexp = "^[A-Za-z0-9\\-_.]{6,255}$") String code,
             @RequestParam(name = "state") @Pattern(regexp = "^[A-Za-z0-9\\-_]{43}$") String state,
             @RequestParam(name = "error", required = false) @Pattern(regexp = "user_cancel", message = "the only supported value is: 'user_cancel'") String error,
             @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
