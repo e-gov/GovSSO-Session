@@ -42,6 +42,7 @@ services:
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
+      - SPRING_PROFILES_ACTIVE=govsso
     networks:
       default:
         aliases:
@@ -80,6 +81,7 @@ services:
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
+      - SPRING_PROFILES_ACTIVE=govsso
     networks:
       default:
         aliases:
