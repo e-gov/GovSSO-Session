@@ -381,8 +381,8 @@ class AuthCallbackControllerTest extends BaseTest {
     @ValueSource(strings = {"",
             "_wBCd",
             "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX+TwtY.Cqk0T6OtkYZppp_aLHXz_00gMnhiCK6HSZftPfs7BLg",
-            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_gggggggggggg" +
-                    "256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_256TahemarkiPikkVaartus_" +
+            "_wBCdwHmgifrnus0frBW43BHK74ZR4UDwGsPSX-TwtY.256CharactersLongValue_256CharactersLongValue_gggggggggggggg" +
+                    "256CharactersLongValue_256CharactersLongValue_256CharactersLongValue_256CharactersLongValue_gggg" +
                     "gggggggggggggggggggggggggggggggggggggggggggggggggggggggg"})
     void authCallback_WhenCodeParameterIsInvalid_ThrowsUserInputError(String codeParameter) {
 
