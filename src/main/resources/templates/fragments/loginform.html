@@ -37,20 +37,24 @@
 
                         <div class="row data-table">
                             <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.first_name}"></div>
-                                <div class="personal-info-value" th:text="${givenName}" translate="no"></div>
+                                <div>
+                                    <div class="personal-info-label" th:utext="#{label.sso.first_name}"></div>
+                                    <div class="personal-info-value" th:text="${givenName}" translate="no"></div>
+                                </div>
+                                <div>
+                                    <div class="personal-info-label" th:utext="#{label.sso.last_name}"></div>
+                                    <div class="personal-info-value" th:text="${familyName}" translate="no"></div>
+                                </div>
                             </div>
                             <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.personal_code}"></div>
-                                <div class="personal-info-value" th:text="${subject}" translate="no"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.last_name}"></div>
-                                <div class="personal-info-value" th:text="${familyName}" translate="no"></div>
-                            </div>
-                            <div class="personal-info">
-                                <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
-                                <div class="personal-info-value" th:text="${dateOfBirth}" translate="no"></div>
+                                <div>
+                                    <div class="personal-info-label" th:utext="#{label.sso.personal_code}"></div>
+                                    <div class="personal-info-value" th:text="${subject}" translate="no"></div>
+                                </div>
+                                <div>
+                                    <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
+                                    <div class="personal-info-value" th:text="${dateOfBirth}" translate="no"></div>
+                                </div>
                             </div>
                             <div class="personal-info" th:if="${email != null}">
                                 <div class="personal-info-label" th:utext="#{label.sso.email}"></div>
