@@ -20,6 +20,7 @@ hsm:
   pin: '1234'
   token_label: hydra
   key_set_prefix: govsso.
+  max_sessions: 32
 webfinger:
   oidc_discovery:
     supported_claims:
