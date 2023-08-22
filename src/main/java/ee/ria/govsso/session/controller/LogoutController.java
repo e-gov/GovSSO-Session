@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.alerts.AlertsService;
@@ -51,6 +52,7 @@ public class LogoutController {
     private final HydraService hydraService;
     @Autowired(required = false)
     private AlertsService alertsService;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
 
     @GetMapping(value = LOGOUT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView logoutInit(@RequestParam(name = "logout_challenge")
@@ -164,6 +166,8 @@ public class LogoutController {
             logoutView.addObject("alerts", alertsService.getStaticAndActiveAlerts());
             logoutView.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
+        logoutView.addObject("activeSessionCount", hydraService.getUserSessionCount(logoutRequestInfo.getSubject()));
+        logoutView.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
         return logoutView;
     }
 }

@@ -25,6 +25,8 @@ public class SsoConfigurationProperties {
     int sessionMaxUpdateIntervalMinutes;
     @Min(1)
     int sessionMaxDurationHours;
+    @NotNull
+    String selfServiceUrl;
 
     @PostConstruct
     public void validateConfiguration() {

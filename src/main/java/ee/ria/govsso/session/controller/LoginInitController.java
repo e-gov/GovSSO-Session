@@ -3,6 +3,7 @@ package ee.ria.govsso.session.controller;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
@@ -66,6 +67,7 @@ public class LoginInitController {
     private final HydraService hydraService;
     private final TaraService taraService;
     private final StatisticsLogger statisticsLogger;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
     @Autowired(required = false)
     private AlertsService alertsService;
 
@@ -195,6 +197,8 @@ public class LoginInitController {
                 model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
                 model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
             }
+            model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
+            model.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
         }
         return model;
     }
@@ -215,6 +219,8 @@ public class LoginInitController {
             model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
             model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
+        model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
+        model.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
         return model;
     }
 

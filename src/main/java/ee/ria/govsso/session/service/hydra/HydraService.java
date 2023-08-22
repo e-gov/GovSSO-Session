@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.stream.Collectors.toSet;
+
 @Service
 @RequiredArgsConstructor
 public class HydraService {
@@ -126,6 +128,14 @@ public class HydraService {
             else
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra consent request info", ex);
         }
+    }
+
+    public Integer getUserSessionCount(String subject) {
+        List<Consent> consents = getConsents(subject, true);
+        return consents.stream()
+                .map(c -> c.getConsentRequest().getLoginSessionId())
+                .collect(toSet())
+                .size();
     }
 
     public List<Consent> getValidConsents(String subject, String sessionId) {

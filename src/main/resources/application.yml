@@ -72,3 +72,4 @@ govsso:
       trust-store-password: changeit
   security:
     cookie-signing-secret: changeme
+  self-service-url: https://enduserselfservice.localhost:25443/

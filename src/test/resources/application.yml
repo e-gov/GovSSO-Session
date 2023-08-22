@@ -51,3 +51,4 @@ govsso:
       trust-store-password: changeit
   security:
     cookie-signing-secret: fec1e8ee45b84f7f66824f7797f759f191c696020f5187744a1a3532935bd5ec
+  self-service-url: https://enduserselfservice.localhost:25443/

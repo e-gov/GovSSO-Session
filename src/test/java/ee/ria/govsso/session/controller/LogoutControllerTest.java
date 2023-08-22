@@ -85,6 +85,12 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -102,7 +108,53 @@ class LogoutControllerTest extends BaseTest {
                 .statusCode(200)
                 .body(containsString("Olete välja logitud <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> teenusest"))
                 .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
-                .body(containsString("data:image/svg+xml;base64,testlogo"));
+                .body(containsString("data:image/svg+xml;base64,testlogo"))
+                .body(containsString("Teil on aktiivne seanss ainult selles seadmes."))
+                .body(not(containsString("Teil on aktiivseid seansse veel 1 seadmes.")));
+    }
+
+    @Test
+    void logoutInit_WhenMultipleSessionsClientLogoutRequest_ReturnsLogoutView() {
+        SsoCookie ssoCookie = createSsoCookie();
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/logout?logout_challenge=" + TEST_LOGOUT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_request.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_sessions.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_sessions.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_logout_accept.json")));
+
+
+        given()
+                .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
+                .when()
+                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
+                .get(LOGOUT_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(containsString("Olete välja logitud <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> teenusest"))
+                .body(matchesRegex("(?:.*\\r*\\n*)*Olete jätkuvalt sisse logitud järgnevatesse teenustesse:(?:.*\\r*\\n*)*Teenusenimi B(?:.*\\r*\\n*)*"))
+                .body(containsString("data:image/svg+xml;base64,testlogo"))
+                .body(not(containsString("Teil on aktiivne seanss ainult selles seadmes.")))
+                .body(containsString("Teil on aktiivseid seansse veel 1 seadmes."));
     }
 
     @Test
@@ -116,6 +168,12 @@ class LogoutControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_without_logo.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -152,6 +210,12 @@ class LogoutControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_russian_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -223,6 +287,12 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -286,6 +356,12 @@ class LogoutControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_russian_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -361,6 +437,12 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -430,6 +512,12 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -460,6 +548,12 @@ class LogoutControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_with_unknown_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -505,6 +599,12 @@ class LogoutControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -539,6 +639,12 @@ class LogoutControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_duplicate_unordered_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-a&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
@@ -772,11 +878,18 @@ class LogoutControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_client_b.json")));
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_one_client.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
 
         given()
                 .param("logout_challenge", TEST_LOGOUT_CHALLENGE)
@@ -799,11 +912,19 @@ class LogoutControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_logout_request_client_b.json")));
+
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=Isikukood3&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_consents.json")));
+
         HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/oauth2/auth/sessions/consent?client=client-b&subject=Isikukood3&login_session_id=97f38419-c541-40e9-8d55-ad223ea1f46a&all=false&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(200)

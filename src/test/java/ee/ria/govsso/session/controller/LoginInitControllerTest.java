@@ -167,6 +167,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -183,7 +189,54 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("Perekonnanimi3"))
                 .body(containsString("12.07.1961"))
                 .body(not(containsString("12345")))
-                .body(containsString("data:image/svg+xml;base64,testlogo"));
+                .body(containsString("data:image/svg+xml;base64,testlogo"))
+                .body(containsString("Teil on aktiivne seanss ainult selles seadmes."))
+                .body(not(containsString("Teil on aktiivseid seansse veel 1 seadmes.")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "mock_sso_oidc_login_request_with_subject.json",
+            "mock_sso_oidc_login_request_with_subject_without_acr.json"})
+    void loginInit_WhenFetchLoginRequestInfoWithMultipleSessionsIsSuccessful_CreatesSessionAndOpensView(String loginRequestMockFile) {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/" + loginRequestMockFile)));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_sessions.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_multiple_sessions.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .cookie(MOCK_OIDC_SESSION_COOKIE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(containsString("Teenusesse <span translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</span> sisselogimine"))
+                .body(containsString("kasutab ühekordse sisselogimise"))
+                .body(containsString("Eesnimi3"))
+                .body(containsString("test1234"))
+                .body(containsString("Perekonnanimi3"))
+                .body(containsString("12.07.1961"))
+                .body(not(containsString("12345")))
+                .body(containsString("data:image/svg+xml;base64,testlogo"))
+                .body(not(containsString("Teil on aktiivne seanss ainult selles seadmes.")))
+                .body(containsString("Teil on aktiivseid seansse veel 1 seadmes."));
     }
 
     @Test
@@ -200,6 +253,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_idtoken_with_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -235,6 +294,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_with_phone.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -268,6 +333,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_with_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -303,6 +374,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -330,6 +407,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -386,6 +469,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -452,6 +541,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -505,6 +600,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_russian_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -566,6 +667,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -590,6 +697,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_unknown_locale.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -652,6 +765,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .when()
@@ -662,7 +781,9 @@ public class LoginInitControllerTest extends BaseTest {
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</strong> sisselogimine"))
                 .body(containsString("Teenusesse <strong translate=\"no\">Teenusenimi A&lt;1&gt;2&amp;3</strong> sisselogimine nõuab kõrgema tasemega autentimisvahendiga uuesti autentimist."))
-                .body(containsString("data:image/svg+xml;base64,testlogo"));
+                .body(containsString("data:image/svg+xml;base64,testlogo"))
+                .body(containsString("Teil on aktiivne seanss ainult selles seadmes."))
+                .body(not(containsString("Teil on aktiivseid seansse veel 1 seadmes.")));
     }
 
     @Test
@@ -674,6 +795,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject_without_logo.json")));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_first_acr_value_low.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -1219,6 +1346,12 @@ public class LoginInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
                 .cookie(MOCK_OIDC_SESSION_COOKIE)
@@ -1384,6 +1517,12 @@ public class LoginInitControllerTest extends BaseTest {
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
                             .withBody(responseBody)));
+
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=test1234&include_expired=true"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
