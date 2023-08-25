@@ -13,7 +13,6 @@ class OidcErrorControllerTest extends BaseTest {
         given()
                 .param("error", "invalid_client")
                 .param("error_description", "Invalid client error description")
-                .param("error_hint", "Invalid client error hint")
                 .when()
                 .get("/error/oidc")
                 .then()
@@ -21,7 +20,7 @@ class OidcErrorControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INVALID_OIDC_CLIENT"));
 
-        assertErrorIsLogged("SsoException: Oidc server error: code = invalid_client, description = Invalid client error description, hint = Invalid client error hint");
+        assertErrorIsLogged("SsoException: Oidc server error: code = invalid_client, description = Invalid client error description");
     }
 
     @Test
@@ -29,7 +28,6 @@ class OidcErrorControllerTest extends BaseTest {
         given()
                 .param("error", "invalid_request")
                 .param("error_description", "Invalid request error description")
-                .param("error_hint", "Invalid request error hint")
                 .when()
                 .get("/error/oidc")
                 .then()
@@ -37,7 +35,7 @@ class OidcErrorControllerTest extends BaseTest {
                 .statusCode(400)
                 .body("error", equalTo("USER_INVALID_OIDC_REQUEST"));
 
-        assertErrorIsLogged("SsoException: Oidc server error: code = invalid_request, description = Invalid request error description, hint = Invalid request error hint");
+        assertErrorIsLogged("SsoException: Oidc server error: code = invalid_request, description = Invalid request error description");
     }
 
     @Test
@@ -45,7 +43,6 @@ class OidcErrorControllerTest extends BaseTest {
         given()
                 .param("error", "unknown_error_code")
                 .param("error_description", "Error description")
-                .param("error_hint", "Error hint")
                 .when()
                 .get("/error/oidc")
                 .then()
@@ -53,7 +50,7 @@ class OidcErrorControllerTest extends BaseTest {
                 .statusCode(500)
                 .body("error", equalTo("USER_OIDC_OTHER_ERROR"));
 
-        assertErrorIsLogged("SsoException: Oidc server error: code = unknown_error_code, description = Error description, hint = Error hint");
+        assertErrorIsLogged("SsoException: Oidc server error: code = unknown_error_code, description = Error description");
     }
 
     @Test
@@ -61,7 +58,6 @@ class OidcErrorControllerTest extends BaseTest {
         given()
                 .param("error", "x".repeat(51))
                 .param("error_description", "Error description")
-                .param("error_hint", "Error hint")
                 .when()
                 .get("/error/oidc")
                 .then()

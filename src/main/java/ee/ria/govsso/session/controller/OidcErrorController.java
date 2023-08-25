@@ -22,10 +22,9 @@ public class OidcErrorController {
     @GetMapping(value = ERROR_OIDC_REQUEST_MAPPING)
     public ModelAndView oidcError(
             @RequestParam(name = "error") @Size(max = 50) String errorCode,
-            @RequestParam(name = "error_description", required = false, defaultValue = "not set") String errorDescription,
-            @RequestParam(name = "error_hint", required = false, defaultValue = "not set") String errorHint) {
+            @RequestParam(name = "error_description", required = false, defaultValue = "not set") String errorDescription) {
 
         throw new SsoException(OIDC_ERRORS_MAP.getOrDefault(errorCode, ErrorCode.USER_OIDC_OTHER_ERROR),
-                "Oidc server error: code = %s, description = %s, hint = %s".formatted(errorCode, errorDescription, errorHint));
+                "Oidc server error: code = %s, description = %s".formatted(errorCode, errorDescription));
     }
 }
