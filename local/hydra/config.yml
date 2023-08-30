@@ -58,19 +58,20 @@ urls:
   error: https://inproxy.localhost:13443/error/oidc
   self:
     issuer: https://inproxy.localhost:13443/
-client.tls:
-  min_version: tls12
-  max_version: tls13
-  cipher_suites:
-    - TLS_AES_128_GCM_SHA256
-    - TLS_CHACHA20_POLY1305_SHA256
-    - TLS_AES_256_GCM_SHA384
-    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-    - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-    - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
-    - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+client:
+  tls:
+    min_version: tls12
+    max_version: tls13
+    cipher_suites:
+      - TLS_AES_128_GCM_SHA256
+      - TLS_CHACHA20_POLY1305_SHA256
+      - TLS_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+      - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
 strategies:
   scope: exact
 ttl:
