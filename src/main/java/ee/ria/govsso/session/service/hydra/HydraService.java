@@ -8,6 +8,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -140,10 +141,7 @@ public class HydraService {
                 .size();
     }
 
-    public List<Consent> getValidConsentsAtRequestTime(String subject, String sessionId, OffsetDateTime validAt) {
-        if (validAt == null) {
-            return Collections.emptyList();
-        }
+    public List<Consent> getValidConsentsAtRequestTime(String subject, String sessionId, @NonNull OffsetDateTime validAt) {
         List<Consent> consents = getConsents(subject, sessionId, IncludeExpiredStrategy.ALL_EXPIRED)
                 .stream()
                 .filter(c -> !validAt.isBefore(c.getRequestedAt()) && !validAt.isAfter(c.getRequestedAt().plusSeconds(c.getRememberFor())))
