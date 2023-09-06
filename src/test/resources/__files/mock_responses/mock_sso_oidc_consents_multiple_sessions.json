@@ -1,8 +1,8 @@
 [
   {
-    "requested_at": "2023-01-01T00:00:00Z",
     "remember_for": 1800,
     "consent_request": {
+      "requested_at": "2023-01-01T00:00:00Z",
       "subject": "Isikukood1",
       "client": {
         "client_id": "client-a",
@@ -26,9 +26,9 @@
     }
   },
   {
-    "requested_at": "2023-01-01T00:30:00Z",
     "remember_for": 900,
     "consent_request": {
+      "requested_at": "2023-01-01T00:30:00Z",
       "subject": "Isikukood1",
       "client": {
         "client_id": "client-b",
@@ -52,9 +52,9 @@
     }
   },
   {
-    "requested_at": "2023-01-01T01:00:00Z",
     "remember_for": 1800,
     "consent_request": {
+      "requested_at": "2023-01-01T01:00:00Z",
       "subject": "Isikukood1",
       "client": {
         "client_id": "client-a",
@@ -78,9 +78,9 @@
     }
   },
   {
-    "requested_at": "2023-01-01T02:00:00Z",
     "remember_for": 2700,
     "consent_request": {
+      "requested_at": "2023-01-01T02:00:00Z",
       "subject": "Isikukood1",
       "client": {
         "client_id": "client-c",

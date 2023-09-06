@@ -9,8 +9,10 @@ import java.time.OffsetDateTime;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Consent {
-    private OffsetDateTime requestedAt;
     private Integer rememberFor;
     private ConsentRequestInfo consentRequest;
 
+    public OffsetDateTime getRequestedAt() {
+        return consentRequest.getRequestedAt();
+    }
 }

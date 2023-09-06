@@ -1591,9 +1591,9 @@ public class LoginInitControllerTest extends BaseTest {
                           "context": {
                             "tara_id_token": "%s"
                           },
-                          "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
+                          "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
+                          "requested_at": "2023-01-01T01:00:00Z"
                         },
-                        "requested_at": "2023-01-01T01:00:00Z",
                         "remember_for": 900
                       }
                     ]
