@@ -47,7 +47,7 @@ public class LocaleUtil {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
         if (localeResolver == null) {
-            return null;
+            return DEFAULT_LOCALE;
         }
         return localeResolver.resolveLocale(request);
     }

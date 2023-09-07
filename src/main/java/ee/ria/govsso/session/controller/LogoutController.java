@@ -167,7 +167,8 @@ public class LogoutController {
             logoutView.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
         logoutView.addObject("activeSessionCount", hydraService.getUserSessionCount(logoutRequestInfo.getSubject()));
-        logoutView.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
+        logoutView.addObject("selfServiceAuthUrl",
+                ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
         return logoutView;
     }
 }

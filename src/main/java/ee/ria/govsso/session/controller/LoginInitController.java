@@ -199,7 +199,8 @@ public class LoginInitController {
                 model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
             }
             model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-            model.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
+            model.addObject("selfServiceAuthUrl",
+                    ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
         }
         return model;
     }
@@ -221,7 +222,8 @@ public class LoginInitController {
             model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
         model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-        model.addObject("selfServiceAuthUrl", ssoConfigurationProperties.getSelfServiceUrl());
+        model.addObject("selfServiceAuthUrl",
+                ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
         return model;
     }
 

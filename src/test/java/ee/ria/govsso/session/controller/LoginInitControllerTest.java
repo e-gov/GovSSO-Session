@@ -9,6 +9,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
+import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.RestAssured;
@@ -65,6 +66,7 @@ public class LoginInitControllerTest extends BaseTest {
     private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
 
     static Stream<Arguments> contextHeaders() {
         return Stream.of(
@@ -191,7 +193,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(not(containsString("12345")))
                 .body(containsString("data:image/svg+xml;base64,testlogo"))
                 .body(containsString("Teil on aktiivne seanss ainult selles seadmes."))
-                .body(not(containsString("Teil on aktiivseid seansse veel 1 seadmes.")));
+                .body(not(containsString("Teil on aktiivseid seansse veel 1 seadmes.")))
+                .body(containsString(ssoConfigurationProperties.getSelfServiceUrl() + "?lang=et"));
     }
 
     @ParameterizedTest
@@ -236,7 +239,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(not(containsString("12345")))
                 .body(containsString("data:image/svg+xml;base64,testlogo"))
                 .body(not(containsString("Teil on aktiivne seanss ainult selles seadmes.")))
-                .body(containsString("Teil on aktiivseid seansse veel 1 seadmes."));
+                .body(containsString("Teil on aktiivseid seansse veel 1 seadmes."))
+                .body(containsString(ssoConfigurationProperties.getSelfServiceUrl() + "?lang=et"));
     }
 
     @Test
@@ -430,7 +434,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("Вход в услугу <span translate=\"no\">Название службы A</span>"))
                 .body(containsString("применяет технологию единого входа (<span lang=\"en\" translate=\"no\">SSO - <i>single sign-on</i></span>)"))
                 .body(containsString("12.07.1961"))
-                .body(containsString("html lang=\"ru\""));
+                .body(containsString("html lang=\"ru\""))
+                .body(containsString(ssoConfigurationProperties.getSelfServiceUrl() + "?lang=ru"));
     }
 
     @Test
@@ -494,7 +499,8 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("Logging in to <span translate=\"no\">Service name A</span>"))
                 .body(containsString("service uses a single sign-on (<span translate=\"no\">SSO</span>) solution"))
                 .body(containsString("7/12/1961"))
-                .body(containsString("html lang=\"en\""));
+                .body(containsString("html lang=\"en\""))
+                .body(containsString(ssoConfigurationProperties.getSelfServiceUrl() + "?lang=en"));
     }
 
     @Test

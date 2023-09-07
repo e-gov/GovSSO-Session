@@ -20,6 +20,7 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasLength;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -75,7 +75,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         assertThat(authenticationRequest.getRedirectionURI().toString(), equalTo(INPROXY_MOCK_URL + "/login/taracallback"));
         assertThat(authenticationRequest.getCustomParameter("govsso_login_challenge").get(0), equalTo(TEST_LOGIN_CHALLENGE));
         assertThat(authenticationRequest.getACRValues().get(0).toString(), equalTo("high"));
-        assertThat(authenticationRequest.getUILocales(), nullValue());
+        assertThat(authenticationRequest.getUILocales().get(0).toString(), equalTo(LocaleUtil.DEFAULT_LOCALE.getLanguage()));
         List<String> scopes = authenticationRequest.getScope().toStringList();
         assertThat(authenticationRequest.getResponseType().toString(), equalTo("code"));
         assertThat(scopes, contains("openid", "phone"));
