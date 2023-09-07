@@ -18,11 +18,6 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
-import java.time.LocalDate;
-import java.time.chrono.IsoChronology;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -126,21 +121,6 @@ public class LocaleUtil {
         if (nameTranslations.containsKey(locale.getLanguage()))
             translatedName = nameTranslations.get(locale.getLanguage());
         return translatedName;
-    }
-
-    public String formatDateWithLocale(String dateString) {
-        LocalDate localDate = LocalDate.parse(dateString);
-
-        String formatPattern = DateTimeFormatterBuilder.getLocalizedDateTimePattern(
-                FormatStyle.SHORT,
-                null,
-                IsoChronology.INSTANCE,
-                getLocale());
-        // Let other date components use short style, but year must use long style.
-        formatPattern = formatPattern.replaceAll("\\byy\\b", "yyyy");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern, getLocale());
-
-        return localDate.format(formatter);
     }
 
     @SneakyThrows

@@ -44,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -186,7 +187,7 @@ public class LoginInitController {
             model.addObject("givenName", profileAttributes.get("given_name"));
             model.addObject("familyName", profileAttributes.get("family_name"));
             if (profileAttributes.get("date_of_birth") != null)
-                model.addObject("dateOfBirth", LocaleUtil.formatDateWithLocale((String) profileAttributes.get("date_of_birth")));
+                model.addObject("dateOfBirth", LocalDate.parse((String) profileAttributes.get("date_of_birth")));
             if (List.of(requestedScopes).contains("phone"))
                 model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
             model.addObject("subject", loginRequestInfo.getSubject());
