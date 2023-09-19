@@ -9,6 +9,7 @@ import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LogoutAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -167,8 +168,7 @@ public class LogoutController {
             logoutView.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
         logoutView.addObject("activeSessionCount", hydraService.getUserSessionCount(logoutRequestInfo.getSubject()));
-        logoutView.addObject("selfServiceAuthUrl",
-                ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
+        ModelUtil.addSelfServiceUrlToModel(logoutView, ssoConfigurationProperties.getSelfServiceUrl());
         return logoutView;
     }
 }

@@ -21,6 +21,7 @@ import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
@@ -199,8 +200,7 @@ public class LoginInitController {
                 model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
             }
             model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-            model.addObject("selfServiceAuthUrl",
-                    ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
+            ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
         }
         return model;
     }
@@ -222,8 +222,7 @@ public class LoginInitController {
             model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
         model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-        model.addObject("selfServiceAuthUrl",
-                ssoConfigurationProperties.getSelfServiceUrl() + "?lang=" + LocaleUtil.getLocale().getLanguage());
+        ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
         return model;
     }
 

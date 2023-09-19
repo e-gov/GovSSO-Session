@@ -60,14 +60,16 @@
                         <p class="detailed-instruction-line"
                            th:utext="#{label.sso.detailed_acr_instruction}">
                         </p>
-                        <p class="detailed-instruction-line detailed-session-management"
-                           th:if="${activeSessionCount} == 1"
-                           th:utext="#{label.sso.detailed_single_session_management(${selfServiceAuthUrl})}">
-                        </p>
-                        <p class="detailed-instruction-line detailed-session-management"
-                           th:if="${activeSessionCount} > 1"
-                           th:utext="#{label.sso.detailed_multiple_session_management(${activeSessionCount - 1}, ${selfServiceAuthUrl})}">
-                        </p>
+                        <th:block th:if="${selfServiceUrl != null}">
+                            <p class="detailed-instruction-line detailed-session-management"
+                               th:if="${activeSessionCount == 1}"
+                               th:utext="#{label.sso.detailed_single_session_management(${selfServiceUrl})}">
+                            </p>
+                            <p class="detailed-instruction-line detailed-session-management"
+                               th:if="${activeSessionCount > 1}"
+                               th:utext="#{label.sso.detailed_multiple_session_management(${activeSessionCount - 1}, ${selfServiceUrl})}">
+                            </p>
+                        </th:block>
                     </div>
                 </div>
                 <div class="c-tab-login__footer">
