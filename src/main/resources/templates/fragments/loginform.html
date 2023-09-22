@@ -53,7 +53,7 @@
                                 </div>
                                 <div th:if="${dateOfBirth != null}">
                                     <div class="personal-info-label" th:utext="#{label.sso.date_of_birth}"></div>
-                                    <div class="personal-info-value" th:text="${#prettyDates.date(dateOfBirth)}" translate="no"></div>
+                                    <div class="personal-info-value" th:text="${#prettyDates.date(dateOfBirth)}" th:aria-label="${#prettyDates.dateText(dateOfBirth)}" translate="no"></div>
                                 </div>
                             </div>
                             <div class="personal-info" th:if="${email != null}">
