@@ -27,6 +27,7 @@
     "0.0.0.0/0",
     "::/0"
   ],
+  "token_endpoint_auth_method": "client_secret_basic",
   "backchannel_logout_uri": "https://clientf.localhost:11443/oauth2/back-channel-logout/govsso",
   "scope": [
     "openid",
