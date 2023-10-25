@@ -27,7 +27,7 @@ services:
           memory: 650M
     environment:
       - server.port=11443
-      - spring.application.name=Client A
+      - spring.application.name=govsso-clienta
       - govsso.client-id=client-a
       - govsso.client-secret=secreta
       - govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
@@ -66,7 +66,7 @@ services:
           memory: 650M
     environment:
       - server.port=12443
-      - spring.application.name=Client B
+      - spring.application.name=govsso-clientb
       - govsso.client-id=client-b
       - govsso.client-secret=secretb
       - govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
@@ -75,6 +75,7 @@ services:
       - govsso.trust-store=file:/var/certs/clientb.localhost.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-b.svg
+      - example-client.messages.title='GovSSO Client B (LOCAL)'
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=/var/certs/clientb.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
