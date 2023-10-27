@@ -115,8 +115,6 @@ services:
       - govsso-inproxy.admin.token-request-allowed-ip-addresses-storage-path=/tmp/ipaddresses
       - govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
       - govsso-inproxy.admin.tls.trust-store-password=changeit
-      - GOVSSO_HYDRA_URL=https://hydra.localhost:8443
-      - GOVSSO_SESSION_URL=https://session.localhost:15443
       - ELASTIC_APM_ENABLED=false
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
