@@ -27,14 +27,14 @@
     "0.0.0.0/0",
     "::/0"
   ],
-  "token_endpoint_auth_method": "client_secret_basic",
+  "token_endpoint_auth_method": "client_secret_post",
   "backchannel_logout_uri": "https://clientf.localhost:11443/oauth2/back-channel-logout/govsso",
   "scope": [
     "openid",
     "phone"
   ],
   "secret": "secretf",
-  "description": "This is a sample client. Intended for use in development environment only.",
+  "description": "This is a sample client with client_secret_post configuration. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.clientf@example.org"
   ],
