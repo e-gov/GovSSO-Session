@@ -106,6 +106,7 @@ services:
         limits:
           memory: 650M
     environment:
+      - SPRING_PROFILES_ACTIVE=govsso
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=file:/var/certs/inproxy.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
