@@ -7,7 +7,7 @@ services:
       - LOG_FILE_LEVEL=INFO
       - LOG_HOME=/var/log/govsso-inproxy
       - ELASTIC_APM_ENABLED=true
-      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVER_URL=http://fleet-server:8200
       - ELASTIC_APM_SERVICE_NAME=govsso-inproxy
       - ELASTIC_APM_HOSTNAME=inproxy.localhost
       - ELASTIC_APM_ENVIRONMENT=dev-local
@@ -25,14 +25,12 @@ services:
   hydra:
     entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && mkdir -p /var/log/govsso-hydra && chmod 750 /var/log/govsso-hydra && hydra serve --config /etc/govsso-hydra/config.yml all 2>&1 | tee -a /var/log/govsso-hydra/hydra-1.log'
     environment:
-      - TRACING_PROVIDER=elastic-apm
-      - ELASTIC_APM_SERVER_URL=http://apm:8200
-      - ELASTIC_APM_SERVICE_NAME=govsso-hydra
-      - ELASTIC_APM_HOSTNAME=hydra.localhost
-      - ELASTIC_APM_ENVIRONMENT=dev-local
-      - ELASTIC_APM_VERIFY_SERVER_CERT=false
-      - ELASTIC_APM_METRICS_INTERVAL=10s
-      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/health/*
+      - TRACING_PROVIDER=otel
+      - TRACING_PROVIDERS_OTLP_INSECURE=true
+      - TRACING_PROVIDERS_OTLP_SAMPLING_SAMPLING_RATIO=1.0
+      - TRACING_PROVIDERS_OTLP_SERVER_URL=fleet-server:8200
+      - TRACING_SERVICE_NAME=govsso-hydra
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local,service.instance.id=hydra,service.version=2.1.2.1
     labels:
       - co.elastic.logs/enabled=true
     user: root
@@ -44,7 +42,7 @@ services:
       - LOG_FILE_LEVEL=INFO
       - LOG_HOME=/var/log/govsso-session
       - ELASTIC_APM_ENABLED=true
-      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVER_URL=http://fleet-server:8200
       - ELASTIC_APM_SERVICE_NAME=govsso-session
       - ELASTIC_APM_HOSTNAME=session.localhost
       - ELASTIC_APM_ENVIRONMENT=dev-local
@@ -84,7 +82,7 @@ services:
       - LOG_FILE_LEVEL=INFO
       - LOG_HOME=/var/log/govsso-enduserselfservice
       - ELASTIC_APM_ENABLED=true
-      - ELASTIC_APM_SERVER_URL=http://apm:8200
+      - ELASTIC_APM_SERVER_URL=http://fleet-server:8200
       - ELASTIC_APM_SERVICE_NAME=govsso-enduserselfservice
       - ELASTIC_APM_HOSTNAME=enduserselfservice.localhost
       - ELASTIC_APM_ENVIRONMENT=dev-local
@@ -100,11 +98,15 @@ services:
       - govsso-enduserselfservice-logs:/var/log/govsso-enduserselfservice:rw
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
     environment:
       - ELASTICSEARCH_PASSWORD=changeme
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - discovery.type=single-node
+      - xpack.security.enabled=true
+    volumes:
+      - ./local/elasticsearch/users:/usr/share/elasticsearch/config/users
+      - ./local/elasticsearch/users_roles:/usr/share/elasticsearch/config/users_roles
     healthcheck:
       test: [
         "CMD-SHELL",
@@ -118,9 +120,9 @@ services:
     restart: unless-stopped
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.3
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    image: docker.elastic.co/kibana/kibana:8.10.4
+    volumes:
+      - ./local/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -137,36 +139,25 @@ services:
       - '23601:5601'
     restart: unless-stopped
 
-  apm:
-    image: docker.elastic.co/apm/apm-server:7.17.3
-    command: >
-      apm-server -e
-        --strict.perms=false        
-        -E apm-server.kibana.host=http://kibana:5601
-        -E output.elasticsearch.hosts=http://elasticsearch:9200
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
+  fleet-server:
+    image: docker.elastic.co/beats/elastic-agent:8.10.4
     ports:
+      - '24220:8220'
       - '24200:8200'
-    restart: unless-stopped
-
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:7.17.3
-    command: -e --strict.perms=false
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-    restart: unless-stopped
     user: root
+    environment:
+      - FLEET_SERVER_ENABLE=1
+      - FLEET_SERVER_POLICY_ID=fleet-server-apm-policy
+      - KIBANA_FLEET_SETUP=1
+      - KIBANA_FLEET_HOST=http://kibana:5601
+      - KIBANA_FLEET_USERNAME=admin
+      - KIBANA_FLEET_PASSWORD=changeme
     volumes:
-      - ./local/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      elasticsearch: { condition: service_healthy }
+      kibana: { condition: service_healthy }
 
 volumes:
   govsso-admin-logs:

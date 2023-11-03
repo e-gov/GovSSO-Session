@@ -1,0 +1,78 @@
+server.host: "0.0.0.0"
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+elasticsearch.username: kibana_system_user
+elasticsearch.password: changeme
+
+xpack.fleet.agents.fleet_server.hosts: [ http://fleet-server:8220 ]
+
+xpack.fleet.outputs:
+  - id: fleet-default-output
+    name: default
+    type: elasticsearch
+    hosts: [ http://elasticsearch:9200 ]
+    is_default: true
+    is_default_monitoring: true
+
+xpack.fleet.packages:
+  - name: fleet_server
+    version: latest
+  - name: elastic_agent
+    version: latest
+  - name: apm
+    version: latest
+  - name: docker
+    version: latest
+
+xpack.fleet.agentPolicies:
+  - name: Fleet Server + APM policy
+    id: fleet-server-apm-policy
+    description: Fleet server policy with APM and System logs and metrics enabled
+    namespace: default
+    is_default_fleet_server: true
+    is_managed: false
+    monitoring_enabled:
+      - logs
+      - metrics
+    package_policies:
+      - name: apm-1
+        package:
+          name: apm
+        # See the APM package manifest for a list of possible inputs.
+        # https://github.com/elastic/apm-server/blob/v8.10.4/apmpackage/apm/manifest.yml#L41-L165
+        inputs:
+          - type: apm
+            keep_enabled: true
+            vars:
+              - name: host
+                value: 0.0.0.0:8200
+                frozen: true
+              - name: url
+                value: http://fleet-server:8200
+                frozen: true
+              - name: enable_rum
+                value: false
+                frozen: true
+      - name: fleet-server-1
+        package:
+          name: fleet_server
+        inputs:
+          - type: fleet-server
+            keep_enabled: true
+            vars:
+              - name: host
+                value: 0.0.0.0
+                frozen: true
+              - name: port
+                value: 8220
+                frozen: true
+      - name: elastic_agent-1
+        package:
+          name: elastic_agent
+      - name: docker-1
+        package:
+          name: docker
+        inputs:
+          - type: filestream
+            enabled: true
+          - type: docker/metrics
+            enabled: false
