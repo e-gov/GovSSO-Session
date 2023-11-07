@@ -32,7 +32,7 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ContinueSessionControllerTest extends BaseTest {
-    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
+    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("__Host-ory_hydra_session", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
 
     static Stream<Arguments> contextHeaders() {
         return Stream.of(
@@ -566,7 +566,7 @@ class ContinueSessionControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .cookie("oauth2_authentication_session_insecure", "")
+                .cookie("__Host-ory_hydra_session", "")
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()

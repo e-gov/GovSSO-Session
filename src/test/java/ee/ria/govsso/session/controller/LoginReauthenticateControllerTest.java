@@ -208,12 +208,12 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
                 .formParam("_csrf", MOCK_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
-                .cookie("oauth2_authentication_session_insecure", "test1234")
+                .cookie("__Host-ory_hydra_session", "test1234")
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .cookie("oauth2_authentication_session_insecure", RestAssuredMatchers.detailedCookie().maxAge(0).value("test1234").path("/").expiryDate(new Date(10000)));
+                .cookie("__Host-ory_hydra_session", RestAssuredMatchers.detailedCookie().maxAge(0).value("test1234").path("/").expiryDate(new Date(10000)));
     }
 
     @Test

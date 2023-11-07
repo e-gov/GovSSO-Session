@@ -12,9 +12,9 @@ serve:
   cookies:
     same_site_mode: Lax
     names:
-      login_csrf: oauth2_authentication_csrf
-      consent_csrf: oauth2_consent_csrf
-      session: oauth2_authentication_session
+      login_csrf: __Host-ory_hydra_login_csrf
+      consent_csrf: __Host-ory_hydra_consent_csrf
+      session: __Host-ory_hydra_session
   public:
     request_log:
       disable_for_health: true

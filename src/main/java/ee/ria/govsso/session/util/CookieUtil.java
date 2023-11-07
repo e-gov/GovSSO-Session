@@ -12,6 +12,8 @@ import java.util.Arrays;
 @UtilityClass
 public class CookieUtil {
 
+    private static final String HYDRA_SESSION_COOKIE_NAME = "__Host-ory_hydra_session";
+
     /**
      * For this to work, it is expected to run Hydra and GOVSSO-Session behind a reverse proxy that exposes them under
      * the same domain. Only then will cookies set by Hydra also reach GOVSSO-Session.
@@ -20,12 +22,11 @@ public class CookieUtil {
      * @param response
      */
     public void deleteHydraSessionCookie(HttpServletRequest request, HttpServletResponse response) {
-        String cookieName = request.isSecure() ? "oauth2_authentication_session" : "oauth2_authentication_session_insecure";
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(cookieName)) {
-                    Cookie newCookie = createCookie(cookieName, cookie.getValue());
+                if (cookie.getName().equals(HYDRA_SESSION_COOKIE_NAME)) {
+                    Cookie newCookie = createCookie(HYDRA_SESSION_COOKIE_NAME, cookie.getValue());
                     response.addCookie(newCookie);
                 }
             }
@@ -40,10 +41,9 @@ public class CookieUtil {
      * @param sessionId
      */
     public boolean isValidHydraSessionCookie(HttpServletRequest request, String sessionId) {
-        String cookieName = request.isSecure() ? "oauth2_authentication_session" : "oauth2_authentication_session_insecure";
         Cookie[] cookies = request.getCookies();
         return cookies != null && Arrays.stream(cookies)
-                .filter(c -> c.getName().equals(cookieName))
+                .filter(c -> c.getName().equals(HYDRA_SESSION_COOKIE_NAME))
                 .anyMatch(c -> containsSessionId(c.getValue(), sessionId));
     }
 

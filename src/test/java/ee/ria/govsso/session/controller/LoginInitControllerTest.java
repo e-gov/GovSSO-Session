@@ -63,7 +63,7 @@ import static org.springframework.test.context.NestedTestConfiguration.Enclosing
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LoginInitControllerTest extends BaseTest {
-    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("oauth2_authentication_session_insecure", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
+    private final Cookie MOCK_OIDC_SESSION_COOKIE = new Cookie.Builder("__Host-ory_hydra_session", "MDAwMDAwMDAwMHxaR0YwWVRFeU16UTFOamM0T1RBZ1pUVTJZMkpoWmprdE9ERmxPUzAwTkRjekxXRTNNek10TWpZeFpUaGtaRE00WlRrMUlHUmhkR0V4TWpNME5UWTNPRGt3fGludmFsaWRfaGFzaA==").build();
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
@@ -849,7 +849,7 @@ public class LoginInitControllerTest extends BaseTest {
         HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
-        Cookie hydraCookie = new Cookie.Builder("oauth2_authentication_session_insecure", "a77cbaf9-77e9-5573-a711-919e8dd38a11")
+        Cookie hydraCookie = new Cookie.Builder("__Host-ory_hydra_session", "a77cbaf9-77e9-5573-a711-919e8dd38a11")
                 .setMaxAge(1000)
                 .build();
 
@@ -862,7 +862,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", equalTo("https://hydra.localhost:9000/oauth2/auth?scope=openid&prompt=consent&response_type=code&client_id=openIdDemo&redirect_uri=https://hydra.localhost:9000/oauth/response&state=049d71ea-30cd-4a74-8dcd-47156055d364&nonce=5210b42a-2362-420b-bb81-54796da8c814&ui_locales=et"))
-                .extract().detailedCookie("oauth2_authentication_session_insecure");
+                .extract().detailedCookie("__Host-ory_hydra_session");
 
         assertThat(invalidatedHydraCookie.getMaxAge(), equalTo(0L));
     }
@@ -899,7 +899,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(302)
                 .header("Location", equalTo("https://hydra.localhost:9000/oauth2/auth?scope=openid&prompt=consent&response_type=code&client_id=openIdDemo&redirect_uri=https://hydra.localhost:9000/oauth/response&state=049d71ea-30cd-4a74-8dcd-47156055d364&nonce=5210b42a-2362-420b-bb81-54796da8c814&ui_locales=et"))
-                .extract().detailedCookie("oauth2_authentication_session_insecure");
+                .extract().detailedCookie("__Host-ory_hydra_session");
 
         assertThat(invalidatedHydraCookie.getMaxAge(), equalTo(0L));
     }
@@ -1457,7 +1457,7 @@ public class LoginInitControllerTest extends BaseTest {
 
         given()
                 .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .cookie("oauth2_authentication_session_insecure", "")
+                .cookie("__Host-ory_hydra_session", "")
                 .when()
                 .get(LOGIN_INIT_REQUEST_MAPPING)
                 .then()
