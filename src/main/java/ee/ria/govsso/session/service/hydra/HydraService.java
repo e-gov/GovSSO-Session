@@ -402,7 +402,8 @@ public class HydraService {
 
     public void deleteLoginSessionAndRelatedLoginRequests(String loginSessionId) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/login/" + loginSessionId)
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/login")
+                .queryParam("sid", loginSessionId)
                 .toUriString();
 
         try {

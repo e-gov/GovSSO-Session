@@ -846,7 +846,7 @@ public class LoginInitControllerTest extends BaseTest {
         HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95&all=true&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(204)));
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
         Cookie hydraCookie = new Cookie.Builder("oauth2_authentication_session_insecure", "a77cbaf9-77e9-5573-a711-919e8dd38a11")
@@ -886,7 +886,7 @@ public class LoginInitControllerTest extends BaseTest {
         HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95&all=true&trigger_backchannel_logout=true"))
                 .willReturn(aResponse()
                         .withStatus(204)));
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 

@@ -37,7 +37,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(204)));
 
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
@@ -170,7 +170,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(204)));
 
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(400)));
 
@@ -200,7 +200,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(204)));
 
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
@@ -228,7 +228,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(204)));
 
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login/e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
