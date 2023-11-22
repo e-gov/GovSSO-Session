@@ -33,7 +33,7 @@ services:
       - govsso.redirect-uri=https://clienta.localhost:11443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clienta.localhost:11443/?show-post-logout-message
       - govsso.issuer-uri=https://inproxy.localhost:13443/
-      - govsso.trust-store=file:/var/certs/clienta.localhost.truststore.p12
+      - govsso.trust-store=file:/var/certs/clienta.localhost.govsso.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-a.svg
       - server.ssl.key-store-type=PKCS12
@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./local/tls/clienta/clienta.localhost.keystore.p12:/var/certs/clienta.localhost.keystore.p12:ro
-      - ./local/tls/clienta/clienta.localhost.truststore.p12:/var/certs/clienta.localhost.truststore.p12:ro
+      - ./local/tls/clienta/clienta.localhost.govsso.truststore.p12:/var/certs/clienta.localhost.govsso.truststore.p12:ro
 
   clientb: # Map to host ports 12xxx.
     image: govsso-client:latest
@@ -72,7 +72,7 @@ services:
       - govsso.redirect-uri=https://clientb.localhost:12443/login/oauth2/code/govsso
       - govsso.post-logout-redirect-uri=https://clientb.localhost:12443/?show-post-logout-message
       - govsso.issuer-uri=https://inproxy.localhost:13443/
-      - govsso.trust-store=file:/var/certs/clientb.localhost.truststore.p12
+      - govsso.trust-store=file:/var/certs/clientb.localhost.govsso.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-b.svg
       - example-client.messages.title='GovSSO Client B (LOCAL)'
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./local/tls/clientb/clientb.localhost.keystore.p12:/var/certs/clientb.localhost.keystore.p12:ro
-      - ./local/tls/clientb/clientb.localhost.truststore.p12:/var/certs/clientb.localhost.truststore.p12:ro
+      - ./local/tls/clientb/clientb.localhost.govsso.truststore.p12:/var/certs/clientb.localhost.govsso.truststore.p12:ro
 
   inproxy: # Map to host ports 13xxx.
     # First follow GOVSSO-InProxy README.md to build this Docker image.

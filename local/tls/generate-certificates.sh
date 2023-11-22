@@ -26,8 +26,9 @@ cd "$(command dirname -- "${0}")" || exit
 ./generate-truststore.sh 'govsso-ca' 'admin'
 ./add-ca-certificate-to-truststore.sh 'admin' 'sk-ldap-ca' './ldap/sk-ldap-ca.crt.pem'
 
-./generate-truststore.sh 'govsso-ca' 'clienta'
-./generate-truststore.sh 'govsso-ca' 'clientb'
+./generate-truststore.sh 'govsso-ca' 'clienta' 'clienta.localhost.govsso.truststore.p12'
+./generate-truststore.sh 'tara-ca' 'clienta' 'clienta.localhost.tara.truststore.p12'
+./generate-truststore.sh 'govsso-ca' 'clientb' 'clientb.localhost.govsso.truststore.p12'
 
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.admin.truststore.p12'
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.hydra.truststore.p12'
