@@ -44,7 +44,7 @@ public class HydraService {
 
     public LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login")
                 .queryParam("login_challenge", loginChallenge)
                 .toUriString();
 
@@ -74,7 +74,7 @@ public class HydraService {
 
     public LogoutRequestInfo fetchLogoutRequestInfo(String logoutChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/logout")
                 .queryParam("logout_challenge", logoutChallenge)
                 .toUriString();
 
@@ -102,7 +102,7 @@ public class HydraService {
 
     public ConsentRequestInfo fetchConsentRequestInfo(String consentChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/consent")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/consent")
                 .queryParam("consent_challenge", consentChallenge)
                 .toUriString();
 
@@ -156,7 +156,7 @@ public class HydraService {
 
     private List<Consent> getConsents(String subject, String sessionId, boolean includeExpired) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/consent")
                 .queryParam("subject", subject);
         if (includeExpired) {
             uriBuilder.queryParam("include_expired", includeExpired);
@@ -201,7 +201,7 @@ public class HydraService {
     @SneakyThrows
     public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress, String userAgent) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login/accept")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login/accept")
                 .queryParam("login_challenge", loginChallenge)
                 .toUriString();
 
@@ -237,7 +237,7 @@ public class HydraService {
 
     public LogoutAcceptResponse acceptLogout(String logoutChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout/accept")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/logout/accept")
                 .queryParam("logout_challenge", logoutChallenge)
                 .toUriString();
 
@@ -263,7 +263,7 @@ public class HydraService {
 
     public void rejectLogout(String logoutChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/logout/reject")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/logout/reject")
                 .queryParam("logout_challenge", logoutChallenge)
                 .toUriString();
 
@@ -289,7 +289,7 @@ public class HydraService {
     @SneakyThrows
     public ConsentAcceptResponse acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/consent/accept")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/consent/accept")
                 .queryParam("consent_challenge", consentChallenge)
                 .toUriString();
 
@@ -333,7 +333,7 @@ public class HydraService {
 
     public void deleteConsentBySubject(String subject) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/consent")
                 .queryParam("subject", subject)
                 .queryParam("all", true)
                 .queryParam("trigger_backchannel_logout", true)
@@ -343,7 +343,7 @@ public class HydraService {
 
     public void expireConsentByClientSession(String clientId, String subject, String loginSessionId) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/consent")
                 .queryParam("client", clientId)
                 .queryParam("subject", subject)
                 .queryParam("login_session_id", loginSessionId)
@@ -355,7 +355,7 @@ public class HydraService {
 
     public void deleteConsentBySubjectSession(String subject, String loginSessionId) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/consent")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/consent")
                 .queryParam("subject", subject)
                 .queryParam("login_session_id", loginSessionId)
                 .queryParam("all", true)
@@ -381,7 +381,7 @@ public class HydraService {
 
     public void deleteLoginSessionAndRelatedLoginRequests(String loginSessionId) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/sessions/login/" + loginSessionId)
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/login/" + loginSessionId)
                 .toUriString();
 
         try {
@@ -401,7 +401,7 @@ public class HydraService {
     // TODO GSSO-244 Call this on unsuccessful outcome of login flows so that Hydra resource cleanup would be immediate.
     public LoginRejectResponse rejectLogin(String loginChallenge) {
         String uri = UriComponentsBuilder
-                .fromUriString(hydraConfigurationProperties.adminUrl() + "/oauth2/auth/requests/login/reject")
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login/reject")
                 .queryParam("login_challenge", loginChallenge)
                 .toUriString();
 

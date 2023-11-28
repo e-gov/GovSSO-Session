@@ -53,7 +53,7 @@ class AdminControllerTest extends BaseTest {
 
     @Test
     void getBySubject_WhenConsentSessionsFound_ReturnsSessions(@Value("classpath:__files/mock_responses/admin/admin_sessions_subject.json") Resource expectedResult) throws IOException {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -93,7 +93,7 @@ class AdminControllerTest extends BaseTest {
     @ParameterizedTest
     @MethodSource("invalidStatusCodes")
     void getBySubject_WhenGetConsentsReturnsInvalidHttpStatus_ReturnsHttp500(int statusCode) {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=true".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(statusCode)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -115,7 +115,7 @@ class AdminControllerTest extends BaseTest {
 
     @Test
     void deleteBySubject_WhenDeleteConsentSuccess_ReturnsHttp204() {
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
@@ -148,7 +148,7 @@ class AdminControllerTest extends BaseTest {
     @ParameterizedTest
     @MethodSource("invalidStatusCodes")
     void deleteBySubject_WhenDeleteConsentsReturnsInvalidHttpStatus_ReturnsHttp500(int statusCode) {
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT)))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT)))
                 .willReturn(aResponse()
                         .withStatus(statusCode)));
 
@@ -166,7 +166,7 @@ class AdminControllerTest extends BaseTest {
 
     @Test
     void deleteBySubjectSession_WhenDeleteConsentSuccess_Returns204() {
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&login_session_id=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT, TEST_LOGIN_SESSION_ID)))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&login_session_id=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT, TEST_LOGIN_SESSION_ID)))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
@@ -218,7 +218,7 @@ class AdminControllerTest extends BaseTest {
     @ParameterizedTest
     @MethodSource("invalidStatusCodes")
     void deleteBySubjectSession_WhenDeleteConsentsReturnsInvalidHttpStatus_ReturnsHttp500(int statusCode) {
-        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/oauth2/auth/sessions/consent?subject=%s&login_session_id=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT, TEST_LOGIN_SESSION_ID)))
+        HYDRA_MOCK_SERVER.stubFor(delete(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&login_session_id=%s&all=true&trigger_backchannel_logout=true".formatted(TEST_SUBJECT, TEST_LOGIN_SESSION_ID)))
                 .willReturn(aResponse()
                         .withStatus(statusCode)));
 

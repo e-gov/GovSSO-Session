@@ -21,7 +21,7 @@ class HydraServiceTest extends BaseTest {
 
     @Test
     void fetchLoginRequestInfo_logoIsMaskedInResponseLog() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -32,7 +32,7 @@ class HydraServiceTest extends BaseTest {
         assertThat(loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo(), equalTo("test-logo"));
 
         assertMessageWithMarkerIsLoggedOnce(HydraService.class, Level.INFO, "HYDRA request",
-                "http.request.method=GET, url.full=https://hydra.localhost:9000/oauth2/auth/requests/login?login_challenge=abcdeff098aadfccabcdeff098aadfcc");
+                "http.request.method=GET, url.full=https://hydra.localhost:9000/admin/oauth2/auth/requests/login?login_challenge=abcdeff098aadfccabcdeff098aadfcc");
         assertMessageWithMarkerIsLoggedOnce(HydraService.class, Level.INFO, "HYDRA response",
                 "http.response.status_code=200, http.response.body.content={" +
                         "\"challenge\":\"abcdeff098aadfccabcdeff098aadfcc\"," +

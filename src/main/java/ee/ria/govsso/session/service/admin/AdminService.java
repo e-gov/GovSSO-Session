@@ -46,7 +46,7 @@ public class AdminService {
     }
 
     private Map<String, Collection<Consent>> keepOnlyLatestConsentForEachClientIdAndSessionId(Map<String, List<Consent>> consents) {
-        // NOTE: Hydra GET /oauth2/sessions/consent response can contain multiple consent sessions per client, but only
+        // NOTE: Hydra GET /admin/oauth2/auth/sessions/consent response can contain multiple consent sessions per client, but only
         //  one of them is considered latest and potentially active (requested_at + remember_for >= now())
         //  Such old inactive sessions should be filtered:
         return consents.values().stream()
