@@ -13,7 +13,7 @@
 
     <groupId>ee.ria.govsso</groupId>
     <artifactId>govsso-session</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <!-- Support servlet container as described in https://docs.spring.io/spring-boot/docs/2.7.x/reference/htmlsingle/#howto.traditional-deployment.war -->
     <packaging>war</packaging>
 
