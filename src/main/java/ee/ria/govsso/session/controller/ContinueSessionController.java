@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.util.ArrayUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Pattern;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Pattern;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;

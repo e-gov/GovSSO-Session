@@ -4,19 +4,17 @@ import ee.ria.govsso.session.logging.LogbackFieldValueMasker;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 @Slf4j
 @Value
 @Validated
-@ConstructorBinding
 @ConfigurationProperties(prefix = "govsso.security")
 public class SecurityConfigurationProperties {
     public static final String DEFAULT_CONTENT_SECURITY_POLICY = "connect-src 'self'; " +

@@ -2,7 +2,7 @@ package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import lombok.SneakyThrows;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
