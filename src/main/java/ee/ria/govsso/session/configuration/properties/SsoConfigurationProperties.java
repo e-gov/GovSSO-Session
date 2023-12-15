@@ -3,19 +3,17 @@ package ee.ria.govsso.session.configuration.properties;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.PostConstruct;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URL;
 
 @Data
 @Validated
-@ConstructorBinding
 @ConfigurationProperties(prefix = "govsso")
 public class SsoConfigurationProperties {
 

@@ -4,8 +4,8 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 import org.springframework.util.CollectionUtils;
 
 import java.net.URL;

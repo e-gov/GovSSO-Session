@@ -7,7 +7,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <!-- TODO GSSO-534 Upgrade to Spring Boot 3.x -->
-        <version>2.7.18</version>
+        <version>3.2.0</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -79,8 +79,8 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
