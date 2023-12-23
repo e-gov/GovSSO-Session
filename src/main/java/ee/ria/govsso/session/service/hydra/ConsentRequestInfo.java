@@ -20,4 +20,5 @@ public class ConsentRequestInfo {
     private Context context;
     private OidcContext oidcContext;
     private OffsetDateTime requestedAt;
+    private String[] requestedAccessTokenAudience;
 }

@@ -315,6 +315,7 @@ public class HydraService {
         ConsentAcceptRequest request = new ConsentAcceptRequest();
         ConsentAcceptRequest.LoginSession session = new ConsentAcceptRequest.LoginSession();
         ConsentAcceptRequest.IdToken idToken = new ConsentAcceptRequest.IdToken();
+        ConsentAcceptRequest.AccessToken accessToken = new ConsentAcceptRequest.AccessToken();
 
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
@@ -336,7 +337,18 @@ public class HydraService {
             idToken.setPhoneNumberVerified((Boolean) taraIdToken.getJWTClaimsSet().getClaims().get("phone_number_verified"));
         }
         session.setIdToken(idToken);
+
+        accessToken.setAcr("high"); // TODO
+        accessToken.setAmr(new String[]{"idcard"}); // TODO
+        accessToken.setGivenName(idToken.getGivenName());
+        accessToken.setFamilyName(idToken.getFamilyName());
+        accessToken.setBirthdate(idToken.getBirthdate());
+        accessToken.setPhoneNumber(idToken.getPhoneNumber());
+        accessToken.setPhoneNumberVerified(idToken.getPhoneNumberVerified());
+        session.setAccessToken(accessToken);
+
         request.setSession(session);
+        request.setGrantAccessTokenAudience(consentRequestInfo.getRequestedAccessTokenAudience());
 
         requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);
         ConsentAcceptResponse response = webclient.put()
