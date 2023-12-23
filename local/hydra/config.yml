@@ -59,6 +59,7 @@ oauth2:
     - birthdate
     - phone_number
     - phone_number_verified
+  #mirror_top_level_claims: false -- will be supported from Hydra v2.2.0-rc.3
   refresh_token_hook: https://session.localhost:15443/admin/token-refresh
 urls:
   login: https://inproxy.localhost:13443/login/init
@@ -82,6 +83,7 @@ client:
       - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
       - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 strategies:
+  access_token: jwt
   scope: exact
 ttl:
   access_token: 1s
