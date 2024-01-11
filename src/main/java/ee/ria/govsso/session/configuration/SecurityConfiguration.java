@@ -6,10 +6,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.HeaderWriter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import static ee.ria.govsso.session.controller.AdminController.ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING;
 import static ee.ria.govsso.session.controller.AdminController.ADMIN_SESSIONS_REQUEST_MAPPING;
@@ -29,38 +39,52 @@ public class SecurityConfiguration {
     private final SecurityConfigurationProperties securityConfigurationProperties;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, HandlerMappingIntrospector introspector) throws Exception {
+
         httpSecurity
-                .securityContext().disable()
-                .anonymous().disable()
-                .logout().disable()
-                .rememberMe().disable()
-                .servletApi().disable()
-                .httpBasic().disable()
-                .sessionManagement().disable()
-                .csrf(csrf -> csrf
-                        .ignoringAntMatchers(TOKEN_REFRESH_REQUEST_MAPPING, ADMIN_SESSIONS_REQUEST_MAPPING, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING)
-                        .csrfTokenRepository(csrfTokenRepository()))
-                .headers()
-                .addHeaderWriter(relaxedCorsHeaderWriter())
-                .xssProtection().xssProtectionEnabled(false)
-                .and()
-                .frameOptions().deny()
-                .contentSecurityPolicy(securityConfigurationProperties.getContentSecurityPolicy())
-                .and()
-                .httpStrictTransportSecurity()
-                .includeSubDomains(true)
-                .maxAgeInSeconds(186 * 24 * 60 * 60);
+                .securityContext(AbstractHttpConfigurer::disable)
+                .anonymous(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .rememberMe(AbstractHttpConfigurer::disable)
+                .servletApi(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable)
+                .csrf((csrf) -> csrf
+                        .ignoringRequestMatchers(
+                                new MvcRequestMatcher(introspector, TOKEN_REFRESH_REQUEST_MAPPING),
+                                new MvcRequestMatcher(introspector, ADMIN_SESSIONS_REQUEST_MAPPING),
+                                new MvcRequestMatcher(introspector, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING))
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(csrfRequestHandler()))
+                .headers(headersConfigurer -> headersConfigurer
+                        .addHeaderWriter(relaxedCorsHeaderWriter())
+                        .xssProtection(xssConfig -> xssConfig
+                                .headerValue(XXssProtectionHeaderWriter.HeaderValue.DISABLED))
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .contentSecurityPolicy(policyConfig -> policyConfig
+                                .policyDirectives(securityConfigurationProperties.getContentSecurityPolicy()))
+                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(Duration.of(186, ChronoUnit.DAYS).toSeconds())));
+
         return httpSecurity.build();
     }
 
     private CsrfTokenRepository csrfTokenRepository() {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieName(COOKIE_NAME_XSRF_TOKEN);
-        repository.setSecure(true);
+        repository.setCookieCustomizer(cookieBuilder -> cookieBuilder
+                .secure(true)
+                .maxAge(securityConfigurationProperties.getCookieMaxAgeSeconds()));
         repository.setCookiePath("/");
-        repository.setCookieMaxAge(securityConfigurationProperties.getCookieMaxAgeSeconds());
         return repository;
+    }
+
+    private CsrfTokenRequestAttributeHandler csrfRequestHandler() {
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        //Opt-out of Deferred CSRF Tokens as described in https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#deferred-csrf-token
+        requestHandler.setCsrfRequestAttributeName(null);
+        return requestHandler;
     }
 
     private HeaderWriter relaxedCorsHeaderWriter() {

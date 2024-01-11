@@ -86,7 +86,7 @@ class WebClientConfiguration {
                         .defaultIfEmpty("")
                         .flatMap(responseBody -> {
                             try {
-                                requestLogger.logResponse(clientResponse.rawStatusCode(), responseBody);
+                                requestLogger.logResponse(clientResponse.statusCode().value(), responseBody);
                                 return Mono.just(clientResponse);
                             } catch (Exception ex) {
                                 return Mono.error(new IllegalStateException("Failed to log response", ex));

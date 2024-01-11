@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.web.server.Cookie;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -40,10 +43,9 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Bean
     public LocaleResolver localeResolver() {
-        CookieLocaleResolver resolver = new CookieLocaleResolver();
-        resolver.setCookieName("__Host-LOCALE");
+        CookieLocaleResolver resolver = new CookieLocaleResolver("__Host-LOCALE");
         resolver.setCookieSecure(true);
-        resolver.setCookieMaxAge(365 * 24 * 60 * 60);
+        resolver.setCookieMaxAge(Duration.of(365, ChronoUnit.DAYS));
 
         // Setting default locale prevents CookieLocaleResolver from falling back to request.getLocale()
         resolver.setDefaultLocale(LocaleUtil.DEFAULT_LOCALE);

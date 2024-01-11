@@ -38,7 +38,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(500);
 
-        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list --> 404 Not Found from GET https://hydra.localhost:9000/admin/oauth2/auth/sessions/consent?subject");
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consents list");
     }
 
     @Test
