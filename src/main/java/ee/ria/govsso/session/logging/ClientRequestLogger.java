@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import net.logstash.logback.marker.LogstashMarker;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +98,7 @@ public class ClientRequestLogger {
         return new Response(statusCode);
     }
 
-    public Response response(HttpStatus status) {
+    public Response response(HttpStatusCode status) {
         return new Response(status.value());
     }
 
