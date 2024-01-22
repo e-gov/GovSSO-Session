@@ -427,6 +427,7 @@ services:
       - tara.trust-store=file:/var/certs/enduserselfservice.localhost.tara.truststore.p12
       - tara.trust-store-password=changeit
       - ELASTIC_APM_ENABLED=false
+      - IGNITE_HOME=/tmp/ignite
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
