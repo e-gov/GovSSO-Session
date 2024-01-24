@@ -46,6 +46,7 @@ public class WebConfiguration implements WebMvcConfigurer {
         CookieLocaleResolver resolver = new CookieLocaleResolver("__Host-LOCALE");
         resolver.setCookieSecure(true);
         resolver.setCookieMaxAge(Duration.of(365, ChronoUnit.DAYS));
+        resolver.setCookieSameSite(Cookie.SameSite.STRICT.attributeValue());
 
         // Setting default locale prevents CookieLocaleResolver from falling back to request.getLocale()
         resolver.setDefaultLocale(LocaleUtil.DEFAULT_LOCALE);
