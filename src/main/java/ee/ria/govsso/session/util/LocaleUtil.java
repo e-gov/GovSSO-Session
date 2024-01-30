@@ -100,7 +100,7 @@ public class LocaleUtil {
             return null;
         }
 
-        List<String> locales = List.of(localeParameter.getValue().split(" "));
+        List<String> locales = List.of(localeParameter.getValue().replace("+", " ").split(" "));
         return getFirstSupportedLocale(locales);
     }
 
