@@ -75,7 +75,7 @@ services:
       - govsso.trust-store=file:/var/certs/clientb.localhost.govsso.truststore.p12
       - govsso.trust-store-password=changeit
       - example-client.logo=client-b.svg
-      - example-client.messages.title='GovSSO Client B (LOCAL)'
+      - example-client.messages.title=GovSSO Client B (LOCAL)
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=/var/certs/clientb.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
