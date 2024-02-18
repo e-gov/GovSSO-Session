@@ -225,11 +225,11 @@ flow implementations.
 Where x denotes index. Example:
 
 ````
-govsso.alerts.static-alert.message-templates[0].message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO dokumentatsioonis</a>!
+govsso.alerts.static-alert.message-templates[0].message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/Testing">GovSSO dokumentatsioonis</a>!
 govsso.alerts.static-alert.message-templates[0].locale=et
-govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">GovSSO documentation</a>!
+govsso.alerts.static-alert.message-templates[1].message=This is a test environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/Testing">GovSSO documentation</a>!
 govsso.alerts.static-alert.message-templates[1].locale=en
-govsso.alerts.static-alert.message-templates[2].message=Это тестовая среда, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/TechnicalSpecification">документации GovSSO</a>!
+govsso.alerts.static-alert.message-templates[2].message=Это тестовая среда, и информация, необходимая для аутентификации, находится в <a href="https://e-gov.github.io/GOVSSO/Testing">документации GovSSO</a>!
 govsso.alerts.static-alert.message-templates[2].locale=ru
 ````
 
