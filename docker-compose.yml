@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   clienta: # Map to host ports 11xxx.
-    image: govsso-client:latest
+    image: tara-govsso-exampleclient:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - inproxy
@@ -56,7 +56,7 @@ services:
       - ./local/tls/clienta/clienta.localhost.govsso.truststore.p12:/var/certs/clienta.localhost.govsso.truststore.p12:ro
 
   clientb: # Map to host ports 12xxx.
-    image: govsso-client:latest
+    image: tara-govsso-exampleclient:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
       - inproxy
