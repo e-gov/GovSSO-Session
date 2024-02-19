@@ -15,8 +15,8 @@ public class CookieUtil {
     private static final String HYDRA_SESSION_COOKIE_NAME = "__Host-ory_hydra_session";
 
     /**
-     * For this to work, it is expected to run Hydra and GOVSSO-Session behind a reverse proxy that exposes them under
-     * the same domain. Only then will cookies set by Hydra also reach GOVSSO-Session.
+     * For this to work, it is expected to run Hydra and GovSSO-Session behind a reverse proxy that exposes them under
+     * the same domain. Only then will cookies set by Hydra also reach GovSSO-Session.
      *
      * @param request
      * @param response
@@ -34,8 +34,8 @@ public class CookieUtil {
     }
 
     /**
-     * For this to work, it is expected to run Hydra and GOVSSO-Session behind a reverse proxy that exposes them under
-     * the same domain. Only then will cookies set by Hydra also reach GOVSSO-Session.
+     * For this to work, it is expected to run Hydra and GovSSO-Session behind a reverse proxy that exposes them under
+     * the same domain. Only then will cookies set by Hydra also reach GovSSO-Session.
      *
      * @param request
      * @param sessionId

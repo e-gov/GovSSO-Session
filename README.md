@@ -13,9 +13,10 @@ flow implementations.
 
 ## Building Dependencies
 
-1. Follow [TARA2-Admin/README.md](https://github.com/e-gov/TARA2-Admin#building-and-running-in-docker) to build it's
-   Docker image
-2. Follow [GOVSSO-Client/README.md](https://github.com/e-gov/GOVSSO-Client#running-in-docker) to build it's Docker image
+1. Follow [TARA-GovSSO-Admin/README.md](https://github.com/e-gov/TARA-GovSSO-Admin#building-and-running-in-docker) to
+   build it's Docker image
+2. Follow [TARA-GovSSO-ExampleClient/README.md](https://github.com/e-gov/TARA-GovSSO-ExampleClient#running-in-docker) to
+   build it's Docker image
 3. Build  [Ory Hydra HSM Docker image](https://github.com/ory/hydra/blob/v1.11.10/.docker/Dockerfile-hsm)
     ```shell
     docker build -f .docker/Dockerfile-hsm -t oryd/hydra:feature-govsso https://github.com/ory/hydra.git#v1.11.10
@@ -31,7 +32,7 @@ flow implementations.
 
 ## Running GovSSO Session Service Locally and Dependencies in Docker Compose
 
-1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from GOVSSO-Session
+1. Add `127.0.0.1 tara.localhost` line to `hosts` file. This is needed only for requests originating from GovSSO-Session
    when it's running locally (not in Docker Compose) or during tests. It's not needed for web browsers as popular
    browsers already have built-in support for resolving `*.localhost` subdomains.
    **NB! Also add given lines to docker-compose.yml gateway configuration with your local ip address.**

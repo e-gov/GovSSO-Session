@@ -96,7 +96,7 @@ services:
       - ./local/tls/clientb/clientb.localhost.govsso.truststore.p12:/var/certs/clientb.localhost.govsso.truststore.p12:ro
 
   inproxy: # Map to host ports 13xxx.
-    # First follow GOVSSO-InProxy README.md to build this Docker image.
+    # First follow TARA-GovSSO-InProxy README.md to build this Docker image.
     image: govsso-inproxy:latest
     depends_on:
       - hydra
@@ -248,7 +248,7 @@ services:
       - ./local/tls/tara:/var/certs:ro
 
   admin: # Map to host ports 17xxx.
-    # First follow TARA2-Admin README.md to build this Docker image.
+    # First follow TARA-GovSSO-Admin README.md to build this Docker image.
     image: tara-admin:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
@@ -398,7 +398,7 @@ services:
       - ./local/tls/hydra/hydra.localhost.key:/var/certs/hydra.localhost.key:ro
 
   enduserselfservice: # Map to host ports 25xxx.
-    # First follow GOVSSO-EndUserSelfService README.md to build this Docker image.
+    # First follow GovSSO-EndUserSelfService README.md to build this Docker image.
     image: govsso-enduserselfservice:latest
     entrypoint: bash -c 'sleep 15 && /cnb/process/web'
     depends_on:
