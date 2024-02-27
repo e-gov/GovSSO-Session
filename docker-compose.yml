@@ -97,7 +97,7 @@ services:
 
   inproxy: # Map to host ports 13xxx.
     # First follow TARA-GovSSO-InProxy README.md to build this Docker image.
-    image: govsso-inproxy:latest
+    image: tara-govsso-inproxy:latest
     depends_on:
       - hydra
       - session
