@@ -113,10 +113,10 @@ services:
       - spring.cloud.gateway.httpclient.ssl.trustedX509Certificates=file:/var/certs/govsso-ca.localhost.crt
       - spring.cloud.discovery.client.simple.instances.hydra[0].uri=https://hydra.localhost:8443
       - spring.cloud.discovery.client.simple.instances.session[0].uri=https://session.localhost:15443
-      - govsso-inproxy.admin.base-url=https://admin.localhost:443
-      - govsso-inproxy.admin.token-request-allowed-ip-addresses-storage-path=/tmp/ipaddresses
-      - govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
-      - govsso-inproxy.admin.tls.trust-store-password=changeit
+      - tara-govsso-inproxy.admin.base-url=https://admin.localhost:443
+      - tara-govsso-inproxy.admin.token-request-allowed-ip-addresses-storage-path=/tmp/ipaddresses
+      - tara-govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
+      - tara-govsso-inproxy.admin.tls.trust-store-password=changeit
       - ELASTIC_APM_ENABLED=false
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
