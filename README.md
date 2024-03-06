@@ -17,9 +17,9 @@ flow implementations.
    build it's Docker image
 2. Follow [TARA-GovSSO-ExampleClient/README.md](https://github.com/e-gov/TARA-GovSSO-ExampleClient#running-in-docker) to
    build it's Docker image
-3. Build  [Ory Hydra HSM Docker image](https://github.com/ory/hydra/blob/v1.11.10/.docker/Dockerfile-hsm)
+3. Build  [Ory Hydra HSM Docker image](https://github.com/ory/hydra/blob/v2.1.2/.docker/Dockerfile-hsm)
     ```shell
-    docker build -f .docker/Dockerfile-hsm -t oryd/hydra:feature-govsso https://github.com/ory/hydra.git#v1.11.10
+    docker build -f .docker/Dockerfile-hsm -t oryd/hydra:feature-govsso https://github.com/ory/hydra.git#v2.1.2
     ```
 4. Generate required resources (TLS certificates, TARA id-token keys, etc.)
    ```shell
