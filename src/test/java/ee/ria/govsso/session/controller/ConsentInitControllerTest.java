@@ -106,6 +106,91 @@ class ConsentInitControllerTest extends BaseTest {
     }
 
     @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithAccessTokenStrategyJwt_RedirectsWithAccessToken() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_with_access_token.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"")));
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithPhoneNumberAndWithAccessTokenStrategyJwt_RedirectsWithAccessToken() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_with_phone_idtoken_with_phone_access_token.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"," +
+                        "\"phone_number\":\"12345\",\"phone_number_verified\":true")));
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentIsSuccessfulWithAccessTokenStrategyNotJwt_RedirectsWithoutAccessToken() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_with_access_token_not_jwt.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"access_token\":null")));
+    }
+
+    @Test
     void consentInit_WhenAcceptConsentIsSuccessfulWithPhoneNumber_RedirectsWithIdTokenIncludingPhone() {
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))

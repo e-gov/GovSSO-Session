@@ -11,6 +11,7 @@ import ee.ria.govsso.session.logging.ClientRequestLogger;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,8 @@ public class HydraService {
     private final ClientRequestLogger requestLogger;
     private final HydraConfigurationProperties hydraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+
+    private static final String ACCESS_TOKEN_STRATEGY_JWT = "jwt";
 
     public LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
         String uri = UriComponentsBuilder
@@ -315,6 +318,7 @@ public class HydraService {
         ConsentAcceptRequest request = new ConsentAcceptRequest();
         ConsentAcceptRequest.LoginSession session = new ConsentAcceptRequest.LoginSession();
         ConsentAcceptRequest.IdToken idToken = new ConsentAcceptRequest.IdToken();
+        ConsentAcceptRequest.AccessToken accessToken = new ConsentAcceptRequest.AccessToken();
 
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
@@ -323,19 +327,32 @@ public class HydraService {
         Duration consentFlowDuration = Duration.between(consentRequestInfo.getRequestedAt(), OffsetDateTime.now());
         request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds() + (int) consentFlowDuration.getSeconds());
 
-        JWT taraIdToken = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken());
-        Map<String, Object> profileAttributesClaim = taraIdToken.getJWTClaimsSet().getJSONObjectClaim("profile_attributes");
+        JWTClaimsSet taraIdTokenClaims = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken()).getJWTClaimsSet();
+
+        Map<String, Object> profileAttributesClaim = taraIdTokenClaims.getJSONObjectClaim("profile_attributes");
 
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
         idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
-        if (List.of(requestedScopes).contains("phone") && taraIdToken.getJWTClaimsSet().getClaims().get("phone_number") != null) {
-            idToken.setPhoneNumber(taraIdToken.getJWTClaimsSet().getClaims().get("phone_number").toString());
-            idToken.setPhoneNumberVerified((Boolean) taraIdToken.getJWTClaimsSet().getClaims().get("phone_number_verified"));
+        if (List.of(requestedScopes).contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
+            idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
+            idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
         }
         session.setIdToken(idToken);
+
+        if (StringUtils.equals(ACCESS_TOKEN_STRATEGY_JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
+            accessToken.setAcr(taraIdTokenClaims.getStringClaim("acr"));
+            accessToken.setAmr(taraIdTokenClaims.getStringArrayClaim("amr"));
+            accessToken.setGivenName(idToken.getGivenName());
+            accessToken.setFamilyName(idToken.getFamilyName());
+            accessToken.setBirthdate(idToken.getBirthdate());
+            accessToken.setPhoneNumber(idToken.getPhoneNumber());
+            accessToken.setPhoneNumberVerified(idToken.getPhoneNumberVerified());
+            session.setAccessToken(accessToken);
+        }
+
         request.setSession(session);
 
         requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);

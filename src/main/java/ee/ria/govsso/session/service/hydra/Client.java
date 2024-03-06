@@ -11,4 +11,5 @@ public class Client {
     private String clientId;
     private String clientName;
     private Metadata metadata;
+    private String accessTokenStrategy;
 }
