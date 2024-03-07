@@ -50,6 +50,15 @@ webfinger:
       - openid
       - phone
 oauth2:
+  exclude_not_before_claim: true
+  allowed_top_level_claims:
+    - acr
+    - amr
+    - given_name
+    - family_name
+    - birthdate
+    - phone_number
+    - phone_number_verified
   refresh_token_hook: https://session.localhost:15443/admin/token-refresh
 urls:
   login: https://inproxy.localhost:13443/login/init
