@@ -18,7 +18,7 @@
     </appender>
 
     <!-- Decrease the amount of logs from Jetty started by WireMock -->
-    <logger name="org.eclipse.jetty" level="INFO"/>
+    <logger name="org.eclipse.jetty" level="ERROR"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
