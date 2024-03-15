@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ConsentRequestInfo {
 
-    //Models selected fields of https://www.ory.sh/hydra/docs/reference/api/#operation/getConsentRequest, Ory Hydra response is deserialized into this class.
+    //Models selected fields of https://www.ory.sh/docs/hydra/reference/api#tag/oAuth2/operation/getOAuth2ConsentRequest, Ory Hydra response is deserialized into this class.
 
     private String challenge;
     private String loginChallenge;
@@ -20,4 +20,5 @@ public class ConsentRequestInfo {
     private Context context;
     private OidcContext oidcContext;
     private OffsetDateTime requestedAt;
+    private String[] requestedAccessTokenAudience;
 }

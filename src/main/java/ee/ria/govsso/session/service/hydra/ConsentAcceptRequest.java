@@ -15,6 +15,7 @@ public class ConsentAcceptRequest {
     private List<String> grantScope;
     private boolean remember;
     private int rememberFor;
+    private List<String> grantAccessTokenAudience;
 
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

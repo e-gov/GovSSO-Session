@@ -32,11 +32,12 @@ class HydraServiceTest extends BaseTest {
         assertThat(loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo(), equalTo("test-logo"));
 
         assertMessageWithMarkerIsLoggedOnce(HydraService.class, Level.INFO, "HYDRA request",
-                "http.request.method=GET, url.full=https://hydra.localhost:9000/admin/oauth2/auth/requests/login?login_challenge=abcdeff098aadfccabcdeff098aadfcc");
+                "http.request.method=GET, url.full=https://hydra.localhost:9000/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE);
         assertMessageWithMarkerIsLoggedOnce(HydraService.class, Level.INFO, "HYDRA response",
                 "http.response.status_code=200, http.response.body.content={" +
-                        "\"challenge\":\"abcdeff098aadfccabcdeff098aadfcc\"," +
+                        "\"challenge\":\"" + TEST_LOGIN_CHALLENGE + "\"," +
                         "\"client\":{" +
+                            "\"audience\":[]," +
                             "\"client_id\":\"openIdDemo\"," +
                             "\"client_name\":\"\"," +
                             "\"metadata\":{" +

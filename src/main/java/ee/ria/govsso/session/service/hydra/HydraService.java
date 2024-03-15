@@ -11,7 +11,6 @@ import ee.ria.govsso.session.logging.ClientRequestLogger;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -318,7 +317,6 @@ public class HydraService {
         ConsentAcceptRequest request = new ConsentAcceptRequest();
         ConsentAcceptRequest.LoginSession session = new ConsentAcceptRequest.LoginSession();
         ConsentAcceptRequest.IdToken idToken = new ConsentAcceptRequest.IdToken();
-        ConsentAcceptRequest.AccessToken accessToken = new ConsentAcceptRequest.AccessToken();
 
         List<String> scopes = Arrays.asList(consentRequestInfo.getRequestedScope());
         request.setGrantScope(scopes);
@@ -342,15 +340,17 @@ public class HydraService {
         }
         session.setIdToken(idToken);
 
-        if (StringUtils.equals(ACCESS_TOKEN_STRATEGY_JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            accessToken.setAcr(taraIdTokenClaims.getStringClaim("acr"));
-            accessToken.setAmr(taraIdTokenClaims.getStringArrayClaim("amr"));
-            accessToken.setGivenName(idToken.getGivenName());
-            accessToken.setFamilyName(idToken.getFamilyName());
-            accessToken.setBirthdate(idToken.getBirthdate());
-            accessToken.setPhoneNumber(idToken.getPhoneNumber());
-            accessToken.setPhoneNumberVerified(idToken.getPhoneNumberVerified());
-            session.setAccessToken(accessToken);
+        if (ACCESS_TOKEN_STRATEGY_JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
+            session.setAccessToken(createAccessToken(taraIdTokenClaims, idToken));
+
+            if (consentRequestInfo.getRequestedAccessTokenAudience() != null) {
+                List<String> audiences = Arrays.asList(consentRequestInfo.getRequestedAccessTokenAudience());
+                if (audiences.isEmpty()) {
+                    request.setGrantAccessTokenAudience(consentRequestInfo.getClient().getAudience());
+                } else {
+                    request.setGrantAccessTokenAudience(audiences);
+                }
+            }
         }
 
         request.setSession(session);
@@ -367,6 +367,18 @@ public class HydraService {
 
         requestLogger.logResponse(HttpStatus.OK.value(), response);
         return response;
+    }
+
+    private ConsentAcceptRequest.AccessToken createAccessToken(JWTClaimsSet taraIdTokenClaims, ConsentAcceptRequest.IdToken idToken) throws ParseException {
+        ConsentAcceptRequest.AccessToken accessToken = new ConsentAcceptRequest.AccessToken();
+        accessToken.setAcr(taraIdTokenClaims.getStringClaim("acr"));
+        accessToken.setAmr(taraIdTokenClaims.getStringArrayClaim("amr"));
+        accessToken.setGivenName(idToken.getGivenName());
+        accessToken.setFamilyName(idToken.getFamilyName());
+        accessToken.setBirthdate(idToken.getBirthdate());
+        accessToken.setPhoneNumber(idToken.getPhoneNumber());
+        accessToken.setPhoneNumberVerified(idToken.getPhoneNumberVerified());
+        return accessToken;
     }
 
     public void deleteConsentBySubject(String subject) {
