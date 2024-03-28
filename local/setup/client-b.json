@@ -56,5 +56,9 @@
   "sla_notification_emails": [
     "slanotifications.clientb@example.org"
   ],
+  "access_token_jwt_enabled": true,
+  "access_token_audience_uris": [
+    "https://clientb.localhost:12443"
+  ],
   "is_user_consent_required": true
 }

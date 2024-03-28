@@ -10,7 +10,8 @@
             "institution": {
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   },
@@ -25,7 +26,8 @@
             "institution": {
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   }

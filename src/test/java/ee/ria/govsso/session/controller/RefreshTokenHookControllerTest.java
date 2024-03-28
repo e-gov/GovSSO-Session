@@ -17,6 +17,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -113,7 +114,14 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .body("session.refresh_remember_for", equalTo(true))
                 .body("session.remember_for", equalTo(900))
                 .body("session.refresh_consent_remember_for", equalTo(true))
-                .body("session.consent_remember_for", equalTo(900));
+                .body("session.consent_remember_for", equalTo(900))
+                .body("session.access_token.acr", equalTo("high"))
+                .body("session.access_token.amr", equalTo(List.of("mID")))
+                .body("session.access_token.given_name", equalTo("Eesnimi3"))
+                .body("session.access_token.family_name", equalTo("Perekonnanimi3"))
+                .body("session.access_token.birthdate", equalTo("1961-07-12"))
+                .body("session.access_token.phone_number", nullValue())
+                .body("session.access_token.phone_number_verified", nullValue());
     }
 
     @Test
@@ -144,7 +152,14 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .body("session.refresh_remember_for", equalTo(true))
                 .body("session.remember_for", equalTo(900))
                 .body("session.refresh_consent_remember_for", equalTo(true))
-                .body("session.consent_remember_for", equalTo(900));
+                .body("session.consent_remember_for", equalTo(900))
+                .body("session.access_token.acr", equalTo("high"))
+                .body("session.access_token.amr", equalTo(List.of("mID")))
+                .body("session.access_token.given_name", equalTo("Eesnimi3"))
+                .body("session.access_token.family_name", equalTo("Perekonnanimi3"))
+                .body("session.access_token.birthdate", equalTo("1961-07-12"))
+                .body("session.access_token.phone_number", equalTo("12345"))
+                .body("session.access_token.phone_number_verified", equalTo(true));
     }
 
     @Test
@@ -161,6 +176,36 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .statusCode(500);
 
         assertErrorIsLogged("SsoException: Hydra session was not found");
+    }
+
+    @Test
+    void tokenRefresh_whenAccessTokenStrategyIsOpaque_ok() {
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId"));
+        hookRequest.setSubject("testSubject");
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_access_token_strategy_opaque.json")));
+
+        given()
+                .request().body(hookRequest)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .when()
+                .post(TOKEN_REFRESH_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("session.id_token.given_name", equalTo("Eesnimi3"))
+                .body("session.id_token.family_name", equalTo("Perekonnanimi3"))
+                .body("session.id_token.birthdate", equalTo("1961-07-12"))
+                .body("session.id_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .body("session.refresh_remember_for", equalTo(true))
+                .body("session.remember_for", equalTo(900))
+                .body("session.refresh_consent_remember_for", equalTo(true))
+                .body("session.consent_remember_for", equalTo(900))
+                .body("session.access_token", nullValue());
     }
 
     private RefreshTokenHookRequest createRefreshTokenHookRequest(String sid, String clientId, List<String> scopes) {

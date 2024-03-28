@@ -29,7 +29,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   },

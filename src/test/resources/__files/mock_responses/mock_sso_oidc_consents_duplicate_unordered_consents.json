@@ -29,7 +29,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   },
@@ -63,7 +64,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   },
@@ -97,7 +99,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   },
@@ -131,7 +134,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       }
     }
   }
