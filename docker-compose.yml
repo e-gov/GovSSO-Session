@@ -441,6 +441,27 @@ services:
     volumes:
       - ./local/tls/enduserselfservice:/var/certs:ro
 
+  paasuke: # Map to host ports 26xxx.
+    image: wiremock/wiremock:3.5.2-alpine
+    environment:
+      - 'WIREMOCK_OPTIONS=
+          --disable-http
+          --https-port 8443
+          --https-keystore /home/wiremock/certs/paasuke.localhost.keystore.p12
+          --keystore-password changeit
+          --key-manager-password changeit'
+    hostname: paasuke.localhost
+    networks:
+      default:
+        aliases:
+          - paasuke.localhost
+    ports:
+      - "26443:8443"
+    volumes:
+      - ./local/paasuke/mappings:/home/wiremock/mappings:ro
+      - ./local/paasuke/__files:/home/wiremock/__files:ro
+      - ./local/tls/paasuke:/home/wiremock/certs:ro
+
 volumes:
   hydra-db-data:
   admin-db-data:

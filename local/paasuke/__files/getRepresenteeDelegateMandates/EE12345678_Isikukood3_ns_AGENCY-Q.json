@@ -1,0 +1,17 @@
+{
+  "representee": {
+    "type": "LEGAL_PERSON",
+    "legalName": "Raamatupidajad OÜ",
+    "identifier": "EE12345678"
+  },
+  "delegate": {
+    "type": "NATURAL_PERSON",
+    "firstName": "Eesnimi3",
+    "surname": "Perekonnanimi3",
+    "identifier": "Perekonnanimi3"
+  },
+  "mandates": [
+    {"role": "BR_REPRIGHT:JUHL"},
+    {"role": "AGENCY-Q:Edit.submit"}
+  ]
+}

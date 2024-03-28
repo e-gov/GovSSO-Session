@@ -16,6 +16,7 @@ cd "$(command dirname -- "${0}")" || exit
 ./generate-certificate.sh 'govsso-ca' 'outproxy'
 ./generate-certificate.sh 'govsso-ca' 'enduserselfservice'
 ./generate-certificate.sh 'govsso-ca' 'inproxy'
+./generate-certificate.sh 'govsso-ca' 'paasuke'
 
 ./generate-ca-certificate.sh 'tara'
 ./generate-certificate.sh 'tara-ca' 'tara'

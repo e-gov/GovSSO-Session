@@ -123,6 +123,8 @@ flow implementations.
     * http://localhost:18080/ - UI
 * Kibana
     * http://localhost:23601/ - UI
+* Pääsuke Mock
+    * https://paasuke.localhost:26443/__admin/mappings - Wiremock admin API stub mappings endpoint
 
 ## Configuration
 
