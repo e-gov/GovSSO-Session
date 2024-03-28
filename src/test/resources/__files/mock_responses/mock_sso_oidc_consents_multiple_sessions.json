@@ -15,7 +15,8 @@
               "ru": "Название службы A"
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
@@ -41,7 +42,8 @@
               "ru": "Название службы B"
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
@@ -67,7 +69,8 @@
               "ru": "Название службы A"
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
@@ -93,7 +96,8 @@
               "ru": "Название службы C"
             }
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "00000000-0000-0000-0000-222222222222",
       "context": {

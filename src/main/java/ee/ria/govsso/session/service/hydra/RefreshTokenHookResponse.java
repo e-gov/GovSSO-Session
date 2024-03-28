@@ -3,6 +3,7 @@ package ee.ria.govsso.session.service.hydra;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import ee.ria.govsso.session.token.AccessTokenClaims;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +14,8 @@ public final class RefreshTokenHookResponse {
     private Session session;
 
     @Builder
-    public RefreshTokenHookResponse(String sessionId, String givenName, String familyName, String birthDate, String phoneNumber, Boolean phoneNumberVerified, boolean refreshRememberFor, int rememberFor, boolean refreshConsentRememberFor, int consentRememberFor) {
-        this.session = new Session(new IdToken(givenName, familyName, birthDate, sessionId, phoneNumber, phoneNumberVerified), refreshRememberFor, rememberFor, refreshConsentRememberFor, consentRememberFor);
+    public RefreshTokenHookResponse(IdToken idToken, AccessTokenClaims accessToken, boolean refreshRememberFor, int rememberFor, boolean refreshConsentRememberFor, int consentRememberFor) {
+        this.session = new Session(idToken, accessToken, refreshRememberFor, rememberFor, refreshConsentRememberFor, consentRememberFor);
     }
 
     @Data
@@ -22,6 +23,7 @@ public final class RefreshTokenHookResponse {
     @JsonNaming(SnakeCaseStrategy.class)
     public static final class Session {
         private IdToken idToken;
+        private AccessTokenClaims accessToken;
         private boolean refreshRememberFor;
         private int rememberFor;
         private boolean refreshConsentRememberFor;
@@ -29,6 +31,7 @@ public final class RefreshTokenHookResponse {
     }
 
     @Data
+    @Builder
     @AllArgsConstructor
     @JsonNaming(SnakeCaseStrategy.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)

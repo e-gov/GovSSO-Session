@@ -6,12 +6,15 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
+import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookRequest;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse;
+import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTokenBuilder;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
+import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INF
 public class RefreshTokenHookController {
     public static final String TOKEN_REFRESH_REQUEST_MAPPING = "/admin/token-refresh";
     private final HydraService hydraService;
+    private final AccessTokenClaimsFactory accessTokenClaimsFactory;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final StatisticsLogger statisticsLogger;
 
@@ -56,37 +60,43 @@ public class RefreshTokenHookController {
         }
 
         List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
+        JWT taraIdToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         ConsentRequestInfo consentRequestInfo = getConsentRequestByClientId(consents, hookRequest.getClientId());
 
-        if (idToken == null || consentRequestInfo == null) {
+        if (taraIdToken == null || consentRequestInfo == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Consent has expired");
         }
 
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
 
-        JWTClaimsSet idTokenClaims = idToken.getJWTClaimsSet();
+        JWTClaimsSet taraIdTokenClaims = taraIdToken.getJWTClaimsSet();
+        IdTokenBuilder idTokenBuilder = RefreshTokenHookResponse.IdToken.builder()
+                .sid(sessionId);
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder()
-                .sessionId(sessionId)
                 .refreshRememberFor(true)
                 .rememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds())
                 .refreshConsentRememberFor(true)
                 .consentRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
-        if (idTokenClaims.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
-            responseBuilder
-                    .givenName(profileAttributes.get("given_name").toString())
-                    .familyName(profileAttributes.get("family_name").toString())
-                    .birthDate(profileAttributes.get("date_of_birth").toString());
+        Map<String, Object> profileAttributes = taraIdTokenClaims.getJSONObjectClaim("profile_attributes");
+        idTokenBuilder
+                .givenName(profileAttributes.get("given_name").toString())
+                .familyName(profileAttributes.get("family_name").toString())
+                .birthdate(profileAttributes.get("date_of_birth").toString());
+        if (hookRequest.getGrantedScopes().contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
+            idTokenBuilder
+                    .phoneNumber(taraIdTokenClaims.getClaims().get("phone_number").toString())
+                    .phoneNumberVerified((Boolean) taraIdTokenClaims.getClaims().get("phone_number_verified"));
         }
-        if (hookRequest.getGrantedScopes().contains("phone") && idTokenClaims.getClaims().get("phone_number") != null) {
-            responseBuilder
-                    .phoneNumber(idTokenClaims.getClaims().get("phone_number").toString())
-                    .phoneNumberVerified((Boolean) idTokenClaims.getClaims().get("phone_number_verified"));
+        RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
+        if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
+            responseBuilder.accessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, hookRequest.getGrantedScopes()));
         }
 
-        statisticsLogger.logAccept(UPDATE_SESSION, idToken, consentRequestInfo, sessionId);
+        statisticsLogger.logAccept(UPDATE_SESSION, taraIdToken, consentRequestInfo, sessionId);
 
-        RefreshTokenHookResponse response = responseBuilder.build();
+        RefreshTokenHookResponse response = responseBuilder
+                .idToken(idToken)
+                .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
     }

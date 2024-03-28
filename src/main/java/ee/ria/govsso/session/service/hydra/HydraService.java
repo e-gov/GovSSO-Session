@@ -8,6 +8,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -42,10 +43,9 @@ public class HydraService {
     private final WebClient webclient;
     @Qualifier("hydraRequestLogger")
     private final ClientRequestLogger requestLogger;
+    private final AccessTokenClaimsFactory accessTokenClaimsFactory;
     private final HydraConfigurationProperties hydraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
-
-    private static final String ACCESS_TOKEN_STRATEGY_JWT = "jwt";
 
     public LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
         String uri = UriComponentsBuilder
@@ -340,9 +340,8 @@ public class HydraService {
         }
         session.setIdToken(idToken);
 
-        if (ACCESS_TOKEN_STRATEGY_JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            session.setAccessToken(createAccessToken(taraIdTokenClaims, idToken));
-
+        if (AccessTokenStrategy.JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
+            session.setAccessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, List.of(requestedScopes)));
             if (consentRequestInfo.getRequestedAccessTokenAudience() != null) {
                 List<String> audiences = Arrays.asList(consentRequestInfo.getRequestedAccessTokenAudience());
                 if (audiences.isEmpty()) {
@@ -367,18 +366,6 @@ public class HydraService {
 
         requestLogger.logResponse(HttpStatus.OK.value(), response);
         return response;
-    }
-
-    private ConsentAcceptRequest.AccessToken createAccessToken(JWTClaimsSet taraIdTokenClaims, ConsentAcceptRequest.IdToken idToken) throws ParseException {
-        ConsentAcceptRequest.AccessToken accessToken = new ConsentAcceptRequest.AccessToken();
-        accessToken.setAcr(taraIdTokenClaims.getStringClaim("acr"));
-        accessToken.setAmr(taraIdTokenClaims.getStringArrayClaim("amr"));
-        accessToken.setGivenName(idToken.getGivenName());
-        accessToken.setFamilyName(idToken.getFamilyName());
-        accessToken.setBirthdate(idToken.getBirthdate());
-        accessToken.setPhoneNumber(idToken.getPhoneNumber());
-        accessToken.setPhoneNumberVerified(idToken.getPhoneNumberVerified());
-        return accessToken;
     }
 
     public void deleteConsentBySubject(String subject) {

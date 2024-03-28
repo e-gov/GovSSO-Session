@@ -28,7 +28,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
     }
@@ -62,7 +63,8 @@
             },
             "logo": "testlogo"
           }
-        }
+        },
+        "access_token_strategy": "jwt"
       },
       "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
     }
