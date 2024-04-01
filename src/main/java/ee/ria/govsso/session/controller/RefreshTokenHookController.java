@@ -14,6 +14,10 @@ import ee.ria.govsso.session.service.hydra.RefreshTokenHookRequest;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTokenBuilder;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
+import ee.ria.govsso.session.service.hydra.Representee;
+import ee.ria.govsso.session.service.paasuke.PaasukeInfo;
+import ee.ria.govsso.session.service.paasuke.PaasukeService;
+import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +47,7 @@ public class RefreshTokenHookController {
     public static final String TOKEN_REFRESH_REQUEST_MAPPING = "/admin/token-refresh";
     private final HydraService hydraService;
     private final AccessTokenClaimsFactory accessTokenClaimsFactory;
+    private final PaasukeService paasukeService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final StatisticsLogger statisticsLogger;
 
@@ -88,8 +94,25 @@ public class RefreshTokenHookController {
                     .phoneNumberVerified((Boolean) taraIdTokenClaims.getClaims().get("phone_number_verified"));
         }
         RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
+
+        String representeeSubject = getRepresenteeSubject(hookRequest);
+        if (representeeSubject != null && !taraIdTokenClaims.getStringClaim("sub").equals(representeeSubject)) {
+            PaasukeInfo paasukeInfo = paasukeService.fetchPaasukeInfo(taraIdTokenClaims.getStringClaim("sub"));
+            Representee representee = new Representee();
+            representee.setType(paasukeInfo.getRepresentee().getType());
+            representee.setGivenName(paasukeInfo.getRepresentee().getFirstName());
+            representee.setFamilyName(paasukeInfo.getRepresentee().getSurname());
+            representee.setSub(representeeSubject);
+            representee.setMandates(paasukeInfo.getMandates());
+            idToken.setRepresentee(representee);
+        }
+
         if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            responseBuilder.accessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, hookRequest.getGrantedScopes()));
+            AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(taraIdTokenClaims, hookRequest.getGrantedScopes());
+            if (idToken.getRepresentee() != null) {
+                accessTokenClaims.setRepresentee(idToken.getRepresentee());
+            }
+            responseBuilder.accessToken(accessTokenClaims);
         }
 
         statisticsLogger.logAccept(UPDATE_SESSION, taraIdToken, consentRequestInfo, sessionId);
@@ -99,6 +122,24 @@ public class RefreshTokenHookController {
                 .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
+    }
+
+    private String getRepresenteeSubject(RefreshTokenHookRequest hookRequest) {
+        if (hookRequest.getRequestedScopes() == null) {
+            return null;
+        }
+        List<String> requestedScopes = Arrays.stream(hookRequest.getRequestedScopes().split(" ")).toList();
+        for (String requestedScope: requestedScopes) {
+            if (!requestedScope.startsWith("representee.")) {
+                continue;
+            }
+            String id = StringUtils.substringAfter(requestedScope, ".");
+            if (id.isEmpty()) {
+                throw new SsoException(ErrorCode.USER_INPUT, "The subject length in the representee scope must be at least 1 character or longer");
+            }
+            return id;
+        }
+        return null;
     }
 
     public static ConsentRequestInfo getConsentRequestByClientId(List<Consent> consents, String clientId) {

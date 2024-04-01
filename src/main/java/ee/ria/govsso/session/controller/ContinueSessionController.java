@@ -14,6 +14,7 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.util.CookieUtil;
+import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,6 @@ import org.thymeleaf.util.ArrayUtils;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Pattern;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
@@ -83,7 +83,6 @@ public class ContinueSessionController {
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
-        String[] requestedScopes = loginRequestInfo.getRequestedScope();
 
         if (loginRequestInfo.getSubject().isEmpty()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Login request subject must not be empty");
@@ -92,19 +91,8 @@ public class ContinueSessionController {
             throw new SsoException(TECHNICAL_GENERAL, "Subject exists, therefore login response skip value can not be false");
         }
 
-        if (!Arrays.asList(requestedScopes).contains("openid") ||
-                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
-                requestedScopes.length > 2) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
-        }
-        if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            if (oidcContext.getAcrValues().length > 1) {
-                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
-
-            } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
-                throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
-            }
-        }
+        LoginRequestInfoUtil.validateScopes(loginRequestInfo);
+        LoginRequestInfoUtil.validateAcrValues(loginRequestInfo);
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
         if (prompt != Prompt.CONSENT) {

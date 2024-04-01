@@ -21,6 +21,7 @@ import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -46,7 +47,6 @@ import javax.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -123,8 +123,6 @@ public class LoginInitController {
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
-        OidcContext oidcContext = loginRequestInfo.getOidcContext();
-        String[] requestedScopes = loginRequestInfo.getRequestedScope();
 
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             if (loginRequestInfo.isSkip()) {
@@ -136,20 +134,8 @@ public class LoginInitController {
             }
         }
 
-        if (!Arrays.asList(requestedScopes).contains("openid") ||
-                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone)$")) ||
-                requestedScopes.length > 2) {
-            throw new SsoException(USER_INPUT, "Requested scope must contain openid and may contain phone, but nothing else");
-        }
-
-        if (oidcContext != null && !ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            if (oidcContext.getAcrValues().length > 1) {
-                throw new SsoException(USER_INPUT, "acrValues must contain only 1 value");
-
-            } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
-                throw new SsoException(USER_INPUT, "acrValues must be one of low/substantial/high");
-            }
-        }
+        LoginRequestInfoUtil.validateScopes(loginRequestInfo);
+        LoginRequestInfoUtil.validateAcrValues(loginRequestInfo);
     }
 
     private void validateLoginRequestInfoForAuthenticationAndContinuation(LoginRequestInfo loginRequestInfo, Prompt prompt) {
