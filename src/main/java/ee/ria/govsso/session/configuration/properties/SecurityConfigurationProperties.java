@@ -29,7 +29,7 @@ public class SecurityConfigurationProperties {
             "frame-ancestors 'none'; " +
             "block-all-mixed-content";
 
-    @Size(min = 32)
+    @Size(min = 32, message = "Cookie signing secret must be at least 256 bits (32 characters) long")
     String cookieSigningSecret;
 
     @NotBlank

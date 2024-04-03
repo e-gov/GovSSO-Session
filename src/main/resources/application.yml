@@ -71,5 +71,7 @@ govsso:
       trust-store-location: classpath:session.localhost.admin.truststore.p12
       trust-store-password: changeit
   security:
-    cookie-signing-secret: changeme
+    # Cookie signing secret needs to be set but to prevent a default value accidentally being used in production,
+    # a default value will not be set here.
+    cookie-signing-secret:
   self-service-url: https://enduserselfservice.localhost:25443/

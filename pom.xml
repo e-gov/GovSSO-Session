@@ -216,7 +216,6 @@
                 <configuration>
                     <environmentVariables>
                         <ELASTIC_APM_ENABLED>false</ELASTIC_APM_ENABLED>
-                        <govsso.security.cookie-signing-secret>exampleCookieSigningSecret123456</govsso.security.cookie-signing-secret>
                     </environmentVariables>
                     <excludes>
                         <exclude>
