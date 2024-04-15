@@ -1073,7 +1073,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone and representee.*, but nothing else");
     }
 
     @Test
@@ -1094,7 +1094,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone and representee.*, but nothing else");
     }
 
     @Test
@@ -1115,7 +1115,7 @@ public class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone, but nothing else");
+        assertErrorIsLogged("SsoException: Requested scope must contain openid and may contain phone and representee.*, but nothing else");
     }
 
     @Test
