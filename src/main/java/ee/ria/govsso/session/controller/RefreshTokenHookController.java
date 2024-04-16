@@ -69,6 +69,8 @@ public class RefreshTokenHookController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session was not found");
         }
 
+        validateRequestedScopes(hookRequest);
+
         List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
         JWT taraIdToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         ConsentRequestInfo consentRequestInfo = getConsentRequestByClientId(consents, hookRequest.getClientId());
@@ -123,6 +125,28 @@ public class RefreshTokenHookController {
         return ResponseEntity.ok(response);
     }
 
+    private static void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {
+        if (hookRequest.getRequestedScopes() != null) {
+            boolean containsRepresenteeWithSubject = false;
+            for (String requestedScope: hookRequest.getRequestedScopes()) {
+                if (StringUtils.isEmpty(requestedScope)) {
+                    continue;
+                }
+                if (requestedScope.startsWith("representee.") && !requestedScope.equals("representee.*")) {
+                    if (!hookRequest.getGrantedScopes().contains("representee.*")) {
+                        throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a representee scope with subject when 'representee.*' is not in the list of granted scopes.");
+                    }
+                    if (containsRepresenteeWithSubject) {
+                        throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain multiple representee scopes with subjects.");
+                    }
+                    containsRepresenteeWithSubject = true;
+                } else if (!hookRequest.getGrantedScopes().contains(requestedScope)) {
+                    throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a requested scope that is not in the list of granted scopes.");
+                }
+            }
+        }
+    }
+
     private Representee getRepresentee(
             ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
         Client client = consentRequestInfo.getClient();
@@ -168,6 +192,9 @@ public class RefreshTokenHookController {
             String id = StringUtils.substringAfter(requestedScope, ".");
             if (id.isEmpty()) {
                 throw new SsoException(ErrorCode.USER_INPUT, "The subject length in the representee scope must be at least 1 character or longer");
+            }
+            if (id.equals("*")) {
+                continue;
             }
             return id;
         }
