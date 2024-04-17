@@ -7,12 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -216,11 +217,12 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @ParameterizedTest
     @ValueSource(strings = {"representee.ABC123", "openid representee.ABC123", "representee.ABC123 openid", "openid representee.A"})
     void tokenRefresh_whenRepresenteeScopeSubjectIsAtLeast1CharacterLong_ok(String scopes) {
-        String requestedRepresentee = Arrays.stream(scopes.split(" ")).filter(s -> s.startsWith("representee")).findFirst().get();
+        List<String> scopesList = Arrays.asList(scopes.split(" "));
+        String requestedRepresentee = scopesList.stream().filter(s -> s.startsWith("representee")).findFirst().get();
         String requestedSubject = StringUtils.substringAfter(requestedRepresentee, ".");
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, scopesList);
         hookRequest.setSubject("ABC123");
-        hookRequest.setRequestedScopes(scopes);
+        hookRequest.setRequestedScopes(scopesList);
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=ABC123&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -248,13 +250,41 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .body("session.id_token.representee.mandates[0].role", equalTo("role"));
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"", "openid"})
-    void tokenRefresh_whenRequestedScopesIsWithoutRepresentee_RepresenteeIsNotAddedToIdTokenOrAccessToken(String scope) {
+    @Test
+    void tokenRefresh_whenRequestedScopesIsEnEmptyList_RepresenteeIsNotAddedToIdTokenOrAccessToken() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId"));
         hookRequest.setSubject("testSubject");
-        hookRequest.setRequestedScopes(scope);
+        hookRequest.setRequestedScopes(List.of());
+
+        System.out.println(hookRequest);
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        given()
+                .request().body(hookRequest)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .when()
+                .post(TOKEN_REFRESH_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("session.access_token.representee", nullValue())
+                .body("session.id_token.representee", nullValue());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"openid"})
+    void tokenRefresh_whenRequestedScopesIsWithoutRepresentee_RepresenteeIsNotAddedToIdTokenOrAccessToken(String scope) {
+        List<String> scopesList = new ArrayList<>();
+        scopesList.add(scope);
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId"));
+        hookRequest.setSubject("testSubject");
+        hookRequest.setRequestedScopes(scopesList);
 
         System.out.println(hookRequest);
 
@@ -280,7 +310,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenRepresenteeScopeSubjectIsNotAtLeast1CharacterLong_ThrowsUserInputError() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId", "phone"));
         hookRequest.setSubject("testSubject");
-        hookRequest.setRequestedScopes("representee.");
+        hookRequest.setRequestedScopes(List.of("representee."));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -304,7 +334,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenRepresenteeSubjectEqualsAuthenticatedUserSubject_RepresenteeIsNotAddedToIdTokenOrAccessToken() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId", "phone"));
         hookRequest.setSubject("Isikukood3");
-        hookRequest.setRequestedScopes("representee.Isikukood3");
+        hookRequest.setRequestedScopes(List.of("representee.Isikukood3"));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -328,7 +358,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenAccessTokenStrategyIsOpaque_RepresenteeIsNotAddedToAccessToken() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openId", "phone"));
         hookRequest.setSubject("testSubject");
-        hookRequest.setRequestedScopes("representee.ABC123");
+        hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()

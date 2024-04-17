@@ -12,7 +12,7 @@ public final class RefreshTokenHookRequest {
     private String subject;
     private String clientId;
     private List<String> grantedScopes;
-    private String requestedScopes;
+    private List<String> requestedScopes;
     private List<String> grantedAudience;
     private Session session;
     private Requester requester;

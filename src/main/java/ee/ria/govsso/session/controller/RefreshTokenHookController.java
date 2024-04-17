@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -102,6 +101,7 @@ public class RefreshTokenHookController {
             representee.setType(paasukeInfo.getRepresentee().getType());
             representee.setGivenName(paasukeInfo.getRepresentee().getFirstName());
             representee.setFamilyName(paasukeInfo.getRepresentee().getSurname());
+            representee.setName(paasukeInfo.getRepresentee().getLegalName());
             representee.setSub(representeeSubject);
             representee.setMandates(paasukeInfo.getMandates());
             idToken.setRepresentee(representee);
@@ -128,9 +128,8 @@ public class RefreshTokenHookController {
         if (hookRequest.getRequestedScopes() == null) {
             return null;
         }
-        List<String> requestedScopes = Arrays.stream(hookRequest.getRequestedScopes().split(" ")).toList();
-        for (String requestedScope: requestedScopes) {
-            if (!requestedScope.startsWith("representee.")) {
+        for (String requestedScope: hookRequest.getRequestedScopes()) {
+            if (requestedScope == null || !requestedScope.startsWith("representee.")) {
                 continue;
             }
             String id = StringUtils.substringAfter(requestedScope, ".");
