@@ -5,12 +5,15 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import ee.ria.govsso.session.logging.StatisticsLogger;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -25,6 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.slf4j.Logger.ROOT_LOGGER_NAME;
@@ -123,4 +127,57 @@ public class BaseTestLoggingAssertion {
         assertNotNull(matchingLoggingEvents);
         assertThat(matchingLoggingEvents, hasSize(1));
     }
+
+    protected Assertion assertMessage() {
+        return new Assertion();
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    protected static class Assertion {
+
+        private final List<Predicate<ILoggingEvent>> eventFilters = new ArrayList<>();
+
+        public Assertion withLevel(Level loggingLevel) {
+            eventFilters.add(e -> e.getLevel() == loggingLevel);
+            return this;
+        }
+
+        public Assertion withLoggerClass(Class<?> loggerClass) {
+            eventFilters.add(e -> e.getLoggerName().equals(loggerClass.getCanonicalName()));
+            return this;
+        }
+
+        public Assertion withMessage(String message) {
+            eventFilters.add(e -> e.getFormattedMessage().equals(message));
+            return this;
+        }
+
+        public Assertion withMarker(String marker) {
+            return withMarkerMatching(marker::equals);
+        }
+
+        public Assertion withMarkerMatching(Predicate<String> matcher) {
+            eventFilters.add(e -> matcher.test(e.getMarker().toString()));
+            return this;
+        }
+
+        public void isLogged() {
+            assertThat(getMatches(), not(empty()));
+        }
+
+        public void isLoggedOnce() {
+            assertThat(getMatches(), hasSize(1));
+        }
+
+        private List<ILoggingEvent> getMatches() {
+            Predicate<ILoggingEvent> masterFilter = eventFilters.stream()
+                    .reduce(Predicate::and)
+                    .orElseThrow();
+            return mockLogAppender.list.stream()
+                    .filter(masterFilter)
+                    .collect(toList());
+        }
+
+    }
+
 }

@@ -32,6 +32,7 @@ public class ClientRequestLogger {
         ALERTS,
         TARA,
         HYDRA,
+        PAASUKE,
     }
 
     public ClientRequestLogger(Class<?> classToBeLogged, Service service) {

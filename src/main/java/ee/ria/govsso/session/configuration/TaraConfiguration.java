@@ -16,19 +16,20 @@ class TaraConfiguration {
     @Bean
     @SneakyThrows
     SSLContext taraTrustContext(
-            TaraConfigurationProperties.TlsConfigurationProperties tlsProperties,
+            TaraConfigurationProperties taraProperties,
             KeyStore taraTrustStore
     ) {
         return SSLContextBuilder.create()
                 .setKeyStoreType(taraTrustStore.getType())
                 .loadTrustMaterial(taraTrustStore, null)
-                .setProtocol(tlsProperties.defaultProtocol())
+                .setProtocol(taraProperties.tls().defaultProtocol())
                 .build();
     }
 
     @Bean
     @SneakyThrows
-    KeyStore taraTrustStore(TaraConfigurationProperties.TlsConfigurationProperties tlsProperties) {
+    KeyStore taraTrustStore(TaraConfigurationProperties taraProperties) {
+        TaraConfigurationProperties.Tls tlsProperties = taraProperties.tls();
         InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
         KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
         trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());

@@ -8,28 +8,17 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
 import java.net.URL;
+import java.time.Duration;
 
 @Validated
 @ConstructorBinding
-@ConfigurationProperties(prefix = "govsso.tara")
-public record TaraConfigurationProperties(
+@ConfigurationProperties(prefix = "govsso.paasuke")
+public record PaasukeConfigurationProperties(
         @NotNull
-        URL issuerUrl,
-        @NotBlank
-        String clientId,
-        @NotBlank
-        String clientSecret,
-        @DefaultValue("5000")
-        @PositiveOrZero
-        Integer connectTimeoutMilliseconds,
-        @DefaultValue("5000")
-        @PositiveOrZero
-        Integer readTimeoutMilliseconds,
-        @DefaultValue("10")
-        @PositiveOrZero
-        Integer maxClockSkewSeconds,
+        URL hostUrl,
+        @DefaultValue("10s")
+        Duration requestTimeout,
         Tls tls) {
 
     @Validated
@@ -41,7 +30,7 @@ public record TaraConfigurationProperties(
             String trustStorePassword,
             @DefaultValue("PKCS12")
             @NotBlank
-            String trustStoreType,
-            String defaultProtocol) {
+            String trustStoreType) {
     }
+
 }

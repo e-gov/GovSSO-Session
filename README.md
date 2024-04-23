@@ -236,6 +236,30 @@ govsso.alerts.static-alert.message-templates[2].message=Это тестовая 
 govsso.alerts.static-alert.message-templates[2].locale=ru
 ````
 
+<a name="paasuke_integration_conf"></a>
+
+### Integration with Pääsuke service
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.paasuke.host-url` | Yes | | Point to Pääsuke service host url |
+
+<a name="paasuke_tls_conf"></a>
+
+### TLS configuration for outbound connections to Pääsuke service
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.paasuke.tls.trust-store-location` | Yes | | Location of the truststore containing trusted CA certificates. |
+| `govsso.paasuke.tls.trust-store-password` | Yes | | Truststore password |
+| `govsso.paasuke.tls.trust-store-type` | No | PKCS12 | Truststore type (jks, pkcs12). |
+
+### X-road configuration
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- | :---------- | :---------- | :---------------- |
+| `govsso.x-road.client-id` | Yes | | The value of `X-Road-Client` header for outbound requests |
+
 ## Non-pom.xml Licenses
 
 * [jquery](https://jquery.com) - MIT license

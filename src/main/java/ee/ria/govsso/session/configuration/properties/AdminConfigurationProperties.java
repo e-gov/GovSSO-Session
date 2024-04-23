@@ -16,12 +16,11 @@ import java.net.URL;
 public record AdminConfigurationProperties(
         @NotNull
         URL hostUrl,
-        AdminTlsConfigurationProperties tls) {
+        Tls tls) {
 
     @Validated
     @ConstructorBinding
-    @ConfigurationProperties(prefix = "govsso.admin.tls")
-    public record AdminTlsConfigurationProperties(
+    public record Tls(
             @NotNull
             Resource trustStoreLocation,
             @NotBlank

@@ -1,12 +1,13 @@
 package ee.ria.govsso.session.service.paasuke;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.NonNull;
 
-@Data
-public class Person {
-
-    private String type;
-    private String firstName;
-    private String surname;
-    private String legalName;
-}
+@Builder
+public record Person(
+        @NonNull String type,
+        String firstName,
+        String surname,
+        String legalName,
+        @NonNull String identifier
+) {}

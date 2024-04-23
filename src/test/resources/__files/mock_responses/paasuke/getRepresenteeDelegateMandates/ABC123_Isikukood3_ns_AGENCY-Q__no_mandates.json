@@ -2,7 +2,7 @@
   "representee": {
     "type": "LEGAL_PERSON",
     "legalName": "Sukk ja Saabas OÜ",
-    "identifier": "EE12345678"
+    "identifier": "ABC123"
   },
   "delegate": {
     "type": "NATURAL_PERSON",
@@ -10,8 +10,5 @@
     "surname": "Perekonnanimi3",
     "identifier": "Isikukood3"
   },
-  "mandates": [
-    {"role": "BR_REPRIGHT:JUHL"},
-    {"role": "AGENCY-Q:Edit.submit"}
-  ]
+  "mandates": []
 }

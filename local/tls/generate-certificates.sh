@@ -33,6 +33,7 @@ cd "$(command dirname -- "${0}")" || exit
 
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.admin.truststore.p12'
 ./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.hydra.truststore.p12'
+./generate-truststore.sh 'govsso-ca' 'session' 'session.localhost.paasuke.truststore.p12'
 ./generate-truststore.sh 'tara-ca' 'session' 'session.localhost.tara.truststore.p12'
 
 ./generate-truststore.sh 'govsso-ca' 'enduserselfservice' 'enduserselfservice.localhost.session.truststore.p12'
@@ -56,6 +57,8 @@ cp './session/session.localhost.keystore.p12' '../../src/test/resources'
 cp './session/session.localhost.admin.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.tara.truststore.p12' '../../src/test/resources'
 cp './session/session.localhost.hydra.truststore.p12' '../../src/test/resources'
+cp './session/session.localhost.paasuke.truststore.p12' '../../src/test/resources'
 cp './admin/admin.localhost.keystore.p12' '../../src/test/resources'
 cp './hydra/hydra.localhost.keystore.p12' '../../src/test/resources'
 cp './tara/tara.localhost.keystore.p12' '../../src/test/resources'
+cp './paasuke/paasuke.localhost.keystore.p12' '../../src/test/resources'

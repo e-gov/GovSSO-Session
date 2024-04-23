@@ -446,7 +446,7 @@ services:
     environment:
       - 'WIREMOCK_OPTIONS=
           --disable-http
-          --https-port 8443
+          --https-port 26443
           --https-keystore /home/wiremock/certs/paasuke.localhost.keystore.p12
           --keystore-password changeit
           --key-manager-password changeit'
@@ -456,7 +456,7 @@ services:
         aliases:
           - paasuke.localhost
     ports:
-      - "26443:8443"
+      - "26443:26443"
     volumes:
       - ./local/paasuke/mappings:/home/wiremock/mappings:ro
       - ./local/paasuke/__files:/home/wiremock/__files:ro

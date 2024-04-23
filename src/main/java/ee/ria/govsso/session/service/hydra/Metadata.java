@@ -12,4 +12,5 @@ public class Metadata {
     private OidcClient oidcClient = new OidcClient();
     private boolean displayUserConsent;
     private List<String> skipUserConsentClientIds;
+    private String paasukeParameters;
 }

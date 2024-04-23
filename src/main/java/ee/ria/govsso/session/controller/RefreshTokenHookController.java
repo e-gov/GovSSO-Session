@@ -4,9 +4,11 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
+import ee.ria.govsso.session.error.ErrorHandler;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -15,8 +17,9 @@ import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTokenBuilder;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
 import ee.ria.govsso.session.service.hydra.Representee;
-import ee.ria.govsso.session.service.paasuke.PaasukeInfo;
+import ee.ria.govsso.session.service.paasuke.MandateTriplet;
 import ee.ria.govsso.session.service.paasuke.PaasukeService;
+import ee.ria.govsso.session.service.paasuke.Person;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -33,10 +36,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
+import static net.logstash.logback.marker.Markers.append;
 
 
 @Slf4j
@@ -94,16 +99,10 @@ public class RefreshTokenHookController {
         }
         RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
+        String subject = taraIdTokenClaims.getStringClaim("sub");
         String representeeSubject = getRepresenteeSubject(hookRequest);
-        if (representeeSubject != null && !taraIdTokenClaims.getStringClaim("sub").equals(representeeSubject)) {
-            PaasukeInfo paasukeInfo = paasukeService.fetchPaasukeInfo(taraIdTokenClaims.getStringClaim("sub"));
-            Representee representee = new Representee();
-            representee.setType(paasukeInfo.getRepresentee().getType());
-            representee.setGivenName(paasukeInfo.getRepresentee().getFirstName());
-            representee.setFamilyName(paasukeInfo.getRepresentee().getSurname());
-            representee.setName(paasukeInfo.getRepresentee().getLegalName());
-            representee.setSub(representeeSubject);
-            representee.setMandates(paasukeInfo.getMandates());
+        if (representeeSubject != null && !subject.equals(representeeSubject)) {
+            Representee representee = getRepresentee(consentRequestInfo, subject, representeeSubject);
             idToken.setRepresentee(representee);
         }
 
@@ -124,11 +123,45 @@ public class RefreshTokenHookController {
         return ResponseEntity.ok(response);
     }
 
+    private Representee getRepresentee(
+            ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
+        Client client = consentRequestInfo.getClient();
+        try {
+            MandateTriplet mandateTriplet =
+                    paasukeService.fetchMandates(representeeSubject, subject, client.getMetadata().getPaasukeParameters());
+            if (mandateTriplet.mandates().isEmpty()) {
+                throw new SsoException(ErrorCode.USER_INPUT, "User is not allowed to represent provided representee");
+            }
+            return toHydraRepresentation(mandateTriplet);
+        } catch (SsoException e) {
+            log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
+        }
+        return null;
+    }
+
+    private static Representee toHydraRepresentation(MandateTriplet mandateTriplet) {
+        Person representee = mandateTriplet.representee();
+        return Representee.builder()
+                .type(representee.type())
+                .givenName(representee.firstName())
+                .familyName(representee.surname())
+                .name(representee.legalName())
+                .sub(representee.identifier())
+                .mandates(mandateTriplet.mandates()
+                        .stream()
+                        .map(mandate -> Representee.Mandate.builder()
+                                .role(mandate.role())
+                                .build())
+                        .collect(Collectors.toList())
+                )
+                .build();
+    }
+
     private String getRepresenteeSubject(RefreshTokenHookRequest hookRequest) {
         if (hookRequest.getRequestedScopes() == null) {
             return null;
         }
-        for (String requestedScope: hookRequest.getRequestedScopes()) {
+        for (String requestedScope : hookRequest.getRequestedScopes()) {
             if (requestedScope == null || !requestedScope.startsWith("representee.")) {
                 continue;
             }

@@ -26,6 +26,8 @@ import static net.logstash.logback.marker.Markers.append;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class ErrorHandler {
+
+    public static final String ERROR_CODE_MARKER = "error.code";
     private final StatisticsLogger statisticsLogger;
 
     // These are considered as USER_INPUT errors.
@@ -57,12 +59,12 @@ public class ErrorHandler {
     }
 
     private void logErrorWithStacktrace(Exception ex, ErrorCode errorCode, String messageFormat, HttpServletRequest request) {
-        log.error(append("error.code", errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex), ex);
+        log.error(append(ERROR_CODE_MARKER, errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex), ex);
         logStatistics(ex, errorCode, request);
     }
 
     private void logError(Exception ex, ErrorCode errorCode, String messageFormat, HttpServletRequest request) {
-        log.error(append("error.code", errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex));
+        log.error(append(ERROR_CODE_MARKER, errorCode.name()), messageFormat, ExceptionUtil.getCauseMessages(ex));
         logStatistics(ex, errorCode, request);
     }
 

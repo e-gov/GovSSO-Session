@@ -57,6 +57,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     protected static final String HYDRA_MOCK_URL = "https://hydra.localhost:9000";
     protected static final String TARA_MOCK_URL = "https://tara.localhost:10000";
     protected static final String ADMIN_MOCK_URL = "https://admin.localhost:11000";
+    protected static final String PAASUKE_MOCK_URL = "https://paasuke.localhost:12000";
     protected static final WireMockServer HYDRA_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
             .httpDisabled(true)
             .httpsPort(9000)
@@ -81,6 +82,15 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
             .keyManagerPassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
+    protected static final WireMockServer PAASUKE_MOCK_SERVER = new WireMockServer(WireMockConfiguration.wireMockConfig()
+            .httpDisabled(true)
+            .httpsPort(12000)
+            .keystorePath("src/test/resources/paasuke.localhost.keystore.p12")
+            .keystorePassword("changeit")
+            .keyManagerPassword("changeit")
+            .notifier(new ConsoleNotifier(true))
+    );
+
     protected static final RSAKey TARA_JWK = TaraTestSetup.generateJWK();
     @LocalServerPort
     protected int port;
@@ -90,7 +100,24 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         configureRestAssured();
         HYDRA_MOCK_SERVER.start();
         ADMIN_MOCK_SERVER.start();
+        PAASUKE_MOCK_SERVER.start();
+        TARA_MOCK_SERVER.start();
+        // TODO: Move to @BeforeEach?
         setUpTaraMetadataMocks();
+    }
+
+    @BeforeEach
+    public void beforeEachTest() {
+        RestAssured.requestSpecification.port(port);
+        RestAssured.responseSpecification = new ResponseSpecBuilder()
+                .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS).build();
+        HYDRA_MOCK_SERVER.resetAll();
+        // TODO: Do not reset admin mock for now as it seems to create issued with scheduled update task
+        // ADMIN_MOCK_SERVER.resetAll();
+        PAASUKE_MOCK_SERVER.resetAll();
+        // TODO: Do not reset TARA mock for now as it seems to create issued with scheduled update task
+        // TARA_MOCK_SERVER.resetAll();
+        // setUpTaraMetadataMocks();
     }
 
     private static void configureRestAssured() {
@@ -102,20 +129,11 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
     }
 
     protected static void setUpTaraMetadataMocks() {
-        TARA_MOCK_SERVER.start();
         setUpTaraMetadataMocks("mock_tara_oidc_metadata.json");
     }
 
     @SneakyThrows
     protected static void setUpTaraMetadataMocks(String metadataBodyFile) {
         TaraTestSetup.setUpMetadataMocks(TARA_MOCK_SERVER, metadataBodyFile, TARA_JWK);
-    }
-
-    @BeforeEach
-    public void beforeEachTest() {
-        RestAssured.requestSpecification.port(port);
-        RestAssured.responseSpecification = new ResponseSpecBuilder()
-                .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS).build();
-        HYDRA_MOCK_SERVER.resetAll();
     }
 }

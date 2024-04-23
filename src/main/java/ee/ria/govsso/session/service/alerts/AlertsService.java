@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -54,6 +55,9 @@ public class AlertsService {
 
             this.alerts = alerts;
 
+        } catch (WebClientResponseException ex) {
+            requestLogger.logResponse(ex.getStatusCode().value(), ex.getResponseBodyAsString());
+            log.error("Unable to update alerts: {}", ExceptionUtil.getCauseMessages(ex), ex);
         } catch (Exception ex) {
             log.error("Unable to update alerts: {}", ExceptionUtil.getCauseMessages(ex), ex);
         }

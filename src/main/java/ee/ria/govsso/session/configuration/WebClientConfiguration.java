@@ -2,12 +2,14 @@ package ee.ria.govsso.session.configuration;
 
 import ee.ria.govsso.session.configuration.properties.AdminConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
+import ee.ria.govsso.session.configuration.properties.PaasukeConfigurationProperties;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -32,31 +34,44 @@ class WebClientConfiguration {
     }
 
     @Bean
-    public WebClient adminWebClient(ClientRequestLogger requestLogger, KeyStore adminTrustStore) {
+    public WebClient adminWebClient(
+            KeyStore adminTrustStore) {
         SslContext sslContext = initSslContext(adminTrustStore);
-
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .filter(responseFilter(requestLogger))
                 .build();
     }
 
     @Bean
-    WebClient hydraWebClient(ClientRequestLogger requestLogger, KeyStore hydraTrustStore) {
+    WebClient hydraWebClient(
+            @Qualifier("hydraRequestLogger") ClientRequestLogger requestLogger,
+            KeyStore hydraTrustStore) {
         SslContext sslContext = initSslContext(hydraTrustStore);
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                // TODO (AUT-1392): Remove filter
                 .filter(responseFilter(requestLogger))
                 .build();
     }
 
     @Bean
+    WebClient paasukeWebClient(KeyStore paasukeTrustStore) {
+        SslContext sslContext = initSslContext(paasukeTrustStore);
+        HttpClient httpClient = HttpClient.create()
+                .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
+
+    @Bean
     @SneakyThrows
-    KeyStore hydraTrustStore(HydraConfigurationProperties.HydraTlsConfigurationProperties tlsProperties) {
+    KeyStore hydraTrustStore(HydraConfigurationProperties hydraProperties) {
+        HydraConfigurationProperties.Tls tlsProperties = hydraProperties.tls();
         InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
         KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
         trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
@@ -65,7 +80,18 @@ class WebClientConfiguration {
 
     @Bean
     @SneakyThrows
-    KeyStore adminTrustStore(AdminConfigurationProperties.AdminTlsConfigurationProperties tlsProperties) {
+    KeyStore adminTrustStore(AdminConfigurationProperties adminProperties) {
+        AdminConfigurationProperties.Tls tlsProperties = adminProperties.tls();
+        InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
+        KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
+        trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
+        return trustStore;
+    }
+
+    @Bean
+    @SneakyThrows
+    KeyStore paasukeTrustStore(PaasukeConfigurationProperties paasukeProperties) {
+        PaasukeConfigurationProperties.Tls tlsProperties = paasukeProperties.tls();
         InputStream trustStoreFile = tlsProperties.trustStoreLocation().getInputStream();
         KeyStore trustStore = KeyStore.getInstance(tlsProperties.trustStoreType());
         trustStore.load(trustStoreFile, tlsProperties.trustStorePassword().toCharArray());
@@ -79,6 +105,9 @@ class WebClientConfiguration {
         return SslContextBuilder.forClient().trustManager(trustManagerFactory).build();
     }
 
+    @Deprecated
+    /* In order to keep all the logging in the same place, log 4xx and 5xx responses manually or implement a filter
+     * that logs all requests or responses instead. See AUT-1392. */
     private ExchangeFilterFunction responseFilter(ClientRequestLogger requestLogger) {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
             if (clientResponse.statusCode().isError()) {

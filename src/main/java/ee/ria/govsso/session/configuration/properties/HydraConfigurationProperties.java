@@ -16,12 +16,11 @@ import java.net.URL;
 public record HydraConfigurationProperties(
         @NotNull
         URL adminUrl,
-        HydraTlsConfigurationProperties tls) {
+        Tls tls) {
 
     @Validated
     @ConstructorBinding
-    @ConfigurationProperties(prefix = "govsso.hydra.tls")
-    public record HydraTlsConfigurationProperties(
+    public record Tls(
             @NotNull
             Resource trustStoreLocation,
             @NotBlank
