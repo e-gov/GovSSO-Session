@@ -30,7 +30,14 @@ public record PaasukeConfigurationProperties(
             String trustStorePassword,
             @DefaultValue("PKCS12")
             @NotBlank
-            String trustStoreType) {
-    }
+            String trustStoreType,
+            @NotNull
+            Resource keyStoreLocation,
+            @NotBlank
+            String keyStorePassword,
+            @DefaultValue("PKCS12")
+            @NotBlank
+            String keyStoreType
+  ) {}
 
 }

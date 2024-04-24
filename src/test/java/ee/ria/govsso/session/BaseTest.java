@@ -88,6 +88,9 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
             .keystorePath("src/test/resources/paasuke.localhost.keystore.p12")
             .keystorePassword("changeit")
             .keyManagerPassword("changeit")
+            .needClientAuth(true)
+            .trustStorePath("src/test/resources/paasuke.localhost.client.truststore.p12")
+            .trustStorePassword("changeit")
             .notifier(new ConsoleNotifier(true))
     );
 

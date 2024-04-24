@@ -192,6 +192,10 @@ services:
       - govsso.tara.tls.trust-store-password=changeit
       - govsso.admin.tls.trust-store-location=file:/var/certs/session.localhost.admin.truststore.p12
       - govsso.admin.tls.trust-store-password=changeit
+      - govsso.paasuke.tls.trust-store-location=file:/var/certs/session.localhost.paasuke.truststore.p12
+      - govsso.paasuke.tls.trust-store-password=changeit
+      - govsso.paasuke.tls.key-store-location=file:/var/certs/session.localhost.keystore.p12
+      - govsso.paasuke.tls.key-store-password=changeit
       - govsso.alerts.static-alert.message-templates[0].message=Tegemist on kohaliku arenduskeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/GOVSSO/Testing">GovSSO dokumentatsioonis</a>!
       - govsso.alerts.static-alert.message-templates[0].locale=et
       - govsso.alerts.static-alert.message-templates[1].message=This is a local development environment and necessary information for testing is available in <a href="https://e-gov.github.io/GOVSSO/Testing">GovSSO documentation</a>!
@@ -449,7 +453,10 @@ services:
           --https-port 26443
           --https-keystore /home/wiremock/certs/paasuke.localhost.keystore.p12
           --keystore-password changeit
-          --key-manager-password changeit'
+          --key-manager-password changeit
+          --https-require-client-cert 
+          --https-truststore /home/wiremock/certs/paasuke.localhost.client.truststore.p12
+          --truststore-password changeit'
     hostname: paasuke.localhost
     networks:
       default:

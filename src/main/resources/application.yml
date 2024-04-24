@@ -76,6 +76,8 @@ govsso:
     tls:
       trust-store-location: classpath:session.localhost.paasuke.truststore.p12
       trust-store-password: changeit
+      key-store-location: classpath:session.localhost.keystore.p12
+      key-store-password: changeit
   x-road:
     client-id: ee-test/GOV/87654321/generic-consumer
   security:

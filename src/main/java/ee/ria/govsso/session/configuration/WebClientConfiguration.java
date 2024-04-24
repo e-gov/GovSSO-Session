@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -59,8 +60,14 @@ class WebClientConfiguration {
     }
 
     @Bean
-    WebClient paasukeWebClient(KeyStore paasukeTrustStore) {
-        SslContext sslContext = initSslContext(paasukeTrustStore);
+    WebClient paasukeWebClient(
+            KeyStore paasukeTrustStore,
+            KeyStore paasukeKeyStore,
+            PaasukeConfigurationProperties paasukeConfigurationProperties) {
+        SslContext sslContext = initSslContext(
+                paasukeTrustStore,
+                paasukeKeyStore,
+                paasukeConfigurationProperties.tls().keyStorePassword());
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
         return WebClient.builder()
@@ -98,11 +105,36 @@ class WebClientConfiguration {
         return trustStore;
     }
 
+    @Bean
+    @SneakyThrows
+    KeyStore paasukeKeyStore(PaasukeConfigurationProperties paasukeProperties) {
+        PaasukeConfigurationProperties.Tls tlsProperties = paasukeProperties.tls();
+        InputStream keyStoreFile = tlsProperties.keyStoreLocation().getInputStream();
+        KeyStore keyStore = KeyStore.getInstance(tlsProperties.keyStoreType());
+        keyStore.load(keyStoreFile, tlsProperties.keyStorePassword().toCharArray());
+        return keyStore;
+    }
+
     @SneakyThrows
     private SslContext initSslContext(KeyStore trustStore) {
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        TrustManagerFactory trustManagerFactory =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustManagerFactory.init(trustStore);
         return SslContextBuilder.forClient().trustManager(trustManagerFactory).build();
+    }
+
+    @SneakyThrows
+    private SslContext initSslContext(KeyStore trustStore, KeyStore keyStore, String keyStorePassword) {
+        TrustManagerFactory trustManagerFactory =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+        KeyManagerFactory keyManagerFactory =
+                KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+        return SslContextBuilder.forClient()
+                .trustManager(trustManagerFactory)
+                .keyManager(keyManagerFactory)
+                .build();
     }
 
     @Deprecated

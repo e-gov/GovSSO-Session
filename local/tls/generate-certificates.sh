@@ -42,6 +42,9 @@ cd "$(command dirname -- "${0}")" || exit
 
 ./generate-truststore.sh 'govsso-ca' 'inproxy' 'inproxy.localhost.admin.truststore.p12'
 
+# TODO (AUT-1805): Trust "session" certificate instead of "govsso-ca"
+./generate-truststore.sh 'govsso-ca' 'paasuke' 'paasuke.localhost.client.truststore.p12'
+
 # Copying these files, because postgres TLS configuration requires cert and key file setting of permissions
 # in Dockerfile thus these files must be reachable from Dockerfile context.
 cp ./hydra-db/hydra-db.localhost.crt ../hydra-db
@@ -62,3 +65,4 @@ cp './admin/admin.localhost.keystore.p12' '../../src/test/resources'
 cp './hydra/hydra.localhost.keystore.p12' '../../src/test/resources'
 cp './tara/tara.localhost.keystore.p12' '../../src/test/resources'
 cp './paasuke/paasuke.localhost.keystore.p12' '../../src/test/resources'
+cp './paasuke/paasuke.localhost.client.truststore.p12' '../../src/test/resources'
