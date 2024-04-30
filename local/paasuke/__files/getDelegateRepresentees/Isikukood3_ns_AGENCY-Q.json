@@ -1,0 +1,13 @@
+[
+  {
+    "type": "LEGAL_PERSON",
+    "legalName": "Sukk ja Saabas OÜ",
+    "identifier": "EE12345678"
+  },
+  {
+    "type": "NATURAL_PERSON",
+    "firstName": "Mari-Liis",
+    "surname": "Männik",
+    "identifier": "EE47101010033"
+  }
+]

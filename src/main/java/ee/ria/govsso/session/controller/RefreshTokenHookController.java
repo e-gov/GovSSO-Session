@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -101,8 +102,9 @@ public class RefreshTokenHookController {
         }
         RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
-        String subject = taraIdTokenClaims.getStringClaim("sub");
+        String subject = taraIdTokenClaims.getSubject();
         String representeeSubject = getRepresenteeSubject(hookRequest);
+        idToken.setRepresentee_list(getRepresentees(consentRequestInfo, subject, hookRequest));
         if (representeeSubject != null && !subject.equals(representeeSubject)) {
             Representee representee = getRepresentee(consentRequestInfo, subject, representeeSubject);
             idToken.setRepresentee(representee);
@@ -181,6 +183,18 @@ public class RefreshTokenHookController {
                 .build();
     }
 
+    //TODO ConsentInitController has the exact same method, refactor so it can be reused in both places.
+    private Representee toHydraRepresentation(Person representee) {
+        return Representee.builder()
+                .type(representee.type())
+                .givenName(representee.firstName())
+                .familyName(representee.surname())
+                .name(representee.legalName())
+                .sub(representee.identifier())
+                .build();
+    }
+
+
     private String getRepresenteeSubject(RefreshTokenHookRequest hookRequest) {
         if (hookRequest.getRequestedScopes() == null) {
             return null;
@@ -197,6 +211,20 @@ public class RefreshTokenHookController {
                 continue;
             }
             return id;
+        }
+        return null;
+    }
+
+    private List<Representee> getRepresentees(
+            ConsentRequestInfo consentRequestInfo, String subject, RefreshTokenHookRequest hookRequest) {
+        if (hookRequest.getRequestedScopes() == null || !hookRequest.getRequestedScopes().contains("representee_list")) {
+            return null;
+        }
+        try {
+            Person[] persons = paasukeService.fetchRepresentees(subject, consentRequestInfo.getClient().getMetadata().getPaasukeParameters());
+            return Arrays.stream(persons).map(this::toHydraRepresentation).toList();
+        } catch (SsoException e) {
+            log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
         }
         return null;
     }

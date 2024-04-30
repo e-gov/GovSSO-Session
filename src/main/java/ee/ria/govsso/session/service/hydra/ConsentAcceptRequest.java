@@ -34,5 +34,6 @@ public class ConsentAcceptRequest {
         private String birthdate;
         private String phoneNumber;
         private Boolean phoneNumberVerified;
+        private List<Representee> representeeList;
     }
 }

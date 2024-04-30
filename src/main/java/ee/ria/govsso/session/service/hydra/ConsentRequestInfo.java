@@ -15,6 +15,7 @@ public class ConsentRequestInfo {
     private String challenge;
     private String loginChallenge;
     private String loginSessionId;
+    private String subject;
     private String[] requestedScope;
     private Client client;
     private Context context;

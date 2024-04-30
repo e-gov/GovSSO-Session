@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @JsonNaming(SnakeCaseStrategy.class)
 public final class RefreshTokenHookResponse {
@@ -43,5 +45,6 @@ public final class RefreshTokenHookResponse {
         private String phoneNumber;
         private Boolean phoneNumberVerified;
         private Representee representee;
+        private List<Representee> representee_list;
     }
 }

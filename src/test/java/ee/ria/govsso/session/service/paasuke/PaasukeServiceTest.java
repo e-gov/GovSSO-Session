@@ -164,4 +164,130 @@ class PaasukeServiceTest extends BaseTest {
                 .isLoggedOnce();
     }
 
+    @Test
+    void fetchRepresentees_okResponse_delegateRepresenteesReturned() {
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
+
+        Person person1 = Person.builder()
+                .type("LEGAL_PERSON")
+                .legalName("Sukk ja Saabas OÜ")
+                .identifier("EE12345678")
+                .build();
+        Person person2 = Person.builder()
+                .type("NATURAL_PERSON")
+                .firstName("Mari-Liis")
+                .surname("Männik")
+                .identifier("EE47101010033")
+                .build();
+
+        Person[] expected = new Person[]{person1, person2};
+        Person[] actual = paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q");
+
+        assertThat(actual, equalTo(expected));
+
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE request")
+                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .isLoggedOnce();
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE response")
+                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=200, http.response.body.content=[{"))
+                .isLoggedOnce();
+    }
+
+    @Test
+    void fetchRepresentees_4xxResponse_exceptionThrown() {
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(400)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        SsoException exception = assertThrows(
+                SsoException.class,
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+
+        assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE request")
+                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .isLoggedOnce();
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE response")
+                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=400"))
+                .isLoggedOnce();
+    }
+
+    @Test
+    void fetchRepresentees_5xxResponse_exceptionThrown() {
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        SsoException exception = assertThrows(
+                SsoException.class,
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+
+        assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE request")
+                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .isLoggedOnce();
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE response")
+                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=500"))
+                .isLoggedOnce();
+    }
+
+    @Test
+    void fetchRepresentees_requestTimesOut_exceptionThrown() {
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withFixedDelay((int) paasukeConfigurationProperties.requestTimeout().plus(100, MILLIS).toMillis())
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
+
+        SsoException exception = assertThrows(
+                SsoException.class,
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+
+        assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
+        assertThat(exception.getCause(), instanceOf(HttpTimeoutRuntimeException.class));
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE request")
+                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .isLoggedOnce();
+    }
+
 }

@@ -1,6 +1,9 @@
 package ee.ria.govsso.session.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import ee.ria.govsso.session.BaseTest;
+import ee.ria.govsso.session.configuration.properties.XRoadConfigurationProperties;
+import ee.ria.govsso.session.xroad.XRoadHeaders;
 import io.restassured.RestAssured;
 import io.restassured.builder.ResponseSpecBuilder;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -26,6 +30,7 @@ import static org.hamcrest.Matchers.equalTo;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ConsentInitControllerTest extends BaseTest {
     public static final String TEST_CONSENT_CHALLENGE = "aaabbbcccdddeeefff00011122233344";
+    private final XRoadConfigurationProperties xRoadConfigurationProperties;
 
     @BeforeEach
     public void setupExpectedResponseSpec() {
@@ -102,7 +107,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(notMatching(".*\"phone_number\":\"12345\",\"phone_number_verified\":true.*")));
+                .withRequestBody(containing("{\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
     }
 
     @Test
@@ -388,5 +393,119 @@ class ConsentInitControllerTest extends BaseTest {
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
         assertErrorIsLogged("Unexpected error: 500 Internal Server Error from PUT");
+    }
+
+    @Test
+    void consentInit_WhenAcceptConsentWithRepresenteeListScopeIsSuccessful_RedirectsWithIdTokenWithRepresentees() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_with_representee_list.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"representee_list\":[{\"type\":\"LEGAL_PERSON\",\"sub\":\"EE12345678\",\"name\":\"Sukk ja Saabas OÜ\"},{\"type\":\"NATURAL_PERSON\",\"sub\":\"EE47101010033\",\"given_name\":\"Mari-Liis\",\"family_name\":\"Männik\"}]"))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+    }
+
+    @Test
+    void consentInit_whenRepresenteeListRequestFails_RepresenteeListIsNotAddedToIdToken() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_with_representee_list.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}"))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+
+        assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
+    }
+
+    @Test
+    void consentInit_whenRepresenteeListIsEmpty_emptyRepresenteeListIsAddedToIdToken() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_request_scope_with_representee_list.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
+
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody("[]")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(302)
+                .header("Location", Matchers.containsString("auth/consent/test"));
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":[]}"))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
     }
 }

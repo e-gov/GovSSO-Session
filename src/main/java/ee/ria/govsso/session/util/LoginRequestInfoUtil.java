@@ -9,18 +9,22 @@ import lombok.experimental.UtilityClass;
 import org.thymeleaf.util.ArrayUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @UtilityClass
 public class LoginRequestInfoUtil {
 
     public void validateScopes(LoginRequestInfo loginRequestInfo) {
-        String[] requestedScopes = loginRequestInfo.getRequestedScope();
-        if (!Arrays.asList(requestedScopes).contains("openid") ||
-                !Arrays.stream(requestedScopes).allMatch(s -> s.matches("^(openid|phone|representee\\.\\*)$")) ||
-                requestedScopes.length > 3) {
-            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone and representee.*, but nothing else");
+        List<String> requestedScopes = Arrays.asList(loginRequestInfo.getRequestedScope());
+        Set<String> set = new HashSet<>(requestedScopes);
+        if (!requestedScopes.contains("openid") ||
+                !requestedScopes.stream().allMatch(s -> s.matches("^(openid|phone|representee_list|representee\\.\\*)$")) ||
+                set.size() != requestedScopes.size() && requestedScopes.size() > 4) {
+            throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, representee.* and representee_list, but nothing else");
         }
-
     }
 
     public void validateAcrValues(LoginRequestInfo loginRequestInfo) {

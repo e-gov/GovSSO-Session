@@ -74,4 +74,41 @@ public class PaasukeService {
             throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchMandates request timed out", e);
         }
     }
+
+    public Person[] fetchRepresentees(@NonNull String delegate, @NonNull String queryParams) {
+        URI uri;
+        try {
+            uri = new URIBuilder(paasukeConfigurationProperties.hostUrl().toURI())
+                    .appendPathSegments("delegates", delegate, "representees")
+                    .addParameters(WWWFormCodec.parse(queryParams, UTF_8))
+                    .build();
+        } catch (URISyntaxException e) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to build Pääsuke fetchRepresentees URL", e);
+        }
+        requestLogger.logRequest(uri.toString(), HttpMethod.GET.name());
+        try {
+            ResponseEntity<Person[]> response = webclient.get()
+                    .uri(uri)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
+                    .header(XRoadHeaders.USER_ID, delegate)
+                    .header(XRoadHeaders.MESSAGE_ID, UUID.randomUUID().toString())
+                    .retrieve()
+                    .toEntity(Person[].class)
+                    .timeout(
+                            paasukeConfigurationProperties.requestTimeout(),
+                            Mono.error(() -> new HttpTimeoutRuntimeException("Pääsuke request timeout exceeded")))
+                    .blockOptional()
+                    .orElseThrow();
+            Person[] responseBody = response.getBody();
+            requestLogger.logResponse(response.getStatusCode().value(), responseBody);
+            return responseBody;
+        } catch (WebClientResponseException e) {
+            requestLogger.logResponse(e.getStatusCode().value(), e.getResponseBodyAsString());
+            throw new SsoException(
+                    ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request failed with HTTP error", e);
+        } catch (HttpTimeoutRuntimeException e) {
+            throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request timed out", e);
+        }
+    }
 }
