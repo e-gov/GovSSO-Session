@@ -35,6 +35,7 @@
 
         <elastic-apm.version>1.49.0</elastic-apm.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <jquery.version>3.7.1</jquery.version>
         <logstash-logback-encoder.version>7.3</logstash-logback-encoder.version><!-- TODO Upgrade to >= 7.4 after Spring Boot is upgraded to 3.x which includes Logback >= 1.3 -->
         <nimbus-oauth2-oidc-sdk.version>11.10.1</nimbus-oauth2-oidc-sdk.version>
         <wiremock.version>2.35.2</wiremock.version> <!-- TODO Upgrade to >=3.0.1 after Spring Boot is upgraded to 3.x which includes jetty >= 11.0.12 -->
@@ -161,6 +162,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+            <version>${jquery.version}</version>
         </dependency>
     </dependencies>
 
