@@ -15,6 +15,7 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Representee {
 
+    private RepresenteeRequestStatus status;
     private String type;
     private String sub;
     private String givenName;

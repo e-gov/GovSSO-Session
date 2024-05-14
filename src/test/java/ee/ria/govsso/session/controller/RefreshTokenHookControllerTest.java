@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.XRoadConfigurationProperties;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookRequest;
+import ee.ria.govsso.session.service.hydra.RepresenteeRequestStatus;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -249,6 +250,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
                 .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
                 .body("session.id_token.representee.sub", equalTo("ABC123"))
                 .body("session.id_token.representee.given_name", nullValue())
@@ -290,6 +292,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
                 .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
                 .body("session.id_token.representee.sub", equalTo("ABC123"))
                 .body("session.id_token.representee.given_name", nullValue())
@@ -331,6 +334,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
                 .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
                 .body("session.id_token.representee.sub", equalTo("ABC123"))
                 .body("session.id_token.representee.given_name", nullValue())
@@ -370,8 +374,20 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body("session.access_token.representee", nullValue())
-                .body("session.id_token.representee", nullValue());
+                .body("session.access_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED.name()))
+                .body("session.access_token.representee.type", nullValue())
+                .body("session.access_token.representee.sub", nullValue())
+                .body("session.access_token.representee.given_name", nullValue())
+                .body("session.access_token.representee.family_name", nullValue())
+                .body("session.access_token.representee.name", nullValue())
+                .body("session.access_token.representee.mandates", nullValue())
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED.name()))
+                .body("session.id_token.representee.type", nullValue())
+                .body("session.id_token.representee.sub", nullValue())
+                .body("session.id_token.representee.given_name", nullValue())
+                .body("session.id_token.representee.family_name", nullValue())
+                .body("session.id_token.representee.name", nullValue())
+                .body("session.id_token.representee.mandates", nullValue());
 
         assertErrorIsLogged("User is not allowed to represent provided representee");
     }
@@ -404,8 +420,20 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body("session.access_token.representee", nullValue())
-                .body("session.id_token.representee", nullValue());
+                .body("session.access_token.representee.status", equalTo(RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE.name()))
+                .body("session.access_token.representee.type", nullValue())
+                .body("session.access_token.representee.sub", nullValue())
+                .body("session.access_token.representee.given_name", nullValue())
+                .body("session.access_token.representee.family_name", nullValue())
+                .body("session.access_token.representee.name", nullValue())
+                .body("session.access_token.representee.mandates", nullValue())
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE.name()))
+                .body("session.id_token.representee.type", nullValue())
+                .body("session.id_token.representee.sub", nullValue())
+                .body("session.id_token.representee.given_name", nullValue())
+                .body("session.id_token.representee.family_name", nullValue())
+                .body("session.id_token.representee.name", nullValue())
+                .body("session.id_token.representee.mandates", nullValue());
 
         assertErrorIsLogged("Pääsuke fetchMandates request failed with HTTP error");
     }
@@ -540,6 +568,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(200)
                 .body("session.access_token.representee", nullValue())
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
                 .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
                 .body("session.id_token.representee.sub", equalTo("ABC123"))
                 .body("session.id_token.representee.given_name", nullValue())

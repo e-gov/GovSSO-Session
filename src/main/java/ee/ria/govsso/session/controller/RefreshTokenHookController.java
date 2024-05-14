@@ -17,6 +17,7 @@ import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTokenBuilder;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
 import ee.ria.govsso.session.service.hydra.Representee;
+import ee.ria.govsso.session.service.hydra.RepresenteeRequestStatus;
 import ee.ria.govsso.session.service.paasuke.MandateTriplet;
 import ee.ria.govsso.session.service.paasuke.PaasukeService;
 import ee.ria.govsso.session.service.paasuke.Person;
@@ -152,22 +153,25 @@ public class RefreshTokenHookController {
     private Representee getRepresentee(
             ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
         Client client = consentRequestInfo.getClient();
+        RepresenteeRequestStatus status = RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE;
         try {
             MandateTriplet mandateTriplet =
                     paasukeService.fetchMandates(representeeSubject, subject, client.getMetadata().getPaasukeParameters());
             if (mandateTriplet.mandates().isEmpty()) {
+                status = RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED;
                 throw new SsoException(ErrorCode.USER_INPUT, "User is not allowed to represent provided representee");
             }
             return toHydraRepresentation(mandateTriplet);
         } catch (SsoException e) {
             log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
         }
-        return null;
+        return Representee.builder().status(status).build();
     }
 
     private static Representee toHydraRepresentation(MandateTriplet mandateTriplet) {
         Person representee = mandateTriplet.representee();
         return Representee.builder()
+                .status(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT)
                 .type(representee.type())
                 .givenName(representee.firstName())
                 .familyName(representee.surname())
