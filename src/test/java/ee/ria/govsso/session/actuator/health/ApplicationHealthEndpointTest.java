@@ -24,6 +24,7 @@ class ApplicationHealthEndpointTest extends HealthEndpointTest {
                 .body("components.diskSpace.status", equalTo("UP"))
                 .body("components.hydra.status", equalTo("UP"))
                 .body("components.tara.status", equalTo("UP"))
+                .body("components.paasuke.status", equalTo("UNKNOWN"))
                 .body("components.livenessState.status", equalTo("UP"))
                 .body("components.ping.status", equalTo("UP"))
                 .body("components.readinessState.status", equalTo("UP"))

@@ -51,7 +51,7 @@ govsso:
       trust-store-password: changeit
   paasuke:
     host-url: https://paasuke.localhost:12000/volitused/oraakel
-    request-timeout: 400ms
+    request-timeout: 1000ms
     tls:
       trust-store-location: classpath:session.localhost.paasuke.truststore.p12
       trust-store-password: changeit

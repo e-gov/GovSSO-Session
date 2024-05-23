@@ -7,8 +7,10 @@ import ee.ria.govsso.session.error.exceptions.HttpTimeoutRuntimeException;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.WWWFormCodec;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,6 +40,9 @@ public class PaasukeService {
     private final PaasukeConfigurationProperties paasukeConfigurationProperties;
     private final XRoadConfigurationProperties xRoadConfigurationProperties;
 
+    @Getter
+    private volatile Boolean lastRequestToPaasukeSuccessful = null;
+
     public MandateTriplet fetchMandates(@NonNull String representee, @NonNull String delegate, @NonNull String queryParams) {
         URI uri;
         try {
@@ -63,14 +68,17 @@ public class PaasukeService {
                             Mono.error(() -> new HttpTimeoutRuntimeException("Pääsuke request timeout exceeded")))
                     .blockOptional()
                     .orElseThrow();
+            lastRequestToPaasukeSuccessful = true;
             MandateTriplet responseBody = response.getBody();
             requestLogger.logResponse(response.getStatusCode().value(), responseBody);
             return responseBody;
         } catch (WebClientResponseException e) {
+            lastRequestToPaasukeSuccessful = false;
             requestLogger.logResponse(e.getStatusCode().value(), e.getResponseBodyAsString());
             throw new SsoException(
                     ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchMandates request failed with HTTP error", e);
         } catch (HttpTimeoutRuntimeException e) {
+            lastRequestToPaasukeSuccessful = false;
             throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchMandates request timed out", e);
         }
     }
@@ -100,14 +108,17 @@ public class PaasukeService {
                             Mono.error(() -> new HttpTimeoutRuntimeException("Pääsuke request timeout exceeded")))
                     .blockOptional()
                     .orElseThrow();
+            lastRequestToPaasukeSuccessful = true;
             Person[] responseBody = response.getBody();
             requestLogger.logResponse(response.getStatusCode().value(), responseBody);
             return responseBody;
         } catch (WebClientResponseException e) {
             requestLogger.logResponse(e.getStatusCode().value(), e.getResponseBodyAsString());
+            lastRequestToPaasukeSuccessful = false;
             throw new SsoException(
                     ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request failed with HTTP error", e);
         } catch (HttpTimeoutRuntimeException e) {
+            lastRequestToPaasukeSuccessful = false;
             throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request timed out", e);
         }
     }

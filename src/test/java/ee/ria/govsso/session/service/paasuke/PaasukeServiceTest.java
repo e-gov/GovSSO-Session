@@ -26,10 +26,10 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class PaasukeServiceTest extends BaseTest {
+public class PaasukeServiceTest extends BaseTest {
 
-    private static final String REPRESENTEE_ID = "ABC123";
-    private static final String DELEGATE_ID = "Isikukood3";
+    public static final String REPRESENTEE_ID = "ABC123";
+    public static final String DELEGATE_ID = "Isikukood3";
 
     private final PaasukeService paasukeService;
     private final PaasukeConfigurationProperties paasukeConfigurationProperties;
