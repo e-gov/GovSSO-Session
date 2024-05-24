@@ -22,6 +22,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.REPRESENTEE_LIST_CURRENT;
+import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.SERVICE_NOT_AVAILABLE;
 import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -429,7 +431,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"representee_list\":[{\"type\":\"LEGAL_PERSON\",\"sub\":\"EE12345678\",\"name\":\"Sukk ja Saabas OÜ\"},{\"type\":\"NATURAL_PERSON\",\"sub\":\"EE47101010033\",\"given_name\":\"Mari-Liis\",\"family_name\":\"Männik\"}]"))
+                .withRequestBody(containing("\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[{\"type\":\"LEGAL_PERSON\",\"sub\":\"EE12345678\",\"name\":\"Sukk ja Saabas OÜ\"},{\"type\":\"NATURAL_PERSON\",\"sub\":\"EE47101010033\",\"given_name\":\"Mari-Liis\",\"family_name\":\"Männik\"}]}"))
                 .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
     }
 
@@ -465,7 +467,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}"))
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE  + "\"}}"))
                 .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
@@ -505,7 +507,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":[]}"))
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[]}}"))
                 .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
     }
 }

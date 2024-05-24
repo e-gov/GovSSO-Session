@@ -308,7 +308,7 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public ConsentAcceptResponse acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo, List<Representee> representees) {
+    public ConsentAcceptResponse acceptConsent(String consentChallenge, ConsentRequestInfo consentRequestInfo, RepresenteeList representeeList) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/consent/accept")
                 .queryParam("consent_challenge", consentChallenge)
@@ -338,8 +338,8 @@ public class HydraService {
             idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
             idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
         }
-        if (representees != null) {
-            idToken.setRepresenteeList(representees);
+        if (representeeList != null) {
+            idToken.setRepresenteeList(representeeList);
         }
         session.setIdToken(idToken);
 

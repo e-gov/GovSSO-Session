@@ -25,6 +25,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
+import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.REPRESENTEE_LIST_CURRENT;
+import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.SERVICE_NOT_AVAILABLE;
 import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -680,13 +682,14 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body("session.id_token.representee_list[0].type", equalTo("LEGAL_PERSON"))
-                .body("session.id_token.representee_list[0].sub", equalTo("EE12345678"))
-                .body("session.id_token.representee_list[0].name", equalTo("Sukk ja Saabas OÜ"))
-                .body("session.id_token.representee_list[1].type", equalTo("NATURAL_PERSON"))
-                .body("session.id_token.representee_list[1].sub", equalTo("EE47101010033"))
-                .body("session.id_token.representee_list[1].given_name", equalTo("Mari-Liis"))
-                .body("session.id_token.representee_list[1].family_name", equalTo("Männik"))
+                .body("session.id_token.representee_list.status", equalTo(REPRESENTEE_LIST_CURRENT.name()))
+                .body("session.id_token.representee_list.list[0].type", equalTo("LEGAL_PERSON"))
+                .body("session.id_token.representee_list.list[0].sub", equalTo("EE12345678"))
+                .body("session.id_token.representee_list.list[0].name", equalTo("Sukk ja Saabas OÜ"))
+                .body("session.id_token.representee_list.list[1].type", equalTo("NATURAL_PERSON"))
+                .body("session.id_token.representee_list.list[1].sub", equalTo("EE47101010033"))
+                .body("session.id_token.representee_list.list[1].given_name", equalTo("Mari-Liis"))
+                .body("session.id_token.representee_list.list[1].family_name", equalTo("Männik"))
                 .body("session.access_token.representee_list", nullValue());
     }
 
@@ -720,7 +723,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body("session.id_token.representee_list", equalTo(Collections.emptyList()))
+                .body("session.id_token.representee_list.list", equalTo(Collections.emptyList()))
+                .body("session.id_token.representee_list.status", equalTo(REPRESENTEE_LIST_CURRENT.name()))
                 .body("session.access_token.representee_list", nullValue());
     }
 
@@ -752,7 +756,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .then()
                 .assertThat()
                 .statusCode(200)
-                .body("session.id_token.representee_list", nullValue())
+                .body("session.id_token.representee_list.status", equalTo(SERVICE_NOT_AVAILABLE.name()))
+                .body("session.id_token.representee_list.list", nullValue())
                 .body("session.access_token.representee_list", nullValue());
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");

@@ -4,11 +4,9 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
-import ee.ria.govsso.session.error.ErrorHandler;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
-import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -17,10 +15,8 @@ import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTokenBuilder;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
 import ee.ria.govsso.session.service.hydra.Representee;
-import ee.ria.govsso.session.service.hydra.RepresenteeRequestStatus;
-import ee.ria.govsso.session.service.paasuke.MandateTriplet;
-import ee.ria.govsso.session.service.paasuke.PaasukeService;
-import ee.ria.govsso.session.service.paasuke.Person;
+import ee.ria.govsso.session.service.hydra.RepresenteeList;
+import ee.ria.govsso.session.service.paasuke.RepresentationService;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -35,15 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
-import static net.logstash.logback.marker.Markers.append;
 
 
 @Slf4j
@@ -53,7 +46,7 @@ public class RefreshTokenHookController {
     public static final String TOKEN_REFRESH_REQUEST_MAPPING = "/admin/token-refresh";
     private final HydraService hydraService;
     private final AccessTokenClaimsFactory accessTokenClaimsFactory;
-    private final PaasukeService paasukeService;
+    private final RepresentationService representationService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final StatisticsLogger statisticsLogger;
 
@@ -105,9 +98,9 @@ public class RefreshTokenHookController {
 
         String subject = taraIdTokenClaims.getSubject();
         String representeeSubject = getRepresenteeSubject(hookRequest);
-        idToken.setRepresentee_list(getRepresentees(consentRequestInfo, subject, hookRequest));
+        idToken.setRepresenteeList(getRepresentees(consentRequestInfo, subject, hookRequest));
         if (representeeSubject != null && !subject.equals(representeeSubject)) {
-            Representee representee = getRepresentee(consentRequestInfo, subject, representeeSubject);
+            Representee representee = representationService.getRepresentee(consentRequestInfo, subject, representeeSubject);
             idToken.setRepresentee(representee);
         }
 
@@ -150,55 +143,6 @@ public class RefreshTokenHookController {
         }
     }
 
-    private Representee getRepresentee(
-            ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
-        Client client = consentRequestInfo.getClient();
-        RepresenteeRequestStatus status = RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE;
-        try {
-            MandateTriplet mandateTriplet =
-                    paasukeService.fetchMandates(representeeSubject, subject, client.getMetadata().getPaasukeParameters());
-            if (mandateTriplet.mandates().isEmpty()) {
-                status = RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED;
-                throw new SsoException(ErrorCode.USER_INPUT, "User is not allowed to represent provided representee");
-            }
-            return toHydraRepresentation(mandateTriplet);
-        } catch (SsoException e) {
-            log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
-        }
-        return Representee.builder().status(status).build();
-    }
-
-    private static Representee toHydraRepresentation(MandateTriplet mandateTriplet) {
-        Person representee = mandateTriplet.representee();
-        return Representee.builder()
-                .status(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT)
-                .type(representee.type())
-                .givenName(representee.firstName())
-                .familyName(representee.surname())
-                .name(representee.legalName())
-                .sub(representee.identifier())
-                .mandates(mandateTriplet.mandates()
-                        .stream()
-                        .map(mandate -> Representee.Mandate.builder()
-                                .role(mandate.role())
-                                .build())
-                        .collect(Collectors.toList())
-                )
-                .build();
-    }
-
-    //TODO ConsentInitController has the exact same method, refactor so it can be reused in both places.
-    private Representee toHydraRepresentation(Person representee) {
-        return Representee.builder()
-                .type(representee.type())
-                .givenName(representee.firstName())
-                .familyName(representee.surname())
-                .name(representee.legalName())
-                .sub(representee.identifier())
-                .build();
-    }
-
-
     private String getRepresenteeSubject(RefreshTokenHookRequest hookRequest) {
         if (hookRequest.getRequestedScopes() == null) {
             return null;
@@ -219,18 +163,11 @@ public class RefreshTokenHookController {
         return null;
     }
 
-    private List<Representee> getRepresentees(
-            ConsentRequestInfo consentRequestInfo, String subject, RefreshTokenHookRequest hookRequest) {
+    private RepresenteeList getRepresentees(ConsentRequestInfo consentRequestInfo, String subject, RefreshTokenHookRequest hookRequest) {
         if (hookRequest.getRequestedScopes() == null || !hookRequest.getRequestedScopes().contains("representee_list")) {
             return null;
         }
-        try {
-            Person[] persons = paasukeService.fetchRepresentees(subject, consentRequestInfo.getClient().getMetadata().getPaasukeParameters());
-            return Arrays.stream(persons).map(this::toHydraRepresentation).toList();
-        } catch (SsoException e) {
-            log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
-        }
-        return null;
+        return representationService.getRepresentees(consentRequestInfo, subject);
     }
 
     public static ConsentRequestInfo getConsentRequestByClientId(List<Consent> consents, String clientId) {

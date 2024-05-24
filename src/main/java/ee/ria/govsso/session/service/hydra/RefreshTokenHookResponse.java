@@ -45,6 +45,6 @@ public final class RefreshTokenHookResponse {
         private String phoneNumber;
         private Boolean phoneNumberVerified;
         private Representee representee;
-        private List<Representee> representee_list;
+        private RepresenteeList representeeList;
     }
 }
