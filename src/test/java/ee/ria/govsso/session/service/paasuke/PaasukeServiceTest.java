@@ -2,6 +2,7 @@ package ee.ria.govsso.session.service.paasuke;
 
 import ch.qos.logback.classic.Level;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.PaasukeConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.XRoadConfigurationProperties;
@@ -43,6 +44,7 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(200)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
         MandateTriplet expected = MandateTriplet.builder()
@@ -66,17 +68,22 @@ public class PaasukeServiceTest extends BaseTest {
         MandateTriplet actual = paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q");
         assertThat(actual, equalTo(expected));
 
+        String requestMessageId = getLastRequestMessageId();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=200, http.response.body.content={"))
+                .withMarker(marker -> marker.contains("http.response.status_code=200"))
+                .withMarker(marker -> marker.contains("http.response.body.content={"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -88,24 +95,29 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(400)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
 
         SsoException exception = assertThrows(
                 SsoException.class,
                 () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=400"))
+                .withMarker(marker -> marker.contains("http.response.status_code=400"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -117,24 +129,29 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(500)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
 
         SsoException exception = assertThrows(
                 SsoException.class,
                 () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=500"))
+                .withMarker(marker -> marker.contains("http.response.status_code=500"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -147,6 +164,7 @@ public class PaasukeServiceTest extends BaseTest {
                 .willReturn(aResponse()
                         .withFixedDelay((int) paasukeConfigurationProperties.requestTimeout().plus(100, MILLIS).toMillis())
                         .withStatus(200)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
 
@@ -154,13 +172,16 @@ public class PaasukeServiceTest extends BaseTest {
                 SsoException.class,
                 () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertThat(exception.getCause(), instanceOf(HttpTimeoutRuntimeException.class));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
     }
 
@@ -172,6 +193,7 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(200)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
 
@@ -192,17 +214,22 @@ public class PaasukeServiceTest extends BaseTest {
 
         assertThat(actual, equalTo(expected));
 
+        String requestMessageId = getLastRequestMessageId();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=200, http.response.body.content=[{"))
+                .withMarker(marker -> marker.contains("http.response.status_code=200"))
+                .withMarker(marker -> marker.contains("http.response.body.content=[{"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -214,24 +241,29 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(400)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
 
         SsoException exception = assertThrows(
                 SsoException.class,
                 () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=400"))
+                .withMarker(marker -> marker.contains("http.response.status_code=400"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -243,24 +275,29 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .willReturn(aResponse()
                         .withStatus(500)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")));
 
         SsoException exception = assertThrows(
                 SsoException.class,
                 () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE response")
-                .withMarkerMatching(marker -> marker.startsWith("http.response.status_code=500"))
+                .withMarker(marker -> marker.contains("http.response.status_code=500"))
+                .withMarker(marker -> marker.contains("http.response.header." + XRoadHeaders.MESSAGE_ID + "=89540c00-7bb0-4c54-8882-6e4aba71eeec"))
                 .isLoggedOnce();
     }
 
@@ -273,6 +310,7 @@ public class PaasukeServiceTest extends BaseTest {
                 .willReturn(aResponse()
                         .withFixedDelay((int) paasukeConfigurationProperties.requestTimeout().plus(100, MILLIS).toMillis())
                         .withStatus(200)
+                        .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
 
@@ -280,14 +318,26 @@ public class PaasukeServiceTest extends BaseTest {
                 SsoException.class,
                 () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
 
+        String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
         assertThat(exception.getCause(), instanceOf(HttpTimeoutRuntimeException.class));
         assertMessage()
                 .withLoggerClass(PaasukeService.class)
                 .withLevel(Level.INFO)
                 .withMessage("PAASUKE request")
-                .withMarkerMatching(marker -> marker.startsWith("http.request.method=GET, url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.method=GET"))
+                .withMarker(marker -> marker.contains("url.full=https://paasuke.localhost:12000/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"))
+                .withMarker(marker -> marker.contains("http.request.header." + XRoadHeaders.MESSAGE_ID + "=" + requestMessageId))
                 .isLoggedOnce();
+    }
+
+    private String getLastRequestMessageId() {
+        List<ServeEvent> events = PAASUKE_MOCK_SERVER.getAllServeEvents();
+        if (events.isEmpty()) {
+            throw new IllegalStateException("No recorded Pääsuke mock serve events");
+        }
+        ServeEvent event = events.get(events.size() - 1);
+        return event.getRequest().getHeader(XRoadHeaders.MESSAGE_ID);
     }
 
 }

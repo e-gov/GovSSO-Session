@@ -7,10 +7,8 @@ import ee.ria.govsso.session.error.exceptions.HttpTimeoutRuntimeException;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.WWWFormCodec;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -53,14 +51,17 @@ public class PaasukeService {
         } catch (URISyntaxException e) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to build Pääsuke fetchMandates URL", e);
         }
-        requestLogger.logRequest(uri.toString(), HttpMethod.GET.name());
+        String outgoingXroadMessageId = UUID.randomUUID().toString();
+        requestLogger.request(HttpMethod.GET, uri.toString())
+                .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
+                .log();
         try {
             ResponseEntity<MandateTriplet> response = webclient.get()
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
                     .header(XRoadHeaders.USER_ID, delegate)
-                    .header(XRoadHeaders.MESSAGE_ID, UUID.randomUUID().toString())
+                    .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
                     .retrieve()
                     .toEntity(MandateTriplet.class)
                     .timeout(
@@ -70,11 +71,17 @@ public class PaasukeService {
                     .orElseThrow();
             lastRequestToPaasukeSuccessful = true;
             MandateTriplet responseBody = response.getBody();
-            requestLogger.logResponse(response.getStatusCode().value(), responseBody);
+            requestLogger.response(response.getStatusCode())
+                    .body(responseBody)
+                    .header(XRoadHeaders.MESSAGE_ID, response.getHeaders().getFirst(XRoadHeaders.MESSAGE_ID))
+                    .log();
             return responseBody;
         } catch (WebClientResponseException e) {
+            requestLogger.response(e.getStatusCode())
+                    .body(e.getResponseBodyAsString())
+                    .header(XRoadHeaders.MESSAGE_ID, e.getHeaders().getFirst(XRoadHeaders.MESSAGE_ID))
+                    .log();
             lastRequestToPaasukeSuccessful = false;
-            requestLogger.logResponse(e.getStatusCode().value(), e.getResponseBodyAsString());
             throw new SsoException(
                     ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchMandates request failed with HTTP error", e);
         } catch (HttpTimeoutRuntimeException e) {
@@ -93,14 +100,17 @@ public class PaasukeService {
         } catch (URISyntaxException e) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to build Pääsuke fetchRepresentees URL", e);
         }
-        requestLogger.logRequest(uri.toString(), HttpMethod.GET.name());
+        String outgoingXroadMessageId = UUID.randomUUID().toString();
+        requestLogger.request(HttpMethod.GET, uri.toString())
+                .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
+                .log();
         try {
             ResponseEntity<Person[]> response = webclient.get()
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
                     .header(XRoadHeaders.USER_ID, delegate)
-                    .header(XRoadHeaders.MESSAGE_ID, UUID.randomUUID().toString())
+                    .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
                     .retrieve()
                     .toEntity(Person[].class)
                     .timeout(
@@ -110,10 +120,16 @@ public class PaasukeService {
                     .orElseThrow();
             lastRequestToPaasukeSuccessful = true;
             Person[] responseBody = response.getBody();
-            requestLogger.logResponse(response.getStatusCode().value(), responseBody);
+            requestLogger.response(response.getStatusCode())
+                    .body(responseBody)
+                    .header(XRoadHeaders.MESSAGE_ID, response.getHeaders().getFirst(XRoadHeaders.MESSAGE_ID))
+                    .log();
             return responseBody;
         } catch (WebClientResponseException e) {
-            requestLogger.logResponse(e.getStatusCode().value(), e.getResponseBodyAsString());
+            requestLogger.response(e.getStatusCode())
+                    .body(e.getResponseBodyAsString())
+                    .header(XRoadHeaders.MESSAGE_ID, e.getHeaders().getFirst(XRoadHeaders.MESSAGE_ID))
+                    .log();
             lastRequestToPaasukeSuccessful = false;
             throw new SsoException(
                     ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request failed with HTTP error", e);

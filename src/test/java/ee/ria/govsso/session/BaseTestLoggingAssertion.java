@@ -153,10 +153,10 @@ public class BaseTestLoggingAssertion {
         }
 
         public Assertion withMarker(String marker) {
-            return withMarkerMatching(marker::equals);
+            return withMarker(marker::equals);
         }
 
-        public Assertion withMarkerMatching(Predicate<String> matcher) {
+        public Assertion withMarker(Predicate<String> matcher) {
             eventFilters.add(e -> matcher.test(e.getMarker().toString()));
             return this;
         }
