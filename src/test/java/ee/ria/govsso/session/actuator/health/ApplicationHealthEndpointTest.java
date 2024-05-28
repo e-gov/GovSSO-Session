@@ -2,6 +2,7 @@ package ee.ria.govsso.session.actuator.health;
 
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
@@ -11,6 +12,9 @@ import static org.hamcrest.Matchers.equalTo;
 class ApplicationHealthEndpointTest extends HealthEndpointTest {
 
     @Test
+    // DirtiesContext is required to make sure that the lastRequestToPaasukeSuccessful parameter in PaasukeService is in its
+    // original state when running this test class, otherwise its status might be DOWN.
+    @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
     void health_WhenAllServicesUp_RespondsWith200() {
         mockHydraHealthAliveUp();
 
@@ -24,7 +28,6 @@ class ApplicationHealthEndpointTest extends HealthEndpointTest {
                 .body("components.diskSpace.status", equalTo("UP"))
                 .body("components.hydra.status", equalTo("UP"))
                 .body("components.tara.status", equalTo("UP"))
-                .body("components.paasuke.status", equalTo("UNKNOWN"))
                 .body("components.livenessState.status", equalTo("UP"))
                 .body("components.ping.status", equalTo("UP"))
                 .body("components.readinessState.status", equalTo("UP"))

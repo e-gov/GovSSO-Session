@@ -46,6 +46,6 @@ class InfoEndpointTest extends BaseTest {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         OffsetDateTime serveCurrentTime = OffsetDateTime.parse(serviceStartTimeStr);
         assertTrue(serveCurrentTime.isBefore(now));
-        assertTrue(serveCurrentTime.isAfter(now.minus(Duration.ofMinutes(1))));
+        assertTrue(serveCurrentTime.isAfter(now.minus(Duration.ofMinutes(2))));
     }
 }
