@@ -13,10 +13,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,8 +26,8 @@ import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-@Import({BuildProperties.class})
+@SpringBootTest(webEnvironment = RANDOM_PORT,
+        classes = {Application.class, MockPropertyBeanConfiguration.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
     protected static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";

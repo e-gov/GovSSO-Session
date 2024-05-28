@@ -1,11 +1,11 @@
 package ee.ria.govsso.session.actuator.health.truststore;
 
+import ee.ria.govsso.session.Application;
+import ee.ria.govsso.session.MockPropertyBeanConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 
 import java.security.KeyStore;
 import java.util.List;
@@ -13,8 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SpringBootTest
-@Import({BuildProperties.class})
+@SpringBootTest(classes = {Application.class, MockPropertyBeanConfiguration.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class CertificateInfoLoaderTest {
 
