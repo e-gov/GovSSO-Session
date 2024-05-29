@@ -31,6 +31,9 @@ public class PaasukeServiceTest extends BaseTest {
 
     public static final String REPRESENTEE_ID = "ABC123";
     public static final String DELEGATE_ID = "Isikukood3";
+    public static final String CLIENT_INSTITUTION_ID = "institution-id";
+    public static final String CLIENT_ID = "client-id";
+    public static final PaasukeGovssoClient GOVSSO_CLIENT = new PaasukeGovssoClient(CLIENT_INSTITUTION_ID, CLIENT_ID);
 
     private final PaasukeService paasukeService;
     private final PaasukeConfigurationProperties paasukeConfigurationProperties;
@@ -42,6 +45,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -65,7 +70,7 @@ public class PaasukeServiceTest extends BaseTest {
                 ))
                 .build();
 
-        MandateTriplet actual = paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q");
+        MandateTriplet actual = paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT);
         assertThat(actual, equalTo(expected));
 
         String requestMessageId = getLastRequestMessageId();
@@ -93,6 +98,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -100,7 +107,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
@@ -127,6 +134,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -134,7 +143,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
@@ -161,6 +170,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withFixedDelay((int) paasukeConfigurationProperties.requestTimeout().plus(100, MILLIS).toMillis())
                         .withStatus(200)
@@ -170,7 +181,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
@@ -191,6 +202,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -210,7 +223,7 @@ public class PaasukeServiceTest extends BaseTest {
                 .build();
 
         Person[] expected = new Person[]{person1, person2};
-        Person[] actual = paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q");
+        Person[] actual = paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT);
 
         assertThat(actual, equalTo(expected));
 
@@ -239,6 +252,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -246,7 +261,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
@@ -273,6 +288,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader(XRoadHeaders.MESSAGE_ID, "89540c00-7bb0-4c54-8882-6e4aba71eeec")
@@ -280,7 +297,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));
@@ -307,6 +324,8 @@ public class PaasukeServiceTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo(DELEGATE_ID))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(CLIENT_INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withFixedDelay((int) paasukeConfigurationProperties.requestTimeout().plus(100, MILLIS).toMillis())
                         .withStatus(200)
@@ -316,7 +335,7 @@ public class PaasukeServiceTest extends BaseTest {
 
         SsoException exception = assertThrows(
                 SsoException.class,
-                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         String requestMessageId = getLastRequestMessageId();
         assertThat(exception.getErrorCode(), equalTo(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE));

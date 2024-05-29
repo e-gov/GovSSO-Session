@@ -5,6 +5,7 @@ import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.XRoadConfigurationProperties;
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookRequest;
 import ee.ria.govsso.session.service.hydra.RepresenteeRequestStatus;
+import ee.ria.govsso.session.service.paasuke.PaasukeHeaders;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     private static final String SESSION_ID = "e56cbaf9-81e9-4473-a733-261e8dd38e95";
     private static final String CLIENT_ID = "client-a";
+    private static final String INSTITUTION_ID = "EE12345678";
     private final XRoadConfigurationProperties xRoadConfigurationProperties;
 
     @Test
@@ -239,6 +241,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -281,6 +285,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -323,6 +329,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -363,6 +371,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -411,6 +421,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(500)));
 
@@ -556,6 +568,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -669,6 +683,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -710,6 +726,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -745,6 +763,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(500)));
 

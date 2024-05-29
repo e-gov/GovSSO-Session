@@ -2,6 +2,7 @@ package ee.ria.govsso.session.actuator.health;
 
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.service.paasuke.PaasukeGovssoClient;
 import ee.ria.govsso.session.service.paasuke.PaasukeService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.MethodOrderer;
@@ -25,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 // original state when running this test class
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class PaasukeHealthIndicatorTest extends BaseTest {
+
+    public static final PaasukeGovssoClient GOVSSO_CLIENT = new PaasukeGovssoClient("institution-id", "client-id");
 
     private final PaasukeService paasukeService;
 
@@ -65,7 +68,7 @@ public class PaasukeHealthIndicatorTest extends BaseTest {
     @Order(2)
     void healthHydra_WhenRepresenteesRequestRespondsWith200_RespondsWith200AndPaasukeStatusUp() {
         mockRepresenteesRequestSuccessful();
-        paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q");
+        paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT);
 
         given()
                 .when()
@@ -80,7 +83,7 @@ public class PaasukeHealthIndicatorTest extends BaseTest {
     @Order(3)
     void healthHydra_WhenMandatesRequestRespondsWith200_RespondsWith200AndPaasukeStatusUp() {
         mockMandatesRequestSuccessful();
-        paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q");
+        paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT);
 
         given()
                 .when()
@@ -95,7 +98,9 @@ public class PaasukeHealthIndicatorTest extends BaseTest {
     @Order(4)
     void healthHydra_WhenRepresenteesRequestRespondsWith400_RespondsWith503AndPaasukeStatusDown() {
         mockRepresenteesRequestUnsuccessful();
-        assertThrows(SsoException.class, () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q"));
+        assertThrows(
+                SsoException.class,
+                () -> paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         given()
                 .when()
@@ -110,7 +115,9 @@ public class PaasukeHealthIndicatorTest extends BaseTest {
     @Order(5)
     void healthHydra_WhenMandatesRequestRespondsWith400_RespondsWith503AndPaasukeStatusDown() {
         mockMandatesRequestUnsuccessful();
-        assertThrows(SsoException.class, () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q"));
+        assertThrows(
+                SsoException.class,
+                () -> paasukeService.fetchMandates(REPRESENTEE_ID, DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT));
 
         given()
                 .when()

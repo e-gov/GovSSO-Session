@@ -3,6 +3,7 @@ package ee.ria.govsso.session.service.paasuke;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.ErrorHandler;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.Representee;
 import ee.ria.govsso.session.service.hydra.RepresenteeList;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.REPRESENTEE_LIST_CURRENT;
 import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.SERVICE_NOT_AVAILABLE;
+import static java.util.Objects.requireNonNull;
 import static net.logstash.logback.marker.Markers.append;
 
 @Slf4j
@@ -26,7 +28,9 @@ public class RepresentationService {
 
     public RepresenteeList getRepresentees(ConsentRequestInfo consentRequestInfo, String subject) {
         try {
-            Person[] persons = paasukeService.fetchRepresentees(subject, extractPaasukeParameters(consentRequestInfo));
+            String paasukeParameters = extractPaasukeParameters(consentRequestInfo);
+            PaasukeGovssoClient govssoClient = extractGovssoClient(consentRequestInfo);
+            Person[] persons = paasukeService.fetchRepresentees(subject, paasukeParameters, govssoClient);
             return representeeListRequestSuccess(persons);
         } catch (SsoException e) {
             log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
@@ -37,7 +41,10 @@ public class RepresentationService {
     public Representee getRepresentee(ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
         RepresenteeRequestStatus status = RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE;
         try {
-            MandateTriplet mandateTriplet = paasukeService.fetchMandates(representeeSubject, subject, extractPaasukeParameters(consentRequestInfo));
+            String paasukeParameters = extractPaasukeParameters(consentRequestInfo);
+            PaasukeGovssoClient govssoClient = extractGovssoClient(consentRequestInfo);
+            MandateTriplet mandateTriplet =
+                    paasukeService.fetchMandates(representeeSubject, subject, paasukeParameters, govssoClient);
             if (mandateTriplet.mandates().isEmpty()) {
                 status = RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED;
                 throw new SsoException(ErrorCode.USER_INPUT, "User is not allowed to represent provided representee");
@@ -51,6 +58,17 @@ public class RepresentationService {
 
     private static String extractPaasukeParameters(ConsentRequestInfo consentRequestInfo) {
         return consentRequestInfo.getClient().getMetadata().getPaasukeParameters();
+    }
+
+    private static PaasukeGovssoClient extractGovssoClient(ConsentRequestInfo consentRequestInfo) {
+        Client client = consentRequestInfo.getClient();
+        String institutionRegistryCode = requireNonNull(
+                client.getMetadata().getOidcClient().getInstitution().getRegistryCode());
+        String clientId = client.getClientId();
+        return new PaasukeGovssoClient(
+                "EE" + institutionRegistryCode,
+                clientId
+        );
     }
 
     private static Representee representeeRequestFailed(RepresenteeRequestStatus status) {

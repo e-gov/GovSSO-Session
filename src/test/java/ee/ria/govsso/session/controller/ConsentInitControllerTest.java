@@ -3,6 +3,7 @@ package ee.ria.govsso.session.controller;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.XRoadConfigurationProperties;
+import ee.ria.govsso.session.service.paasuke.PaasukeHeaders;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
 import io.restassured.RestAssured;
 import io.restassured.builder.ResponseSpecBuilder;
@@ -416,6 +417,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
@@ -454,6 +457,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))
                 .willReturn(aResponse()
                         .withStatus(500)));
 
@@ -467,7 +472,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE  + "\"}}"))
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE + "\"}}"))
                 .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
@@ -492,6 +497,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
                 .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
+                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
+                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")

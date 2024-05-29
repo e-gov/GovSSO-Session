@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.WWWFormCodec;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.PAASUKE;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -42,7 +44,9 @@ public class PaasukeService {
     @Getter
     private volatile Boolean lastRequestToPaasukeSuccessful = null;
 
-    public MandateTriplet fetchMandates(@NonNull String representee, @NonNull String delegate, @NonNull String queryParams) {
+    public MandateTriplet fetchMandates(
+            @NonNull String representee, @NonNull String delegate, @NonNull String queryParams,
+            @NonNull PaasukeGovssoClient govssoClient) {
         URI uri;
         try {
             uri = new URIBuilder(paasukeConfigurationProperties.hostUrl().toURI())
@@ -63,6 +67,7 @@ public class PaasukeService {
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
                     .header(XRoadHeaders.USER_ID, delegate)
                     .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
+                    .headers(govssoClientHeaders(govssoClient))
                     .retrieve()
                     .toEntity(MandateTriplet.class)
                     .timeout(
@@ -91,7 +96,8 @@ public class PaasukeService {
         }
     }
 
-    public Person[] fetchRepresentees(@NonNull String delegate, @NonNull String queryParams) {
+    public Person[] fetchRepresentees(
+            @NonNull String delegate, @NonNull String queryParams, @NonNull PaasukeGovssoClient govssoClient) {
         URI uri;
         try {
             uri = new URIBuilder(paasukeConfigurationProperties.hostUrl().toURI())
@@ -112,6 +118,7 @@ public class PaasukeService {
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
                     .header(XRoadHeaders.USER_ID, delegate)
                     .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
+                    .headers(govssoClientHeaders(govssoClient))
                     .retrieve()
                     .toEntity(Person[].class)
                     .timeout(
@@ -138,5 +145,12 @@ public class PaasukeService {
             lastRequestToPaasukeSuccessful = false;
             throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request timed out", e);
         }
+    }
+
+    private Consumer<HttpHeaders> govssoClientHeaders(@NonNull PaasukeGovssoClient govssoClient) {
+        return headers -> {
+            headers.add(PaasukeHeaders.INSTITUTION, govssoClient.institution());
+            headers.add(PaasukeHeaders.CLIENT_ID, govssoClient.clientId());
+        };
     }
 }

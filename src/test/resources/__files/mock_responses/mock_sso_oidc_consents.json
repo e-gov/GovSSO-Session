@@ -13,6 +13,7 @@
           "paasuke_parameters": "ns=AGENCY-Q",
           "oidc_client": {
             "institution": {
+              "registry_code": "12345678"
             }
           }
         },
@@ -34,6 +35,7 @@
           "paasuke_parameters": "ns=AGENCY-Q",
           "oidc_client": {
             "institution": {
+              "registry_code": "87654321"
             }
           }
         },
