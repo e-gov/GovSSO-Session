@@ -7,6 +7,7 @@ import ee.ria.govsso.session.error.exceptions.HttpTimeoutRuntimeException;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.core5.net.URIBuilder;
