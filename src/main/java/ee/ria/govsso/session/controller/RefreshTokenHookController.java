@@ -152,9 +152,6 @@ public class RefreshTokenHookController {
                 continue;
             }
             String id = StringUtils.substringAfter(requestedScope, ".");
-            if (id.isEmpty()) {
-                throw new SsoException(ErrorCode.USER_INPUT, "The subject length in the representee scope must be at least 1 character or longer");
-            }
             if (id.equals("*")) {
                 continue;
             }

@@ -413,16 +413,16 @@ class ConsentInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/EEisikukood3_ns_AGENCY-Q.json")));
 
         given()
                 .param("consent_challenge", TEST_CONSENT_CHALLENGE)
@@ -453,9 +453,9 @@ class ConsentInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))
@@ -493,9 +493,9 @@ class ConsentInitControllerTest extends BaseTest {
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBodyFile("mock_responses/mock_sso_oidc_consent_accept.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo("EE12345678"))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo("client-a"))

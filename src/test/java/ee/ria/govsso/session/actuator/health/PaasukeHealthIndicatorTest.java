@@ -32,22 +32,22 @@ public class PaasukeHealthIndicatorTest extends BaseTest {
     private final PaasukeService paasukeService;
 
     void mockRepresenteesRequestSuccessful() {
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .willReturn(aResponse().withStatus(200)));;
     }
 
     void mockRepresenteesRequestUnsuccessful() {
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .willReturn(aResponse().withStatus(400)));;
     }
 
     void mockMandatesRequestSuccessful() {
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .willReturn(aResponse().withStatus(200)));;
     }
 
     void mockMandatesRequestUnsuccessful() {
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .willReturn(aResponse().withStatus(400)));;
     }
 

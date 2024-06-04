@@ -1,0 +1,14 @@
+{
+  "representee": {
+    "type": "LEGAL_PERSON",
+    "legalName": "Sukk ja Saabas OÜ",
+    "identifier": "ABC123"
+  },
+  "delegate": {
+    "type": "NATURAL_PERSON",
+    "firstName": "Eesnimi3",
+    "surname": "Perekonnanimi3",
+    "identifier": "EEisikukood3"
+  },
+  "mandates": []
+}

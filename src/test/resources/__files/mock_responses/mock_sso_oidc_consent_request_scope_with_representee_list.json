@@ -2,7 +2,7 @@
   "challenge": "aaabbbcccdddeeefff00011122233344",
   "login_challenge": "abcdeff098aadfccabcdeff098aadfcc",
   "requested_at": "2023-01-01T01:15:00Z",
-  "subject": "Isikukood3",
+  "subject": "EEisikukood3",
   "requested_scope": [
     "openid",
     "representee_list"

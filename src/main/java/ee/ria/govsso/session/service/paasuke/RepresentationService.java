@@ -39,20 +39,21 @@ public class RepresentationService {
     }
 
     public Representee getRepresentee(ConsentRequestInfo consentRequestInfo, String subject, String representeeSubject) {
-        RepresenteeRequestStatus status = RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE;
         try {
             String paasukeParameters = extractPaasukeParameters(consentRequestInfo);
             PaasukeGovssoClient govssoClient = extractGovssoClient(consentRequestInfo);
             MandateTriplet mandateTriplet =
                     paasukeService.fetchMandates(representeeSubject, subject, paasukeParameters, govssoClient);
             if (mandateTriplet.mandates().isEmpty()) {
-                status = RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED;
                 throw new SsoException(ErrorCode.USER_INPUT, "User is not allowed to represent provided representee");
             }
             return toHydraRepresentation(mandateTriplet);
         } catch (SsoException e) {
             log.error(append(ErrorHandler.ERROR_CODE_MARKER, e.getErrorCode().name()), e.getMessage(), e);
-            return representeeRequestFailed(status);
+            if (e.getErrorCode().equals(ErrorCode.USER_INPUT)) {
+                return representeeRequestFailed(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED);
+            }
+            return representeeRequestFailed(RepresenteeRequestStatus.SERVICE_NOT_AVAILABLE);
         }
     }
 

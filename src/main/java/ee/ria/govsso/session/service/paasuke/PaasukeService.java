@@ -43,14 +43,17 @@ public class PaasukeService {
 
     @Getter
     private volatile Boolean lastRequestToPaasukeSuccessful = null;
+    private static final String VALID_IDENTIFIER_PATTERN = "^[A-Z][A-Z]\\S{1,256}$";
 
     public MandateTriplet fetchMandates(
-            @NonNull String representee, @NonNull String delegate, @NonNull String queryParams,
+            @NonNull String representeeId, @NonNull String delegateId, @NonNull String queryParams,
             @NonNull PaasukeGovssoClient govssoClient) {
+        validateIdentifier(representeeId, ErrorCode.USER_INPUT);
+        validateIdentifier(delegateId, ErrorCode.TECHNICAL_GENERAL);
         URI uri;
         try {
             uri = new URIBuilder(paasukeConfigurationProperties.hostUrl().toURI())
-                    .appendPathSegments("representees", representee, "delegates", delegate, "mandates")
+                    .appendPathSegments("representees", representeeId, "delegates", delegateId, "mandates")
                     .addParameters(WWWFormCodec.parse(queryParams, UTF_8))
                     .build();
         } catch (URISyntaxException e) {
@@ -65,7 +68,7 @@ public class PaasukeService {
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
-                    .header(XRoadHeaders.USER_ID, delegate)
+                    .header(XRoadHeaders.USER_ID, delegateId)
                     .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
                     .headers(govssoClientHeaders(govssoClient))
                     .retrieve()
@@ -81,6 +84,7 @@ public class PaasukeService {
                     .body(responseBody)
                     .header(XRoadHeaders.MESSAGE_ID, response.getHeaders().getFirst(XRoadHeaders.MESSAGE_ID))
                     .log();
+            validateResponse(representeeId, delegateId, responseBody);
             return responseBody;
         } catch (WebClientResponseException e) {
             requestLogger.response(e.getStatusCode())
@@ -97,11 +101,12 @@ public class PaasukeService {
     }
 
     public Person[] fetchRepresentees(
-            @NonNull String delegate, @NonNull String queryParams, @NonNull PaasukeGovssoClient govssoClient) {
+            @NonNull String delegateId, @NonNull String queryParams, @NonNull PaasukeGovssoClient govssoClient) {
+        validateIdentifier(delegateId, ErrorCode.TECHNICAL_GENERAL);
         URI uri;
         try {
             uri = new URIBuilder(paasukeConfigurationProperties.hostUrl().toURI())
-                    .appendPathSegments("delegates", delegate, "representees")
+                    .appendPathSegments("delegates", delegateId, "representees")
                     .addParameters(WWWFormCodec.parse(queryParams, UTF_8))
                     .build();
         } catch (URISyntaxException e) {
@@ -116,7 +121,7 @@ public class PaasukeService {
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .header(XRoadHeaders.CLIENT, xRoadConfigurationProperties.clientId())
-                    .header(XRoadHeaders.USER_ID, delegate)
+                    .header(XRoadHeaders.USER_ID, delegateId)
                     .header(XRoadHeaders.MESSAGE_ID, outgoingXroadMessageId)
                     .headers(govssoClientHeaders(govssoClient))
                     .retrieve()
@@ -144,6 +149,24 @@ public class PaasukeService {
         } catch (HttpTimeoutRuntimeException e) {
             lastRequestToPaasukeSuccessful = false;
             throw new SsoException(ErrorCode.TECHNICAL_PAASUKE_UNAVAILABLE, "Pääsuke fetchRepresentees request timed out", e);
+        }
+    }
+
+    private static void validateResponse(String representeeId, String delegateId, MandateTriplet responseBody) {
+        if (responseBody == null) {
+            return;
+        }
+        if (!responseBody.representee().identifier().equalsIgnoreCase(representeeId)) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "The requested representeeId must match the representee identifier from Pääsuke response");
+        }
+        if (!responseBody.delegate().identifier().equals(delegateId)) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "The requested delegateId must match the delegate identifier from Pääsuke response");
+        }
+    }
+
+    private static void validateIdentifier(String identifier, ErrorCode errorCode) {
+        if (!identifier.matches(VALID_IDENTIFIER_PATTERN)) {
+            throw new SsoException(errorCode, "The identifier of the representee or delegate must match " + VALID_IDENTIFIER_PATTERN);
         }
     }
 

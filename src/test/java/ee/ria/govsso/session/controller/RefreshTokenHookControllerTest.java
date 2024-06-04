@@ -228,25 +228,25 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @ValueSource(strings = {"representee.ABC123", "openid representee.ABC123", "representee.ABC123 openid", "representee.* representee.ABC123", "representee.ABC123 representee.*"})
     void tokenRefresh_whenRepresenteeScopeProvided_ok(String scopes) {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(Arrays.asList(scopes.split(" ")));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
+                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_EEisikukood3_ns_AGENCY-Q.json")));
 
         given()
                 .request().body(hookRequest)
@@ -267,74 +267,28 @@ class RefreshTokenHookControllerTest extends BaseTest {
     }
 
     @Test
-    /* TODO: Due to available test data, the returned representee will be "ASD123" instead of the requested "1".
-     *       Either create proper test data or remove this test and replace it with a unit test. */
-    void tokenRefresh_whenRepresenteeIdSingleCharacter_ok() {
-        RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
-        hookRequest.setRequestedScopes(List.of("representee.1"));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
-
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/1/delegates/Isikukood3/mandates?ns=AGENCY-Q")
-                .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
-                .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
-                .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
-                .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
-
-        given()
-                .request().body(hookRequest)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .when()
-                .post(TOKEN_REFRESH_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
-                .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
-                .body("session.id_token.representee.sub", equalTo("ABC123"))
-                .body("session.id_token.representee.given_name", nullValue())
-                .body("session.id_token.representee.family_name", nullValue())
-                .body("session.id_token.representee.name", equalTo("Sukk ja Saabas OÜ"))
-                .body("session.id_token.representee.mandates[0].role", equalTo("BR_REPRIGHT:JUHL"))
-                .body("session.id_token.representee.mandates[1].role", equalTo("AGENCY-Q:Edit.submit"));
-    }
-
-    @Test
-        /* TODO: Due to available test data, the returned representee will be "ASD123" instead of the requested "ISIKUKOOD3".
-         *       Either create proper test data or remove this test and replace it with a unit test. */
     void tokenRefresh_whenRepresenteeIdHasOnlyCaseDifference_ok() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
-        hookRequest.setRequestedScopes(List.of("representee.ISIKUKOOD3"));
+        hookRequest.setSubject("EEisikukood3");
+        hookRequest.setRequestedScopes(List.of( "representee.EEISIKUKOOD3"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ISIKUKOOD3/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/EEISIKUKOOD3/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
+                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/EEISIKUKOOD3_EEisikukood3_ns_AGENCY-Q.json")));
 
         given()
                 .request().body(hookRequest)
@@ -346,7 +300,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .statusCode(200)
                 .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_CURRENT.name()))
                 .body("session.id_token.representee.type", equalTo("LEGAL_PERSON"))
-                .body("session.id_token.representee.sub", equalTo("ABC123"))
+                .body("session.id_token.representee.sub", equalTo("EEISIKUKOOD3"))
                 .body("session.id_token.representee.given_name", nullValue())
                 .body("session.id_token.representee.family_name", nullValue())
                 .body("session.id_token.representee.name", equalTo("Sukk ja Saabas OÜ"))
@@ -358,25 +312,25 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenAuthenticatedUserIsNotAllowedToRepresentRepresentee_representeeIsOmitted() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q__no_mandates.json")));
+                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_EEisikukood3_ns_AGENCY-Q__no_mandates.json")));
 
         given()
                 .request().body(hookRequest)
@@ -408,10 +362,10 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenMandatesRequestFails_representeeIsOmitted() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -419,7 +373,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
         PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
@@ -523,18 +477,32 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .post(TOKEN_REFRESH_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(400);
+                .statusCode(200)
+                .body("session.access_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED.name()))
+                .body("session.access_token.representee.type", nullValue())
+                .body("session.access_token.representee.sub", nullValue())
+                .body("session.access_token.representee.given_name", nullValue())
+                .body("session.access_token.representee.family_name", nullValue())
+                .body("session.access_token.representee.name", nullValue())
+                .body("session.access_token.representee.mandates", nullValue())
+                .body("session.id_token.representee.status", equalTo(RepresenteeRequestStatus.REQUESTED_REPRESENTEE_NOT_ALLOWED.name()))
+                .body("session.id_token.representee.type", nullValue())
+                .body("session.id_token.representee.sub", nullValue())
+                .body("session.id_token.representee.given_name", nullValue())
+                .body("session.id_token.representee.family_name", nullValue())
+                .body("session.id_token.representee.name", nullValue())
+                .body("session.id_token.representee.mandates", nullValue());
 
-        assertErrorIsLogged("SsoException: The subject length in the representee scope must be at least 1 character or longer");
+        assertErrorIsLogged("The identifier of the representee or delegate must match ^[A-Z][A-Z]\\S{1,256}$");
     }
 
     @Test
     void tokenRefresh_whenRepresenteeSubjectEqualsAuthenticatedUserSubject_RepresenteeIsNotAddedToIdTokenOrAccessToken() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
-        hookRequest.setRequestedScopes(List.of("representee.Isikukood3"));
+        hookRequest.setSubject("EEisikukood3");
+        hookRequest.setRequestedScopes(List.of("representee.EEisikukood3"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -555,25 +523,25 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenAccessTokenStrategyIsOpaque_RepresenteeIsNotAddedToAccessToken() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone", "representee.*"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents_access_token_strategy_opaque.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/Isikukood3/mandates?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/representees/ABC123/delegates/EEisikukood3/mandates?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_Isikukood3_ns_AGENCY-Q.json")));
+                        .withBodyFile("mock_responses/paasuke/getRepresenteeDelegateMandates/ABC123_EEisikukood3_ns_AGENCY-Q.json")));
 
         given()
                 .request().body(hookRequest)
@@ -670,25 +638,25 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenRepresenteeListIsRequested_representeeListIsAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee_list"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json")));
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/EEisikukood3_ns_AGENCY-Q.json")));
 
         given()
                 .request().body(hookRequest)
@@ -713,18 +681,18 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenRepresenteeListIsEmpty_emptyRepresenteeListIsAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee_list"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
@@ -750,18 +718,18 @@ class RefreshTokenHookControllerTest extends BaseTest {
     void tokenRefresh_whenRepresenteeListRequestFails_RepresenteeListIsNotAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
                 createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
-        hookRequest.setSubject("Isikukood3");
+        hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee_list"));
 
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=Isikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
-        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q")
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))
-                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("Isikukood3"))
+                .withHeader(XRoadHeaders.USER_ID, WireMock.equalTo("EEisikukood3"))
                 .withHeader(XRoadHeaders.MESSAGE_ID, isUuid())
                 .withHeader(PaasukeHeaders.INSTITUTION, WireMock.equalTo(INSTITUTION_ID))
                 .withHeader(PaasukeHeaders.CLIENT_ID, WireMock.equalTo(CLIENT_ID))
