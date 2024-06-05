@@ -64,5 +64,6 @@
     "https://test1.test",
     "https://test2.test"
   ],
+  "access_token_lifespan": "15m",
   "paasuke_parameters": "ns=BR_REPRIGHT"
 }

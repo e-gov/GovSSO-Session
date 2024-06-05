@@ -61,5 +61,6 @@
     "https://test1.test/123",
     "https://test2.test/123"
   ],
+  "access_token_lifespan": "10m",
   "is_user_consent_required": true
 }
