@@ -339,6 +339,25 @@ public class PaasukeServiceTest extends BaseTest {
     }
 
     @Test
+    void fetchRepresentees_whenResponseSizeExceedsSpringDefaultAllowedLimit_delegateRepresenteesReturned() {
+        PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/paasuke/getDelegateRepresentees/EEisikukood3_ns_AGENCY-Q_with_size_exceeding_spring_default_allowed_limit.json")));
+
+        paasukeService.fetchRepresentees(DELEGATE_ID, "ns=AGENCY-Q", GOVSSO_CLIENT);
+
+        assertMessage()
+                .withLoggerClass(PaasukeService.class)
+                .withLevel(Level.INFO)
+                .withMessage("PAASUKE response")
+                .withMarker(marker -> marker.contains("http.response.status_code=200"))
+                .withMarker(marker -> marker.contains("http.response.body.content=[{"))
+                .isLoggedOnce();
+    }
+
+    @Test
     void fetchRepresentees_4xxResponse_exceptionThrown() {
         PAASUKE_MOCK_SERVER.stubFor(get("/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q")
                 .withHeader(XRoadHeaders.CLIENT, WireMock.equalTo(xRoadConfigurationProperties.clientId()))

@@ -6,6 +6,13 @@ spring:
     name: govsso-session
   main:
     banner-mode: off
+  codec:
+    # https://www.ory.sh/docs/hydra/reference/api#operation/listSubjectConsentSessions by default returns 250 consents
+    #  (see https://github.com/ory/hydra/blob/v2.1.2/x/pagination.go#L55). 100 KiB logo is 136560 bytes in Base64.
+    #  User agent info 8 KiB (header size limit set by Tomcat configuration). One consent JSON is ~148000 bytes.
+    #  Increase Spring WebClient codec buffer limit from 256 KiB to 40 MiB to
+    #  accommodate 250 consents with max logo size.
+    max-in-memory-size: 41943040
 
 management:
   endpoint:

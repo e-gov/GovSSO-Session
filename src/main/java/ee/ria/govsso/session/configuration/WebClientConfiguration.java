@@ -36,11 +36,12 @@ class WebClientConfiguration {
 
     @Bean
     public WebClient adminWebClient(
-            KeyStore adminTrustStore) {
+            KeyStore adminTrustStore,
+            WebClient.Builder builder) {
         SslContext sslContext = initSslContext(adminTrustStore);
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
-        return WebClient.builder()
+        return builder
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
@@ -48,11 +49,12 @@ class WebClientConfiguration {
     @Bean
     WebClient hydraWebClient(
             @Qualifier("hydraRequestLogger") ClientRequestLogger requestLogger,
-            KeyStore hydraTrustStore) {
+            KeyStore hydraTrustStore,
+            WebClient.Builder builder) {
         SslContext sslContext = initSslContext(hydraTrustStore);
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
-        return WebClient.builder()
+        return builder
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 // TODO (AUT-1392): Remove filter
                 .filter(responseFilter(requestLogger))
@@ -63,14 +65,15 @@ class WebClientConfiguration {
     WebClient paasukeWebClient(
             KeyStore paasukeTrustStore,
             KeyStore paasukeKeyStore,
-            PaasukeConfigurationProperties paasukeConfigurationProperties) {
+            PaasukeConfigurationProperties paasukeConfigurationProperties,
+            WebClient.Builder builder) {
         SslContext sslContext = initSslContext(
                 paasukeTrustStore,
                 paasukeKeyStore,
                 paasukeConfigurationProperties.tls().keyStorePassword());
         HttpClient httpClient = HttpClient.create()
                 .secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
-        return WebClient.builder()
+        return builder
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
