@@ -1051,7 +1051,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1067,7 +1067,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", logoutChallenge)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1089,7 +1089,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1112,7 +1112,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1138,7 +1138,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1164,7 +1164,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_END_SESSION_REQUEST_MAPPING)
@@ -1191,7 +1191,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1207,7 +1207,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", logoutChallenge)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1229,7 +1229,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1252,7 +1252,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1272,7 +1272,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1292,7 +1292,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1312,7 +1312,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1339,7 +1339,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)
@@ -1366,7 +1366,7 @@ class LogoutControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("logoutChallenge", TEST_LOGOUT_CHALLENGE)
                 .when()
                 .post(LOGOUT_CONTINUE_SESSION_REQUEST_MAPPING)

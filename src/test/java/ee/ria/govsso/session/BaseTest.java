@@ -51,6 +51,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         put(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
     }};
     protected static final String MOCK_CSRF_TOKEN = "d1341bfc-052d-448b-90f0-d7a7a9e4b842";
+    protected static final String XORED_CSRF_TOKEN = "QpqbVSMb7BVoy0xy0VFU9Cb9QnmhGelsZxrQz17ElikbjqpOJquoYRJ5inZF-3lAtXxgwB6fb0CRf9lBAy2x-D_98x15tp58";
     protected static final String INPROXY_MOCK_URL = "https://inproxy.localhost:8000";
     protected static final String HYDRA_MOCK_URL = "https://hydra.localhost:9000";
     protected static final String TARA_MOCK_URL = "https://tara.localhost:10000";

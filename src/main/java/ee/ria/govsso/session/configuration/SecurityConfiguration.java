@@ -11,11 +11,9 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.HeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.time.Duration;
@@ -54,8 +52,7 @@ public class SecurityConfiguration {
                                 new MvcRequestMatcher(introspector, TOKEN_REFRESH_REQUEST_MAPPING),
                                 new MvcRequestMatcher(introspector, ADMIN_SESSIONS_REQUEST_MAPPING),
                                 new MvcRequestMatcher(introspector, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING))
-                        .csrfTokenRepository(csrfTokenRepository())
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())) // Opt-out of BREACH protection as described in https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-token-request-handler-plain
+                        .csrfTokenRepository(csrfTokenRepository()))
                 .headers(headersConfigurer -> headersConfigurer
                         .addHeaderWriter(relaxedCorsHeaderWriter())
                         .xssProtection(xssConfig -> xssConfig

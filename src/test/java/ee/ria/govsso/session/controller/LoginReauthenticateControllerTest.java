@@ -43,7 +43,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -83,7 +83,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
     void loginReauthenticate_WhenLoginChallengeFormParamIsMissing_ThrowsUserInputError() {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
@@ -98,7 +98,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
     void loginReauthenticate_WhenLoginChallengeIncorrectFormat_ThrowsUserInputError() {
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", "incorrect_format_login_challenge_#%")
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -124,7 +124,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -146,7 +146,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -176,7 +176,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .when()
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
@@ -206,7 +206,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .cookie("__Host-ory_hydra_session", "test1234")
                 .when()
@@ -234,7 +234,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
 
         given()
                 .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
-                .formParam("_csrf", MOCK_CSRF_TOKEN)
+                .formParam("_csrf", XORED_CSRF_TOKEN)
                 .formParam("loginChallenge", TEST_LOGIN_CHALLENGE)
                 .header(ORIGIN, "https://clienta.localhost:11443")
                 .when()
