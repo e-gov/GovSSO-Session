@@ -59,6 +59,7 @@ oauth2:
     - birthdate
     - phone_number
     - phone_number_verified
+    - representee
   refresh_token_hook: https://session.localhost:15443/admin/token-refresh
 urls:
   login: https://inproxy.localhost:13443/login/init
