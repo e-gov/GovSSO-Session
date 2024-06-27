@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "GET",
-    "url": "/volitused/oraakel/delegates/Isikukood3/representees?ns=AGENCY-Q"
+    "url": "/volitused/oraakel/delegates/EEisikukood3/representees?ns=AGENCY-Q"
   },
   "response": {
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "getDelegateRepresentees/Isikukood3_ns_AGENCY-Q.json",
+    "bodyFileName": "getDelegateRepresentees/EEisikukood3_ns_AGENCY-Q.json",
     "status": 200
   }
 }

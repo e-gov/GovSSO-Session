@@ -247,6 +247,7 @@ services:
       - '16443:16443'
     restart: unless-stopped
     volumes:
+      - ./local/tara/identities.json:/service/identities.json:ro
       - ./local/tara/config.json:/service/config.json:ro
       - ./local/tara/id-token:/var/id-token:ro
       - ./local/tls/tara:/var/certs:ro

@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "GET",
-    "url": "/volitused/oraakel/representees/EE12345678/delegates/Isikukood3/mandates?ns=AGENCY-Q"
+    "url": "/volitused/oraakel/representees/EE12345678/delegates/EEisikukood3/mandates?ns=AGENCY-Q"
   },
   "response": {
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "getRepresenteeDelegateMandates/EE12345678_Isikukood3_ns_AGENCY-Q.json",
+    "bodyFileName": "getRepresenteeDelegateMandates/EE12345678_EEisikukood3_ns_AGENCY-Q.json",
     "status": 200
   }
 }

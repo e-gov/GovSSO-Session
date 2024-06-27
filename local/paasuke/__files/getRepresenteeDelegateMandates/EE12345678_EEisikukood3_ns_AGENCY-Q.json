@@ -8,7 +8,7 @@
     "type": "NATURAL_PERSON",
     "firstName": "Eesnimi3",
     "surname": "Perekonnanimi3",
-    "identifier": "Isikukood3"
+    "identifier": "EEisikukood3"
   },
   "mandates": [
     {"role": "BR_REPRIGHT:JUHL"},
