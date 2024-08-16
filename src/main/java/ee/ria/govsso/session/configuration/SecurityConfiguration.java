@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.HeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
@@ -52,7 +54,8 @@ public class SecurityConfiguration {
                                 new MvcRequestMatcher(introspector, TOKEN_REFRESH_REQUEST_MAPPING),
                                 new MvcRequestMatcher(introspector, ADMIN_SESSIONS_REQUEST_MAPPING),
                                 new MvcRequestMatcher(introspector, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING))
-                        .csrfTokenRepository(csrfTokenRepository()))
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(csrfRequestHandler()))
                 .headers(headersConfigurer -> headersConfigurer
                         .addHeaderWriter(relaxedCorsHeaderWriter())
                         .xssProtection(xssConfig -> xssConfig
@@ -75,6 +78,14 @@ public class SecurityConfiguration {
                 .maxAge(securityConfigurationProperties.getCookieMaxAgeSeconds()));
         repository.setCookiePath("/");
         return repository;
+    }
+
+    private CsrfTokenRequestHandler csrfRequestHandler() {
+        //Use XorCsrfTokenRequestAttributeHandler for BREACH protection (default in Spring Security 6)
+        XorCsrfTokenRequestAttributeHandler requestHandler = new XorCsrfTokenRequestAttributeHandler();
+        //Opt-out of Deferred CSRF Tokens as described in https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#deferred-csrf-token
+        requestHandler.setCsrfRequestAttributeName(null);
+        return requestHandler;
     }
 
     private HeaderWriter relaxedCorsHeaderWriter() {
