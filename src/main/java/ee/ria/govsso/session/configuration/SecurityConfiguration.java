@@ -81,9 +81,13 @@ public class SecurityConfiguration {
     }
 
     private CsrfTokenRequestHandler csrfRequestHandler() {
-        //Use XorCsrfTokenRequestAttributeHandler for BREACH protection (default in Spring Security 6)
+        // Use XorCsrfTokenRequestAttributeHandler for BREACH protection (default in Spring Security 6)
         XorCsrfTokenRequestAttributeHandler requestHandler = new XorCsrfTokenRequestAttributeHandler();
-        //Opt-out of Deferred CSRF Tokens as described in https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#deferred-csrf-token
+        /* Opt-out of Deferred CSRF Tokens as described in
+         * https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#deferred-csrf-token.
+         * Using deferred CSRF token would sometimes cause setting the CSRF token cookie to be skipped, as by the time
+         * setting the CSRF token cookie was triggered, the HttpServletResponse was already committed and thus setting
+         * the `Set-Cookie` header would be impossible. */
         requestHandler.setCsrfRequestAttributeName(null);
         return requestHandler;
     }
