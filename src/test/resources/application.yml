@@ -1,5 +1,5 @@
 server:
-  forward-headers-strategy: native
+  forward-headers-strategy: NATIVE
 
 spring:
   application:

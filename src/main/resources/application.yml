@@ -1,4 +1,5 @@
 server:
+  forward-headers-strategy: NATIVE
   # Use same port as docker-compose-all.yml.
   port: 15443
   ssl:
