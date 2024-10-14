@@ -28,6 +28,6 @@ MSYS_NO_PATHCONV=1 \
   -sha512 \
   -nodes \
   -key "$caFullName/$caFullName.localhost.key" \
-  -days 365 \
+  -days 3650 \
   -subj "/C=EE/L=Tallinn/O=$caName-local/CN=$caFullName.localhost" \
   -out "$caFullName/$caFullName.localhost.crt"

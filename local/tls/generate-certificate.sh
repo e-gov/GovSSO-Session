@@ -49,7 +49,7 @@ openssl x509 \
   -CA "$ca/$ca.localhost.crt" \
   -CAkey "$ca/$ca.localhost.key" \
   -CAcreateserial \
-  -days 363 \
+  -days 3649 \
   -extfile "openssl.cnf" \
   -out "$applicationName/$host.crt"
 
