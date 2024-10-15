@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
 import java.io.IOException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
@@ -51,11 +53,16 @@ public class ErrorHandler {
         response.sendError(ex.getErrorCode().getHttpStatusCode());
     }
 
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public void handleNoResourceException(HttpServletResponse response) throws IOException {
+        response.sendError(ErrorCode.USER_INVALID_RESOURCE.getHttpStatusCode());
+    }
+
     // These are considered as TECHNICAL_GENERAL errors.
     @ExceptionHandler({Exception.class})
     public void handleAll(Exception ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
         logErrorWithStacktrace(ex, ErrorCode.TECHNICAL_GENERAL, "Unexpected error: {}", request);
-        response.sendError(500);
+        response.sendError(ErrorCode.TECHNICAL_GENERAL.getHttpStatusCode());
     }
 
     private void logErrorWithStacktrace(Exception ex, ErrorCode errorCode, String messageFormat, HttpServletRequest request) {

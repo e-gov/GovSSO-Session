@@ -234,4 +234,16 @@ class AdminControllerTest extends BaseTest {
 
         assertErrorIsLogged("SsoException: Failed to delete Hydra consent --> %d".formatted(statusCode));
     }
+
+    @Test
+    void nonExistingEndpoint_ReturnsHttp404() {
+        given()
+            .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+            .when()
+            .get("/non-existing-endpoint")
+            .then()
+            .assertThat()
+            .statusCode(404)
+            .body("error", equalTo("USER_INPUT"));
+    }
 }
