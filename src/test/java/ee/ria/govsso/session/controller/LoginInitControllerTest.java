@@ -18,6 +18,9 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Cookie;
 import io.restassured.matcher.DetailedCookieMatcher;
 import io.restassured.matcher.RestAssuredMatchers;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -327,6 +330,44 @@ public class LoginInitControllerTest extends BaseTest {
                 .body(containsString("12.07.1961"))
                 .body(not(containsString("12345")))
                 .body(containsString("data:image/svg+xml;base64,testlogo"));
+    }
+
+    @SneakyThrows
+    @Test
+    void loginInit_WhenVeryLongBase64IconDisplayCorrectly() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json; charset=UTF-8")
+                .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_longBase64Icon.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&include_expired=all_expired&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json; charset=UTF-8")
+                .withBodyFile("mock_responses/mock_sso_oidc_consents_with_phone.json")));
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&include_expired=partially_expired"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json; charset=UTF-8")
+                .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+
+        Path path = Path.of("src/test/resources/svg/mockLongIcon.svg");
+        String originalString = Files.readString(path);
+        String base64 =  Base64.getEncoder().encodeToString(originalString.getBytes());
+
+        given()
+            .param("login_challenge", TEST_LOGIN_CHALLENGE)
+            .cookie(MOCK_OIDC_SESSION_COOKIE)
+            .when()
+            .get(LOGIN_INIT_REQUEST_MAPPING)
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+            .body(containsString("data:image/svg+xml;base64,"+ base64));
     }
 
     @Test
