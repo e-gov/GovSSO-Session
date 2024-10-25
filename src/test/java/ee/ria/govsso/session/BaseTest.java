@@ -117,9 +117,8 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         // TODO: Do not reset admin mock for now as it seems to create issued with scheduled update task
         // ADMIN_MOCK_SERVER.resetAll();
         PAASUKE_MOCK_SERVER.resetAll();
-        // TODO: Do not reset TARA mock for now as it seems to create issued with scheduled update task
-        // TARA_MOCK_SERVER.resetAll();
-        // setUpTaraMetadataMocks();
+        TARA_MOCK_SERVER.resetAll();
+        setUpTaraMetadataMocks();
     }
 
     private static void configureRestAssured() {
