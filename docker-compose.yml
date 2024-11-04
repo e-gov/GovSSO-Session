@@ -284,6 +284,7 @@ services:
       - server.ssl.key-store-password=changeit
       - server.ssl.protocol=TLS
       - server.ssl.enabled-protocols=TLSv1.3
+      - ELASTIC_APM_ENABLED=false
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10

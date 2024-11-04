@@ -61,6 +61,16 @@ services:
     environment:
       - LOG_FILE_LEVEL=INFO
       - LOG_HOME=/var/log/govsso-admin
+      - ELASTIC_APM_ENABLED=true
+      - ELASTIC_APM_SERVER_URL=http://fleet-server:8200
+      - ELASTIC_APM_SERVICE_NAME=govsso-admin
+      - ELASTIC_APM_HOSTNAME=admin.localhost
+      - ELASTIC_APM_ENVIRONMENT=dev-local
+      - ELASTIC_APM_VERIFY_SERVER_CERT=false
+      - ELASTIC_APM_METRICS_INTERVAL=10s
+      - ELASTIC_APM_CLOUD_PROVIDER=NONE
+      - ELASTIC_APM_APPLICATION_PACKAGES=ee.ria.tara
+      - ELASTIC_APM_TRANSACTION_IGNORE_URLS=/actuator/*
     labels:
       - co.elastic.logs/enabled=true
     user: root
