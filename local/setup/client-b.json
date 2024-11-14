@@ -32,7 +32,9 @@
   "backchannel_logout_uri": "https://clientb.localhost:12443/oauth2/back-channel-logout/govsso",
   "scope": [
     "openid",
-    "phone"
+    "phone",
+    "representee.*",
+    "representee_list"
   ],
   "secret": "secretb",
   "description": "This is a sample client. Intended for use in development environment only.",
@@ -56,6 +58,7 @@
   "sla_notification_emails": [
     "slanotifications.clientb@example.org"
   ],
+  "paasuke_parameters": "ns=BR_REPRIGHT&ns=ARGUMENT_CLINIC_DEMO&ns=PAASUKE",
   "access_token_jwt_enabled": true,
   "access_token_audience_uris": [
     "https://test1.test/123",
