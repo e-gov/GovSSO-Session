@@ -4,11 +4,14 @@ server:
   port: 15443
   ssl:
     enabled: true
+    enabled-protocols: TLSv1.3
+    ciphers:
+      - TLS_AES_128_GCM_SHA256
+      - TLS_CHACHA20_POLY1305_SHA256
+      - TLS_AES_256_GCM_SHA384
     key-store-type: PKCS12
     key-store: classpath:session.localhost.keystore.p12
     key-store-password: changeit
-    protocol: TLS
-    enabled-protocols: TLSv1.3
   tomcat:
     accesslog:
       enabled: false
