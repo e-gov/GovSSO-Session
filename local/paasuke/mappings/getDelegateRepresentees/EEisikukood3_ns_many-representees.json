@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/volitused/oraakel/delegates/EEisikukood3/representees?ns=many-representees"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "getDelegateRepresentees/EEisikukood3_ns_many-representees.json",
+    "status": 200
+  }
+}
