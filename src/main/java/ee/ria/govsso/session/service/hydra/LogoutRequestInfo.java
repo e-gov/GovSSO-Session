@@ -19,4 +19,6 @@ public class LogoutRequestInfo {
     // TODO: for some reason Hydra does not return full URL here, so have to use URI instead of URL.
     private URI requestUrl;
     private Boolean rpInitiated;
+    private String postLogoutRedirectUri;
+    private String[] uiLocales;
 }

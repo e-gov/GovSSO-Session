@@ -6,6 +6,7 @@ import ee.ria.govsso.session.service.hydra.LogoutRequestInfo;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
 import org.springframework.util.Assert;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -95,13 +97,11 @@ public class LocaleUtil {
     }
 
     private String getFirstSupportedLocale(LogoutRequestInfo logoutRequestInfo) {
-        NameValuePair localeParameter = getHydraRequestUrlLocaleParameter(logoutRequestInfo.getRequestUrl());
-        if (localeParameter == null || localeParameter.getValue() == null) {
+        String[] locales = logoutRequestInfo.getUiLocales();
+        if (ArrayUtils.isEmpty(locales)) {
             return null;
         }
-
-        List<String> locales = List.of(localeParameter.getValue().replace("+", " ").split(" "));
-        return getFirstSupportedLocale(locales);
+        return getFirstSupportedLocale(Arrays.asList(locales));
     }
 
     private String getFirstSupportedLocale(List<String> locales) {
@@ -121,15 +121,5 @@ public class LocaleUtil {
         if (nameTranslations.containsKey(locale.getLanguage()))
             translatedName = nameTranslations.get(locale.getLanguage());
         return translatedName;
-    }
-
-    @SneakyThrows
-    private NameValuePair getHydraRequestUrlLocaleParameter(URI requestUrl) {
-        return new URIBuilder(requestUrl)
-                .getQueryParams()
-                .stream()
-                .filter(x -> x.getName().equals("ui_locales"))
-                .findFirst()
-                .orElse(null);
     }
 }

@@ -109,35 +109,16 @@ public class LogoutController {
         validateLogoutRequestInfo(logoutRequestInfo);
 
         hydraService.rejectLogout(logoutChallenge);
-        String postLogoutRedirectUri = getAndValidatePostLogoutRedirectUri(logoutRequestInfo.getRequestUrl());
-        return new RedirectView(postLogoutRedirectUri);
+        return new RedirectView(logoutRequestInfo.getPostLogoutRedirectUri());
     }
 
     private void validateLogoutRequestInfo(LogoutRequestInfo logoutRequestInfo) {
         if (!logoutRequestInfo.getRpInitiated()) {
             throw new SsoException(ErrorCode.USER_INPUT, "Logout not initiated by relying party");
         }
-
-        getAndValidatePostLogoutRedirectUri(logoutRequestInfo.getRequestUrl());
-    }
-
-    @SneakyThrows
-    private String getAndValidatePostLogoutRedirectUri(URI requestUrl) {
-        List<NameValuePair> postLogoutRedirectUris = new URIBuilder(requestUrl)
-                .getQueryParams()
-                .stream()
-                .filter(x -> x.getName().equals("post_logout_redirect_uri"))
-                .toList();
-
-        if (CollectionUtils.isEmpty(postLogoutRedirectUris) || StringUtils.isBlank(postLogoutRedirectUris.get(0).getValue())) {
+        if (StringUtils.isBlank(logoutRequestInfo.getPostLogoutRedirectUri())) {
             throw new SsoException(USER_INPUT, "Invalid post logout redirect URI");
         }
-
-        if (postLogoutRedirectUris.size() > 1) {
-            throw new SsoException(USER_INPUT, "Request URL contains more than 1 post logout redirect uri");
-        }
-
-        return postLogoutRedirectUris.get(0).getValue();
     }
 
     private boolean consentDoesNotExistOrExistsOnlyForRequestClient(List<Consent> consents, String requestClientId) {
