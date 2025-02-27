@@ -43,6 +43,7 @@ import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static com.nimbusds.jose.JWSAlgorithm.RS384;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasLength;
 import static org.hamcrest.Matchers.notNullValue;
@@ -228,7 +229,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
         assertThat(ssoException.getMessage(), equalTo("Unable to request ID Token"));
         Throwable cause = ssoException.getCause();
-        assertThat(cause.getMessage(), startsWith("Invalid JSON: Unexpected token abc123 at position"));
+        assertThat(cause.getMessage(), equalTo("Invalid JSON"));
+        assertThat(cause.getCause().getMessage(), containsString("Unexpected token abc123 at position"));
     }
 
     @Test
