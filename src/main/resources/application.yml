@@ -42,6 +42,9 @@ management:
       group:
         readiness:
           include: readinessState,truststore,tara,hydra
+  health:
+    ssl:
+      enabled: false
   endpoints:
     web:
       exposure:
