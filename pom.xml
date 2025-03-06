@@ -216,6 +216,11 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <image>
+                        <env>
+                            <BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
+                        </env>
+                    </image>
                     <environmentVariables>
                         <ELASTIC_APM_ENABLED>false</ELASTIC_APM_ENABLED>
                     </environmentVariables>
