@@ -27,7 +27,6 @@
         <!-- Property values here can be overridden from command line, but plugin <configuration> values below can't be
         (see https://issues.apache.org/jira/browse/MNG-4979 ). -->
         <maven.compiler.release>17</maven.compiler.release>
-        <spring-boot.build-image.builder>paketobuildpacks/builder:tiny</spring-boot.build-image.builder>
         <spring-boot.build-image.imageName>${project.artifactId}:latest</spring-boot.build-image.imageName><!-- Use "latest" tag instead of version tag. -->
 
         <elastic-apm.version>1.53.0</elastic-apm.version>
