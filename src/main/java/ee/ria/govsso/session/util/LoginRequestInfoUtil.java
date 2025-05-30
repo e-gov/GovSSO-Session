@@ -9,10 +9,11 @@ import lombok.experimental.UtilityClass;
 import org.thymeleaf.util.ArrayUtils;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 
 @UtilityClass
 public class LoginRequestInfoUtil {
@@ -33,10 +34,21 @@ public class LoginRequestInfoUtil {
         if (oidcContext == null || ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
             return;
         }
+
+        String loginRequestAcrName = oidcContext.getAcrValues()[0];
+
         if (oidcContext.getAcrValues().length > 1) {
             throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
-        } else if (LevelOfAssurance.findByAcrName(oidcContext.getAcrValues()[0]) == null) {
+        } else if (LevelOfAssurance.findByAcrName(loginRequestAcrName) == null) {
             throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
         }
+
+        LevelOfAssurance loginRequestAcr = LevelOfAssurance.findByAcrName(loginRequestAcrName);
+        LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
+
+        if (clientSettingsAcr != null && !loginRequestAcr.equals(clientSettingsAcr)) {
+            throw new SsoException(USER_INPUT, "Requested acr_values must match configured minimum_acr_value");
+        }
+
     }
 }

@@ -13,4 +13,5 @@ public class Metadata {
     private boolean displayUserConsent;
     private List<String> skipUserConsentClientIds;
     private String paasukeParameters;
+    private String minimumAcrValue;
 }

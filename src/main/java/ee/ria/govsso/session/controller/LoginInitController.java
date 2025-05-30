@@ -92,8 +92,14 @@ public class LoginInitController {
         validateLoginRequestInfo(loginRequestInfo);
 
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
+
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
+            LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
+            if (clientSettingsAcr != null) {
+                oidcContext.setAcrValues(new String[]{clientSettingsAcr.getAcrName()});
+            } else {
+                oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
+            }
         }
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());

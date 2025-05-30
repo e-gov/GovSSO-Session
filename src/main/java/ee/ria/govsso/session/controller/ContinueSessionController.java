@@ -65,9 +65,16 @@ public class ContinueSessionController {
         if (!CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
             throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
         }
+
         OidcContext oidcContext = loginRequestInfo.getOidcContext();
+
         if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
+            LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
+            if (clientSettingsAcr != null) {
+                oidcContext.setAcrValues(new String[]{clientSettingsAcr.getAcrName()});
+            } else {
+                oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
+            }
         }
 
         validateLoginRequestInfo(loginRequestInfo);
