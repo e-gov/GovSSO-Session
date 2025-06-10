@@ -21,3 +21,6 @@ echo 'Adding client E'
 
 echo 'Adding client F'
 ./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000002' './institution-b.json' 'client-f' './client-f.json'
+
+echo 'Adding client Mock ACR Low'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000003' './institution-mock.json' 'client-mock-acr-low' './client-mock-acr-low.json'
