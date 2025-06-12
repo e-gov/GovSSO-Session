@@ -24,3 +24,9 @@ echo 'Adding client F'
 
 echo 'Adding client Mock ACR Low'
 ./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000003' './institution-mock.json' 'client-mock-acr-low' './client-mock-acr-low.json'
+
+echo 'Adding client Mock ACR Substantial'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000003' './institution-mock.json' 'client-mock-acr-substantial' './client-mock-acr-substantial.json'
+
+echo 'Adding client Mock ACR High'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS '70000003' './institution-mock.json' 'client-mock-acr-high' './client-mock-acr-high.json'

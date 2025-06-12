@@ -1,0 +1,60 @@
+{
+  "client_id": "client-mock-acr-substantial",
+  "client_name": {
+    "et": "Teenusenimi Mock ACR SUBSTANTIAL",
+    "en": "Service name Mock ACR SUBSTANTIAL",
+    "ru": "Название службы Mock ACR SUBSTANTIAL"
+  },
+  "client_short_name": {
+    "et": "Teenus MAS",
+    "en": "Service MAS",
+    "ru": "Название MAS"
+  },
+  "institution_metainfo": {
+    "registry_code": "70000003",
+    "type": {
+      "type": "public"
+    },
+    "name": "Institution Mock"
+  },
+  "redirect_uris": [
+    "https://client.mock.acr.substantial.localhost:11443/login/oauth2/code/govsso"
+  ],
+  "token_request_allowed_ip_addresses": [
+    "0.0.0.0/0",
+    "::/0"
+  ],
+  "token_endpoint_auth_method": "client_secret_basic",
+  "post_logout_redirect_uris": [
+    "https://client.mock.acr.substantial.localhost:11443/?show-post-logout-message"
+  ],
+  "backchannel_logout_uri": "https://client.mock.acr.substantial.localhost:11443/oauth2/back-channel-logout/govsso",
+  "scope": [
+    "openid",
+    "phone"
+  ],
+  "secret": "secret",
+  "description": "This is a sample client. Intended for use in development environment only.",
+  "info_notification_emails": [
+    "notifications.client-mock-acr-substantial@example.org"
+  ],
+  "client_contacts": [
+    {
+      "name": "Contact 1",
+      "email": "contact1.client-mock-acr-substantial@example.org",
+      "phone": "+37270000001",
+      "department": "Department 1"
+    },
+    {
+      "name": "Contact 2",
+      "email": "contact2.client-mock-acr-substantial@example.org",
+      "phone": "+37270000002",
+      "department": "Department 2"
+    }
+  ],
+  "sla_notification_emails": [
+    "slanotifications.client-mock-acr-substantial@example.org"
+  ],
+  "is_user_consent_required": true,
+  "minimum_acr_value": "substantial"
+}
