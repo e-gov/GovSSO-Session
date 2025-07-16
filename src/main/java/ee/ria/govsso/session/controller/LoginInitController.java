@@ -25,6 +25,9 @@ import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,11 +42,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
-import org.thymeleaf.util.ArrayUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.Pattern;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -91,17 +90,6 @@ public class LoginInitController {
 
         validateLoginRequestInfo(loginRequestInfo);
 
-        OidcContext oidcContext = loginRequestInfo.getOidcContext();
-
-        if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
-            if (clientSettingsAcr != null) {
-                oidcContext.setAcrValues(new String[]{clientSettingsAcr.getAcrName()});
-            } else {
-                oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
-            }
-        }
-
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
@@ -141,7 +129,7 @@ public class LoginInitController {
         }
 
         LoginRequestInfoUtil.validateScopes(loginRequestInfo);
-        LoginRequestInfoUtil.validateAcrValues(loginRequestInfo);
+        loginRequestInfo.validateAcr();
     }
 
     private void validateLoginRequestInfoForAuthenticationAndContinuation(LoginRequestInfo loginRequestInfo, Prompt prompt) {
@@ -156,8 +144,9 @@ public class LoginInitController {
     }
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
-        String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(acrValue, loginRequestInfo.getChallenge());
+        LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+        LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest(requiredAcr, loginRequestInfo.getChallenge());
 
         SsoCookie ssoCookie = SsoCookie.builder()
                 .loginChallenge(loginRequestInfo.getChallenge())
@@ -248,16 +237,13 @@ public class LoginInitController {
     }
 
     private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        String loginRequestInfoAcr = loginRequestInfo.getOidcContext().getAcrValues()[0];
-        String idTokenAcr;
-
         try {
-            idTokenAcr = idToken.getJWTClaimsSet().getStringClaim("acr");
+            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
+            return tokenAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
-
-        return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel()
-                >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
     }
 }

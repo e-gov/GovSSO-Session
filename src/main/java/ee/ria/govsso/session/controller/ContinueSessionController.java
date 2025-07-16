@@ -1,7 +1,6 @@
 package ee.ria.govsso.session.controller;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
@@ -17,6 +16,8 @@ import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -27,10 +28,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
-import org.thymeleaf.util.ArrayUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.Pattern;
 import java.text.ParseException;
 import java.util.List;
 
@@ -66,17 +64,6 @@ public class ContinueSessionController {
             throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
         }
 
-        OidcContext oidcContext = loginRequestInfo.getOidcContext();
-
-        if (oidcContext != null && ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
-            if (clientSettingsAcr != null) {
-                oidcContext.setAcrValues(new String[]{clientSettingsAcr.getAcrName()});
-            } else {
-                oidcContext.setAcrValues(new String[]{LevelOfAssurance.HIGH.getAcrName()});
-            }
-        }
-
         validateLoginRequestInfo(loginRequestInfo);
         List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
@@ -99,7 +86,7 @@ public class ContinueSessionController {
         }
 
         LoginRequestInfoUtil.validateScopes(loginRequestInfo);
-        LoginRequestInfoUtil.validateAcrValues(loginRequestInfo);
+        loginRequestInfo.validateAcr();
 
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
         if (prompt != Prompt.CONSENT) {
@@ -112,18 +99,15 @@ public class ContinueSessionController {
 
     private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {
         try {
-            JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
-            String acrValue = loginRequestInfo.getOidcContext().getAcrValues()[0];
-            if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(claimsSet.getStringClaim("acr"), acrValue)) {
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
+            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
+            if (tokenAcr.getAcrLevel() < requiredAcr.getAcrLevel()) {
+                throw new SsoException(TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
             }
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
-    }
-
-    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(String idTokenAcr, String loginRequestInfoAcr) {
-        return LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() >= LevelOfAssurance.findByAcrName(loginRequestInfoAcr).getAcrLevel();
     }
 
     private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {

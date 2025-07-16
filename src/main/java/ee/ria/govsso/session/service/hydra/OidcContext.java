@@ -12,7 +12,7 @@ import java.util.Map;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OidcContext {
 
-    private String[] acrValues;
+    private List<String> acrValues;
     private Map<String, Object> idTokenHintClaims;
     private List<String> uiLocales = new ArrayList<>();
 }

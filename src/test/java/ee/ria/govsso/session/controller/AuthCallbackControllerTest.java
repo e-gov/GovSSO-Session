@@ -13,6 +13,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
@@ -201,15 +202,15 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @Test
-    void authCallback_WhenTokenLoginRequestResponseAcrIsEmpty_Redirects() {
+    void authCallback_WhenClientSettingsAcrIsLow_AndIdTokenAcrIsLow_Redirects() {
         SsoCookie ssoCookie = createSsoCookie();
-        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "high");
+        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_only_minimum_acr_value.json")));
 
         TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
                 .willReturn(aResponse()
@@ -236,39 +237,7 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     @Test
-    void authCallback_WhenTokenRequestResponseAcrIsLow_ThrowsUserInputError() {
-        SsoCookie ssoCookie = createSsoCookie();
-        OIDCTokenResponse tokenResponse = getTaraOidcTokenResponse(ssoCookie, "low");
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_empty_acr.json")));
-
-        TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBody(tokenResponse.toJSONObject().toJSONString())));
-
-        given()
-                .param("code", TEST_CODE)
-                .param("state", ssoCookie.getTaraAuthenticationRequestState())
-                .cookie(ssoCookieSigner.getSignedCookieValue(ssoCookie))
-                .when()
-                .get(CALLBACK_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(400)
-                .body("error", equalTo("USER_INPUT"));
-
-        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
-
-    }
-
-    @Test
-    void authCallback_WhenErrorParemeterIsUserCancel_Redirects() {
+    void authCallback_WhenErrorParameterIsUserCancel_Redirects() {
         SsoCookie ssoCookie = createSsoCookie();
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                 .willReturn(aResponse()
@@ -751,7 +720,8 @@ class AuthCallbackControllerTest extends BaseTest {
     }
 
     private SsoCookie createSsoCookie() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", TEST_LOGIN_CHALLENGE);
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, TEST_LOGIN_CHALLENGE);
         return SsoCookie.builder()
                 .loginChallenge(TEST_LOGIN_CHALLENGE)
                 .taraAuthenticationRequestState(authenticationRequest.getState().getValue())
