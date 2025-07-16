@@ -14,6 +14,8 @@ import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieValue;
 import ee.ria.govsso.session.util.RequestUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +27,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
-import org.thymeleaf.util.ArrayUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.Pattern;
+import java.text.ParseException;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
@@ -89,17 +89,15 @@ public class AuthCallbackController {
 
     @SneakyThrows
     private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
-        String idTokenAcr = idToken.getJWTClaimsSet().getStringClaim("acr");
-        String loginRequestAcr = LevelOfAssurance.HIGH.getAcrName();
-
-        if (loginRequestInfo.getOidcContext() != null
-                && !ArrayUtils.isEmpty(loginRequestInfo.getOidcContext().getAcrValues())
-                && !loginRequestInfo.getOidcContext().getAcrValues()[0].isEmpty()) {
-            loginRequestAcr = loginRequestInfo.getOidcContext().getAcrValues()[0];
-        }
-
-        if (LevelOfAssurance.findByAcrName(idTokenAcr).getAcrLevel() < LevelOfAssurance.findByAcrName(loginRequestAcr).getAcrLevel()) {
-            throw new SsoException(ErrorCode.USER_INPUT, "ID Token acr value must be equal to or higher than hydra login request acr");
+        try {
+            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
+            if (tokenAcr.getAcrLevel() < requiredAcr.getAcrLevel()) {
+                throw new SsoException(ErrorCode.USER_INPUT, "ID Token acr value must be equal to or higher than hydra login request acr");
+            }
+        } catch (ParseException ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
     }
 

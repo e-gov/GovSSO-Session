@@ -14,6 +14,7 @@ public enum LevelOfAssurance {
     SUBSTANTIAL("substantial", 2),
     HIGH("high", 3);
 
+    public static final LevelOfAssurance DEFAULT = HIGH;
     private static final Map<String, LevelOfAssurance> acrNameMap;
 
     static {

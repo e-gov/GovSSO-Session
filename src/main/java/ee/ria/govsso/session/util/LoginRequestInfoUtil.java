@@ -2,18 +2,13 @@ package ee.ria.govsso.session.util;
 
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
-import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
-import ee.ria.govsso.session.service.hydra.OidcContext;
 import lombok.experimental.UtilityClass;
-import org.thymeleaf.util.ArrayUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 
 @UtilityClass
 public class LoginRequestInfoUtil {
@@ -28,27 +23,4 @@ public class LoginRequestInfoUtil {
         }
     }
 
-    public void validateAcrValues(LoginRequestInfo loginRequestInfo) {
-        OidcContext oidcContext = loginRequestInfo.getOidcContext();
-
-        if (oidcContext == null || ArrayUtils.isEmpty(oidcContext.getAcrValues())) {
-            return;
-        }
-
-        String loginRequestAcrName = oidcContext.getAcrValues()[0];
-
-        if (oidcContext.getAcrValues().length > 1) {
-            throw new SsoException(ErrorCode.USER_INPUT, "acrValues must contain only 1 value");
-        } else if (LevelOfAssurance.findByAcrName(loginRequestAcrName) == null) {
-            throw new SsoException(ErrorCode.USER_INPUT, "acrValues must be one of low/substantial/high");
-        }
-
-        LevelOfAssurance loginRequestAcr = LevelOfAssurance.findByAcrName(loginRequestAcrName);
-        LevelOfAssurance clientSettingsAcr = LevelOfAssurance.findByAcrName(loginRequestInfo.getClient().getMetadata().getMinimumAcrValue());
-
-        if (clientSettingsAcr != null && !loginRequestAcr.equals(clientSettingsAcr)) {
-            throw new SsoException(USER_INPUT, "Requested acr_values must match configured minimum_acr_value");
-        }
-
-    }
 }

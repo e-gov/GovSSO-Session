@@ -34,6 +34,7 @@ import ee.ria.govsso.session.configuration.properties.TaraConfigurationPropertie
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class TaraService {
     private final SSLContext trustContext;
 
     @SneakyThrows
-    public AuthenticationRequest createAuthenticationRequest(String acrValue, String loginChallenge) {
+    public AuthenticationRequest createAuthenticationRequest(LevelOfAssurance acr, String loginChallenge) {
         ClientID clientID = new ClientID(taraConfigurationProperties.clientId());
         URI callback = ssoConfigurationProperties.getCallbackUri();
         State state = new State();
@@ -77,7 +78,7 @@ public class TaraService {
                 .endpointURI(taraMetadataService.getMetadata().getAuthorizationEndpointURI())
                 .state(state)
                 .nonce(nonce)
-                .acrValues(List.of(new ACR(acrValue)))
+                .acrValues(List.of(new ACR(acr.getAcrName())))
                 .uiLocales(getUiLocales())
                 .customParameter("govsso_login_challenge", loginChallenge)
                 .build();

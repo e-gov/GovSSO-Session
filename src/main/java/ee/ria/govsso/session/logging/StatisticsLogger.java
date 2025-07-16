@@ -5,16 +5,14 @@ import com.nimbusds.jwt.JWT;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
-import ee.ria.govsso.session.service.hydra.OidcContext;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.util.ArrayUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -41,25 +39,31 @@ public class StatisticsLogger {
             "eidas", "EIDAS");
 
     @SneakyThrows
-    public void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull LoginRequestInfo loginRequestInfo) {
-        logAccept(requestType, taraIdToken, loginRequestInfo.getClient(), loginRequestInfo.getSessionId(), loginRequestInfo.getOidcContext());
+    public void logAccept(
+            @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken,
+            @NonNull LoginRequestInfo loginRequestInfo) {
+        logAccept(
+                requestType, taraIdToken, loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
+                loginRequestInfo.getAcr());
     }
 
     @SneakyThrows
-    public void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
-        logAccept(requestType, taraIdToken, consentRequestInfo.getClient(), sessionId, consentRequestInfo.getOidcContext());
+    public void logAccept(
+            @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken,
+            @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
+        logAccept(requestType, taraIdToken, consentRequestInfo.getClient(), sessionId, null);
     }
 
-    private void logAccept(@NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull Client client, @NonNull String sessionId, OidcContext oidcContext) throws ParseException {
+    private void logAccept(
+            @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull Client client,
+            @NonNull String sessionId, LevelOfAssurance requestAcr) throws ParseException {
         var institution = client.getMetadata().getOidcClient().getInstitution();
         var claims = taraIdToken.getJWTClaimsSet();
         var subject = claims.getSubject();
         var country = subject.substring(0, 2);
         var idCode = subject.substring(2);
-        var sid = sessionId;
         var iat = claims.getIssueTime();
         var sessionTime = Instant.now().getEpochSecond() - iat.toInstant().getEpochSecond();
-        var acrValues = oidcContext != null ? oidcContext.getAcrValues() : null;
         var grantedAcr = claims.getStringClaim("acr").toUpperCase(Locale.ROOT);
         var amr = stream(claims.getStringArrayClaim("amr"))
                 .filter(authenticationTypes::containsKey)
@@ -70,7 +74,7 @@ public class StatisticsLogger {
                 .clientId(client.getClientId())
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
-                .sessionId(sid)
+                .sessionId(sessionId)
                 .sessionStartTime(iat)
                 .sessionDuration(sessionTime)
                 .country(country)
@@ -80,10 +84,9 @@ public class StatisticsLogger {
                 .grantedAcr(grantedAcr)
                 .build();
         amr.ifPresent(sessionStatistics::setAuthenticationType);
-        if (!requestType.equals(AuthenticationRequestType.UPDATE_SESSION) && !ArrayUtils.isEmpty(acrValues) && StringUtils.isNotBlank(acrValues[0])) {
-            sessionStatistics.setRequestedAcr(acrValues[0].toUpperCase(Locale.ROOT));
+        if (requestAcr != null) {
+            sessionStatistics.setRequestedAcr(requestAcr.name());
         }
-
 
         log.info(appendFields(sessionStatistics), "Statistics");
     }

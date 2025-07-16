@@ -20,6 +20,7 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
 import ee.ria.govsso.session.error.exceptions.SsoException;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.util.LocaleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,7 +48,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasLength;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
@@ -64,7 +64,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void createAuthenticationRequest_WhenCreated_ContainsValidRequestParameters() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", TEST_LOGIN_CHALLENGE);
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, TEST_LOGIN_CHALLENGE);
         ClientID clientID = authenticationRequest.getClientID();
 
         assertThat(clientID.getValue(), equalTo(taraConfigurationProperties.clientId()));
@@ -84,7 +85,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenInvalidCode_ThrowsIllegalArgumentException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse unsignedTokenResponse = getTokenResponse(claimsSet, false);
         TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
@@ -101,7 +103,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenUnsignedJwtTokenResponse_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse unsignedTokenResponse = getTokenResponse(claimsSet, false);
         TARA_MOCK_SERVER.stubFor(post(urlEqualTo("/oidc/token"))
@@ -154,7 +157,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void requestIdToken_WhenTokenEndpointRequestTimeout_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
 
@@ -235,7 +239,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenAuthenticationRequestNull_ThrowsIllegalArgumentException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         JWTClaimsSet claimsSet = createClaimSet(authenticationRequest);
         OIDCTokenResponse signedTokenResponse = getTokenResponse(claimsSet, true);
         SignedJWT idToken = (SignedJWT) signedTokenResponse.getOIDCTokens().getIDToken();
@@ -248,7 +253,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenIdTokenNull_ThrowsIllegalArgumentException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
 
         NullPointerException exception = assertThrows(NullPointerException.class,
@@ -259,7 +265,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenInvalidJWSAlgorithm_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -285,7 +292,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenInvalidSignature_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -311,7 +319,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenMissingNonce_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -336,7 +345,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenInvalidNonce_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -362,7 +372,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenInvalidAudience_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -388,7 +399,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenMissingAudience_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -413,7 +425,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenMissingSubject_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -438,7 +451,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenInvalidIssuer_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -464,7 +478,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenMissingIssuer_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -490,7 +505,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     @Test
     void verifyIdToken_WhenIssueTimeAheadOfCurrentTime_ThrowsSsoException() {
         Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -517,7 +533,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     @Test
     void verifyIdToken_WhenIssueTimeMissing_ThrowsSsoException() {
         Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -542,7 +559,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenIssueTimeAheadOfCurrentTimeWithinAcceptableSkew_TokenValid() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
@@ -563,7 +581,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
     @Test
     void verifyIdToken_WhenExpired_ThrowsSsoException() {
         Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -589,7 +608,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenExpirationTimeMissing_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -614,7 +634,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenGovssoLoginChallengeMissing_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -637,7 +658,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenGovssoLoginChallengeInvalid_ThrowsSsoException() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         String nonce = authenticationRequest.getNonce().getValue();
         String state = authenticationRequest.getState().getValue();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -661,7 +683,8 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
 
     @Test
     void verifyIdToken_WhenExpirationTimeWithinAcceptableSkew_TokenValid() {
-        AuthenticationRequest authenticationRequest = taraService.createAuthenticationRequest("high", "test");
+        AuthenticationRequest authenticationRequest =
+                taraService.createAuthenticationRequest(LevelOfAssurance.HIGH, "test");
         Integer maxClockSkew = taraConfigurationProperties.maxClockSkewSeconds();
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("nonce", authenticationRequest.getNonce().getValue())
