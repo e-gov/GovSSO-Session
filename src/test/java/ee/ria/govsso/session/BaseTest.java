@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.nimbusds.jose.jwk.RSAKey;
+import ee.ria.govsso.session.configuration.TestSchedulingConfiguration;
 import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -27,7 +28,7 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT,
-        classes = {Application.class, MockPropertyBeanConfiguration.class})
+        classes = {Application.class, MockPropertyBeanConfiguration.class, TestSchedulingConfiguration.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
     protected static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
@@ -104,8 +105,6 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         ADMIN_MOCK_SERVER.start();
         PAASUKE_MOCK_SERVER.start();
         TARA_MOCK_SERVER.start();
-        // TODO: Move to @BeforeEach?
-        setUpTaraMetadataMocks();
     }
 
     @BeforeEach
@@ -114,8 +113,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         RestAssured.responseSpecification = new ResponseSpecBuilder()
                 .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITHOUT_CORS).build();
         HYDRA_MOCK_SERVER.resetAll();
-        // TODO: Do not reset admin mock for now as it seems to create issued with scheduled update task
-        // ADMIN_MOCK_SERVER.resetAll();
+        ADMIN_MOCK_SERVER.resetAll();
         PAASUKE_MOCK_SERVER.resetAll();
         TARA_MOCK_SERVER.resetAll();
         setUpTaraMetadataMocks();

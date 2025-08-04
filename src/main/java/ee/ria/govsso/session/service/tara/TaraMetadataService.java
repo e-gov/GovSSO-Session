@@ -79,7 +79,7 @@ public class TaraMetadataService {
             backoff = @Backoff(delayExpression = "${govsso.tara.metadata-backoff-delay-milliseconds:1000}",
                     maxDelayExpression = "${govsso.tara.metadata-backoff-max-delay-milliseconds:60000}",
                     multiplierExpression = "${govsso.tara.metadata-backoff-multiplier:1.1}"))
-    void updateMetadata() {
+    public void updateMetadata() {
         try {
             OIDCProviderMetadata metadata = requestMetadata();
             JWKSet jwkSet = requestJWKSet(metadata);

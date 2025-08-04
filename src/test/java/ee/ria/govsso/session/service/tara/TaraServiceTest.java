@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -55,11 +56,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests under appropriate *Controller tests
     private final TaraService taraService;
     private final TaraConfigurationProperties taraConfigurationProperties;
+    private final TaraMetadataService taraMetadataService;
 
     @BeforeAll
     static void setUp() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
+
+    @BeforeEach
+    void updateMetadata() {
+        taraMetadataService.updateMetadata();
     }
 
     @Test

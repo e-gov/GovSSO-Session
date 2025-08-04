@@ -1,7 +1,10 @@
 package ee.ria.govsso.session.actuator.health;
 
+import ee.ria.govsso.session.service.tara.TaraMetadataService;
 import io.restassured.response.ValidatableResponse;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
@@ -9,13 +12,18 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
+
+// DirtiesContext is required to make sure that the lastRequestToPaasukeSuccessful parameter in PaasukeService is in its
+// original state when running this test class, otherwise its status might be DOWN.
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ApplicationHealthEndpointTest extends HealthEndpointTest {
 
+    private final TaraMetadataService taraMetadataService;
+
     @Test
-    // DirtiesContext is required to make sure that the lastRequestToPaasukeSuccessful parameter in PaasukeService is in its
-    // original state when running this test class, otherwise its status might be DOWN.
-    @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
     void health_WhenAllServicesUp_RespondsWith200() {
+        taraMetadataService.updateMetadata();
         mockHydraHealthAliveUp();
 
         ValidatableResponse response = given()
@@ -93,6 +101,7 @@ class ApplicationHealthEndpointTest extends HealthEndpointTest {
 
     @Test
     void healthTara_WhenTaraRespondsWithMetadata_RespondsWith200AndTaraStatusUp() {
+        taraMetadataService.updateMetadata();
         given()
                 .when()
                 .get("/actuator/health/tara")

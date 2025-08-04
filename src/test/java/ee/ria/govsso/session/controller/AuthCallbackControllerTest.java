@@ -13,6 +13,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.TaraConfigurationProperties;
+import ee.ria.govsso.session.service.tara.TaraMetadataService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
@@ -22,6 +23,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -59,6 +61,7 @@ class AuthCallbackControllerTest extends BaseTest {
     private final TaraConfigurationProperties taraConfigurationProperties;
     private final TaraService taraService;
     private final SsoCookieSigner ssoCookieSigner;
+    private final TaraMetadataService taraMetadataService;
 
     static Stream<Arguments> contextHeaders() {
         return Stream.of(
@@ -71,6 +74,11 @@ class AuthCallbackControllerTest extends BaseTest {
     static void setUp() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
+
+    @BeforeEach
+    void updateMetadata() {
+        taraMetadataService.updateMetadata();
     }
 
     @Test
