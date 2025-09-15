@@ -27,7 +27,8 @@
         <!-- Property values here can be overridden from command line, but plugin <configuration> values below can't be
         (see https://issues.apache.org/jira/browse/MNG-4979 ). -->
         <maven.compiler.release>17</maven.compiler.release>
-        <spring-boot.build-image.imageName>${project.artifactId}:latest</spring-boot.build-image.imageName><!-- Use "latest" tag instead of version tag. -->
+        <imageName>${project.artifactId}:latest</imageName>
+        <githubMirror>https://github.com</githubMirror>
 
         <elastic-apm.version>1.54.0</elastic-apm.version>
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
@@ -215,6 +216,17 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <image>
+                    <name>${imageName}</name>
+                        <env>
+                            <!-- Avoid excessive downloads in build environments with restricted internet access -->
+                            <BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
+                            <!-- Enable overriding GitHub mirror -->
+                            <BP_DEPENDENCY_MIRROR_GITHUB_COM>${githubMirror}</BP_DEPENDENCY_MIRROR_GITHUB_COM>
+                            <!-- Some mirrors might respond too slowly to handle the default timeout (5s) -->
+                            <BP_RESPONSE_HEADER_TIMEOUT>60</BP_RESPONSE_HEADER_TIMEOUT>
+                        </env>
+                    </image>
                     <environmentVariables>
                         <ELASTIC_APM_ENABLED>false</ELASTIC_APM_ENABLED>
                     </environmentVariables>
