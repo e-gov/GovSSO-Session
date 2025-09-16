@@ -132,12 +132,29 @@ services:
       - ./local/tls/inproxy/inproxy.localhost.admin.truststore.p12:/var/certs/inproxy.localhost.admin.truststore.p12:ro
       - ./local/tls/inproxy/inproxy.localhost.keystore.p12:/var/certs/inproxy.localhost.keystore.p12:ro
 
+  # This step runs before hydra. If Hydra has been updated since the last run and the new version
+  # is using an updated database schema, then this step updates the schema in the database accordingly.
+  setup-hydra:
+    image: oryd/hydra:feature-govsso
+    command: migrate sql --yes --config /etc/govsso-hydra/config.yml --read-from-env
+    depends_on:
+      hydra-db:
+        condition: service_healthy
+    environment:
+      # TODO: move to govsso-hydra/config.yml
+      - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
+    volumes:
+      - ./local/hydra:/etc/govsso-hydra:ro
+
   hydra: # Map to host ports 14xxx.
     # TODO Temporarily a fork is used until all pull requests are merged upstream.
-    image: oryd/hydra:feature-govsso # hydra:v2.1.2 image doesn't have shell, -sqlite image does.
-    entrypoint: sh -c 'sleep 7 && hydra migrate sql --read-from-env --yes && hydra serve --config /etc/govsso-hydra/config.yml all'
+    image: oryd/hydra:feature-govsso
+    command: serve --config /etc/govsso-hydra/config.yml all
     depends_on:
-      - hydra-db
+      setup-hydra:
+        condition: service_completed_successfully
+      hydra-db:
+        condition: service_healthy
     deploy:
       resources:
         limits:
