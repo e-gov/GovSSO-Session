@@ -1,15 +1,22 @@
 package ee.ria.govsso.session.actuator.health;
 
+import ee.ria.govsso.session.service.tara.TaraMetadataService;
 import io.restassured.response.ValidatableResponse;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ReadinessHealthEndpointTest extends HealthEndpointTest {
+
+    private final TaraMetadataService taraMetadataService;
 
     @Test
     void healthReadiness_WhenAllIncludedServicesUp_RespondsWith200() {
+        taraMetadataService.updateMetadata();
         mockHydraHealthAliveUp();
 
         ValidatableResponse response = given()
@@ -28,6 +35,7 @@ class ReadinessHealthEndpointTest extends HealthEndpointTest {
 
     @Test
     void healthReadiness__WhenHydraServiceDownButOtherServicesUp_RespondsWith503AndHydraStatusDown() {
+        taraMetadataService.updateMetadata();
         mockHydraHealthAliveDown();
 
         ValidatableResponse response = given()

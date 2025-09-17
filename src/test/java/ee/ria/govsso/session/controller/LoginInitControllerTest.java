@@ -10,6 +10,7 @@ import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
+import ee.ria.govsso.session.service.tara.TaraMetadataService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.RestAssured;
@@ -70,6 +71,7 @@ public class LoginInitControllerTest extends BaseTest {
     private final SsoCookieSigner ssoCookieSigner;
     private final SecurityConfigurationProperties securityConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final TaraMetadataService taraMetadataService;
 
     static Stream<Arguments> contextHeaders() {
         return Stream.of(
@@ -82,6 +84,7 @@ public class LoginInitControllerTest extends BaseTest {
     public void setupExpectedResponseSpec() {
         RestAssured.responseSpecification = new ResponseSpecBuilder()
                 .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITH_CORS).build();
+        taraMetadataService.updateMetadata();
     }
 
     @Test
