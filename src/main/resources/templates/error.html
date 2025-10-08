@@ -9,6 +9,7 @@
             <p><strong><span th:remove="tag" th:text="#{message.error.auth.title}"></span></strong></p>
             <p th:if="${message != null}" th:utext="${message}"></p>
             <p th:text="#{error.technical_general}" th:unless="${message != null}"></p>
+            <p th:text="#{label.error.incident-time(${#prettyDates.dateTime(timestamp)})}"></p>
             <p th:if="${incident_nr != null}" th:text="#{label.error.incident-number(${incident_nr})}"></p>
         </div>
     </div>
