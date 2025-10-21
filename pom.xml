@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.6</version>
+        <version>3.5.6</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -30,12 +30,12 @@
         <imageName>${project.artifactId}:latest</imageName>
         <githubMirror>https://github.com</githubMirror>
 
-        <elastic-apm.version>1.54.0</elastic-apm.version>
-        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+        <elastic-apm.version>1.55.1</elastic-apm.version>
+        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <jquery.version>3.7.1</jquery.version>
         <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version>
-        <nimbus-oauth2-oidc-sdk.version>11.25</nimbus-oauth2-oidc-sdk.version>
-        <wiremock.version>3.13.0</wiremock.version>
+        <nimbus-oauth2-oidc-sdk.version>11.30</nimbus-oauth2-oidc-sdk.version>
+        <wiremock.version>3.13.1</wiremock.version>
     </properties>
 
     <dependencies><!-- Ordered by scope, groupId, artifactId. -->
