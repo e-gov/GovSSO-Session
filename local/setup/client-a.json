@@ -34,7 +34,7 @@
     "openid",
     "phone"
   ],
-  "secret": "secreta",
+  "_systemTest_secret": "secreta",
   "description": "This is a sample client. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.clienta@example.org"

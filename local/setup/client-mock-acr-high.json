@@ -33,7 +33,7 @@
     "openid",
     "phone"
   ],
-  "secret": "secret",
+  "_systemTest_secret": "secret",
   "description": "This is a sample client. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.client-mock-acr-high@example.org"

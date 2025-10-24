@@ -34,7 +34,7 @@
     "openid",
     "phone"
   ],
-  "secret": "secretc",
+  "_systemTest_secret": "secretc",
   "description": "This is a sample client. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.clientc@example.org"

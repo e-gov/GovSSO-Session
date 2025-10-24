@@ -36,7 +36,7 @@
     "representee.*",
     "representee_list"
   ],
-  "secret": "secretb",
+  "_systemTest_secret": "secretb",
   "description": "This is a sample client. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.clientb@example.org"

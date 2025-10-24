@@ -33,7 +33,7 @@
     "openid",
     "phone"
   ],
-  "secret": "secretf",
+  "_systemTest_secret": "secretf",
   "description": "This is a sample client with client_secret_post configuration. Intended for use in development environment only.",
   "info_notification_emails": [
     "notifications.clientf@example.org"

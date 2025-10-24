@@ -243,6 +243,7 @@ services:
           memory: 250M
     environment:
       - ADMIN_SERVICE_URL=admin.localhost:443 # Must be set without protocol
+      - OIDC_SERVICE_URL=hydra.localhost:4445
       - ADMIN_USER=admin
       - ADMIN_PASS=admin
 
