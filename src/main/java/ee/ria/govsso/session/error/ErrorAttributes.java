@@ -2,6 +2,7 @@ package ee.ria.govsso.session.error;
 
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.util.LocaleUtil;
+import ee.ria.govsso.session.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -11,8 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class ErrorAttributes extends DefaultErrorAttributes {
     public static final String ERROR_ATTR_MESSAGE = "message";
     public static final String ERROR_ATTR_ERROR_CODE = "error";
     public static final String ERROR_ATTR_INCIDENT_NR = "incident_nr";
-    public static final String ERROR_ATTR_TIMESTAMP = "timestamp";
+    public static final String ERROR_ATTR_OFFSET_TIMESTAMP = "offset_timestamp";
 
     private final MessageSource messageSource;
 
@@ -54,10 +54,17 @@ public class ErrorAttributes extends DefaultErrorAttributes {
 
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode, String incidentNumber) {
         Locale locale = LocaleUtil.getLocale();
+
+        Date errorTimestamp = (Date) attr.get("timestamp");
+        if (errorTimestamp == null) {
+            errorTimestamp = new Date();
+        }
+        OffsetDateTime timestampWithOffset = TimeUtil.toOffsetDateTime(errorTimestamp);
+
         attr.put(ERROR_ATTR_MESSAGE, messageSource.getMessage("error." + errorCode.name().toLowerCase(Locale.ROOT), null, locale));
         attr.put(ERROR_ATTR_INCIDENT_NR, incidentNumber);
         attr.put(ERROR_ATTR_ERROR_CODE, errorCode.name());
-        attr.put(ERROR_ATTR_TIMESTAMP, LocalDateTime.now());
+        attr.put(ERROR_ATTR_OFFSET_TIMESTAMP, timestampWithOffset);
     }
 
 }
