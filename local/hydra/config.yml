@@ -20,7 +20,7 @@ serve:
       disable_for_health: true
     port: 8443
 hsm:
-  enabled: true
+  enabled: false
   library: /usr/lib/softhsm/libsofthsm2.so
   pin: '1234'
   token_label: hydra
