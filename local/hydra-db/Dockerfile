@@ -1,4 +1,4 @@
-FROM postgres:13
+FROM postgres:17
 
 # These files could also be just mounted through volume from docker-compose, but postgres needs specific
 # TLS cert and key file permissions to be set. Since it is not doable in Windows machine it must be done separately
