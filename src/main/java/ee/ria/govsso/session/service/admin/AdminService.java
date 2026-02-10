@@ -71,8 +71,8 @@ public class AdminService {
                 .min(comparing(Consent::getRequestedAt))
                 .map(Consent::getRequestedAt)
                 .orElseThrow();
-        List<String> ipAddresses = allConsents.stream()
-                .map(c -> c.getConsentRequest().getContext().getIpAddress())
+        List<SessionIpInfo> ipInfos = allConsents.stream()
+                .map(this::mapToSessionIpInfo)
                 .distinct()
                 .toList();
         String userAgent = allConsents.get(0).getConsentRequest().getContext().getUserAgent();
@@ -81,7 +81,7 @@ public class AdminService {
         return Session.builder()
                 .sessionId(sessionId)
                 .authenticatedAt(authenticatedAt)
-                .ipAddresses(ipAddresses)
+                .ipInfos(ipInfos)
                 .userAgent(userAgent)
                 .os(parsed.os())
                 .browser(parsed.browser())
@@ -105,5 +105,13 @@ public class AdminService {
                 .lastUpdatedAt(lastUpdatedAt)
                 .clientNames(clientNames)
                 .build();
+    }
+
+    private SessionIpInfo mapToSessionIpInfo(Consent consent) {
+        var context = consent.getConsentRequest().getContext();
+        return new SessionIpInfo(
+                context.getIpAddress(),
+                context.getIpCountry()
+        );
     }
 }

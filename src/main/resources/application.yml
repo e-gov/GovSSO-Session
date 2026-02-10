@@ -67,6 +67,8 @@ govsso:
   # NB! Hydra database clean-up functionality will remove session data older than 24 hours, so
   # setting this value over 24 also requires increasing Hydra database clean-up time limit.
   session-max-duration-hours: 12
+  ip-country:
+    provider: NONE # NONE | CLOUDFLARE
   hydra:
     admin-url: https://hydra.localhost:14445/
     tls:

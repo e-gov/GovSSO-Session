@@ -62,6 +62,7 @@ class AdminServiceTest {
                 "client-1",
                 now.minusMinutes(10),
                 "127.0.0.1",
+                "EE",
                 userAgent
         );
 
@@ -80,7 +81,7 @@ class AdminServiceTest {
         assertThat(session.userAgent(), equalTo(userAgent));
         assertThat(session.os(), equalTo(os));
         assertThat(session.browser(), equalTo(browser));
-        assertThat(session.ipAddresses(), contains("127.0.0.1"));
+        assertThat(session.ipInfos(), contains(new SessionIpInfo("127.0.0.1", "EE")));
         assertThat(session.services(), hasSize(1));
     }
 
@@ -95,8 +96,8 @@ class AdminServiceTest {
         OffsetDateTime t1 = OffsetDateTime.now().minusMinutes(20);
         OffsetDateTime t2 = OffsetDateTime.now().minusMinutes(5);
 
-        Consent oldConsent = consent(sessionId, "client-1", t1, "127.0.0.1", userAgent);
-        Consent newConsent = consent(sessionId, "client-1", t2, "127.0.0.1", userAgent);
+        Consent oldConsent = consent(sessionId, "client-1", t1, "127.0.0.1", null, userAgent);
+        Consent newConsent = consent(sessionId, "client-1", t2, "127.0.0.1", null, userAgent);
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(oldConsent, newConsent));
@@ -118,9 +119,9 @@ class AdminServiceTest {
         String browser = "Chrome";
 
         Consent s1 = consent("session-1", "client-1",
-                OffsetDateTime.now().minusMinutes(30), "127.0.0.1", "ua1");
+                OffsetDateTime.now().minusMinutes(30), "127.0.0.1", null, "ua1");
         Consent s2 = consent("session-2", "client-2",
-                OffsetDateTime.now().minusMinutes(10), "127.0.0.2", "ua2");
+                OffsetDateTime.now().minusMinutes(10), "127.0.0.2", null, "ua2");
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(s1, s2));
@@ -138,10 +139,12 @@ class AdminServiceTest {
             String clientId,
             OffsetDateTime requestedAt,
             String ip,
+            String country,
             String userAgent
     ) {
         Context context = new Context();
         context.setIpAddress(ip);
+        context.setIpCountry(country);
         context.setUserAgent(userAgent);
 
         OidcClient oidcClient = new OidcClient();

@@ -3,6 +3,8 @@ package ee.ria.govsso.session.controller;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import ee.ria.govsso.session.common.ClientRequestMetadata;
+import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
@@ -69,6 +71,7 @@ public class LoginInitController {
     private final TaraService taraService;
     private final StatisticsLogger statisticsLogger;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final ClientRequestMetadataFactory clientRequestMetadataFactory;
     @Autowired(required = false)
     private AlertsService alertsService;
 
@@ -105,7 +108,8 @@ public class LoginInitController {
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
-                return acceptLogin(loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
+                ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
+                return acceptLogin(loginRequestInfo, idToken, metadata);
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                     return openSessionContinuationView(loginRequestInfo, idToken);
@@ -186,8 +190,8 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress, userAgent);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, metadata);
         statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }

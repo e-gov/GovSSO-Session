@@ -260,6 +260,12 @@ govsso.alerts.static-alert.message-templates[2].locale=ru
 | :---------------- | :---------- | :---------- | :---------------- |
 | `govsso.x-road.client-id` | Yes | | The value of `X-Road-Client` header for outbound requests |
 
+### IP country configuration
+
+| Parameter        | Mandatory | Default value | Description, example |
+| :---------------- |:----------|:--------------| :---------------- |
+| `govsso.ip-country.provider` | No        | NONE          | IP country provider. Supported values: `NONE`, `CLOUDFLARE`. |
+
 ## Non-pom.xml Licenses
 
 * [jquery](https://jquery.com) - MIT license

@@ -1,6 +1,8 @@
 package ee.ria.govsso.session.controller;
 
 import com.nimbusds.jwt.SignedJWT;
+import ee.ria.govsso.session.common.ClientRequestMetadata;
+import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
@@ -43,6 +45,7 @@ public class AuthCallbackController {
     private final TaraService taraService;
     private final HydraService hydraService;
     private final StatisticsLogger statisticsLogger;
+    private final ClientRequestMetadataFactory clientRequestMetadataFactory;
 
     @GetMapping(value = CALLBACK_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView loginCallback(
@@ -83,7 +86,9 @@ public class AuthCallbackController {
         verifyAcr(idToken, loginRequestInfo);
         taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
 
-        return acceptLogin(ssoCookie, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
+        ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
+
+        return acceptLogin(ssoCookie, loginRequestInfo, idToken, metadata);
     }
 
     private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
@@ -111,8 +116,8 @@ public class AuthCallbackController {
         }
     }
 
-    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, ipAddress, userAgent);
+    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, metadata);
         statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }

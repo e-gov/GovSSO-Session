@@ -15,7 +15,7 @@ import java.util.List;
 public record Session(@NonNull String sessionId,
                       @NonNull OffsetDateTime authenticatedAt,
 
-                      @NonNull List<String> ipAddresses,
+                      @NonNull List<SessionIpInfo> ipInfos,
                       @NonNull String userAgent,
                       @NonNull String os,
                       @NonNull String browser,

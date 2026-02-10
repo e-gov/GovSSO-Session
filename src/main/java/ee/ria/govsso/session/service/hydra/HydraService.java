@@ -3,6 +3,7 @@ package ee.ria.govsso.session.service.hydra;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
@@ -220,7 +221,7 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress, String userAgent) {
+    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, ClientRequestMetadata metadata) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login/accept")
                 .queryParam("login_challenge", loginChallenge)
@@ -230,8 +231,9 @@ public class HydraService {
 
         Context context = new Context();
         context.setTaraIdToken(idToken.getParsedString());
-        context.setIpAddress(ipAddress);
-        context.setUserAgent(userAgent);
+        context.setIpAddress(metadata.ipAddress());
+        context.setUserAgent(metadata.userAgent());
+        context.setIpCountry(metadata.ipCountry());
 
         LoginAcceptRequest request = new LoginAcceptRequest();
         request.setRemember(true);

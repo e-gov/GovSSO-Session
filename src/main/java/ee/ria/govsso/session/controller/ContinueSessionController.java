@@ -1,6 +1,8 @@
 package ee.ria.govsso.session.controller;
 
 import com.nimbusds.jwt.JWT;
+import ee.ria.govsso.session.common.ClientRequestMetadata;
+import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
@@ -47,6 +49,7 @@ public class ContinueSessionController {
 
     private final HydraService hydraService;
     private final StatisticsLogger statisticsLogger;
+    private final ClientRequestMetadataFactory clientRequestMetadataFactory;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView continueSession(
@@ -71,8 +74,9 @@ public class ContinueSessionController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
 
+        ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
         validateIdToken(loginRequestInfo, idToken);
-        return acceptLogin(loginChallenge, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
+        return acceptLogin(loginChallenge, loginRequestInfo, idToken, metadata);
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -110,8 +114,8 @@ public class ContinueSessionController {
         }
     }
 
-    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, ipAddress, userAgent);
+    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, metadata);
         statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
