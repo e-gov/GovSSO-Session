@@ -17,5 +17,7 @@ public record Session(@NonNull String sessionId,
 
                       @NonNull List<String> ipAddresses,
                       @NonNull String userAgent,
+                      @NonNull String os,
+                      @NonNull String browser,
                       @NonNull List<ServiceSession> services) {
 }

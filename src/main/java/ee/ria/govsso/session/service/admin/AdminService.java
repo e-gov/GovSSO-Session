@@ -6,6 +6,8 @@ import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.Metadata;
+import ee.ria.govsso.session.service.useragent.ParsedUserAgent;
+import ee.ria.govsso.session.service.useragent.UserAgentParserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ import static java.util.stream.Collectors.toMap;
 public class AdminService {
     private final HydraService hydraService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final UserAgentParserService userAgentParserService;
 
     public List<Session> getSessions(String subject) {
         List<Consent> consents = hydraService.getConsentsIncludingPartiallyExpired(subject);
@@ -73,12 +76,15 @@ public class AdminService {
                 .distinct()
                 .toList();
         String userAgent = allConsents.get(0).getConsentRequest().getContext().getUserAgent();
+        ParsedUserAgent parsed = userAgentParserService.parse(userAgent);
 
         return Session.builder()
                 .sessionId(sessionId)
                 .authenticatedAt(authenticatedAt)
                 .ipAddresses(ipAddresses)
                 .userAgent(userAgent)
+                .os(parsed.os())
+                .browser(parsed.browser())
                 .services(serviceSessions)
                 .build();
     }

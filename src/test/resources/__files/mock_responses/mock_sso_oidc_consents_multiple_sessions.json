@@ -21,7 +21,7 @@
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
         "tara_id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRhcmFtb2NrIiwidHlwIjoiSldUIn0.eyJqdGkiOiIwMDEiLCJpc3MiOiJodHRwczovL3RhcmEubG9jYWxob3N0OjE1NDQzIiwiYXVkIjoiZ292c3NvIiwiZXhwIjoxNjM5NTUxMTQ1LCJpYXQiOjE2Mzk1NTEwODUsIm5iZiI6MTYzOTU1MTA4NSwic3ViIjoiSXNpa3Vrb29kMyIsInByb2ZpbGVfYXR0cmlidXRlcyI6eyJkYXRlX29mX2JpcnRoIjoiMTk2MS0wNy0xMiIsImdpdmVuX25hbWUiOiJFZXNuaW1pMyIsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMifSwiYW1yIjpbIm1JRCJdLCJzdGF0ZSI6InRvOEJYYlFsS0MxMWhBamlUdmxkWUlCSWhzVHNEN0tsZEg4Y0RaYkpfSUkiLCJub25jZSI6ImNQalJkSEVUSzhTZG45UEdtdlpjVEdaWG5MQVpwMEhPYlhoVjBDM2c3ZTQiLCJhY3IiOiJoaWdoIn0.irzFM-GHglKW378pOgT97y6Qul-WHAX6SKD9aBrP3yjZ_nvAmiH5_uJ4jAfd13chtPe8jlmhb6WHxciQJF8LszfIzp6U4E3J4F-R7HJT9QkbHKYiRfSJlmJNpBaGniTfKtdT0d7qsTz2_FX1xN01nrvuIUa84UvH__jbAfXJAE2WoIytNSCL8sxBPZSdfih2nEBGu0qrfHCHl8tdM-UbgIS-Km_Y8udI1Fva6wH99cVFcOPHBcujVmsGHhk6Q3agqt0V6sK50K-eQR1RzV0-qyIJLThJb3dEgkO4vQE1WY2n3fM9xSI18ei7J5XtkLUhF1-4GtKn5Qxaiz3vm1EyHw",
-        "user_agent": "User-Agent-1",
+        "user_agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
         "ip_address": "192.168.1.1"
       }
     }
@@ -48,7 +48,7 @@
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
         "tara_id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRhcmFtb2NrIiwidHlwIjoiSldUIn0.eyJqdGkiOiIwMDEiLCJpc3MiOiJodHRwczovL3RhcmEubG9jYWxob3N0OjE1NDQzIiwiYXVkIjoiZ292c3NvIiwiZXhwIjoxNjM5NTUxMTQ1LCJpYXQiOjE2Mzk1NTEwODUsIm5iZiI6MTYzOTU1MTA4NSwic3ViIjoiSXNpa3Vrb29kMyIsInByb2ZpbGVfYXR0cmlidXRlcyI6eyJkYXRlX29mX2JpcnRoIjoiMTk2MS0wNy0xMiIsImdpdmVuX25hbWUiOiJFZXNuaW1pMyIsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMifSwiYW1yIjpbIm1JRCJdLCJzdGF0ZSI6InRvOEJYYlFsS0MxMWhBamlUdmxkWUlCSWhzVHNEN0tsZEg4Y0RaYkpfSUkiLCJub25jZSI6ImNQalJkSEVUSzhTZG45UEdtdlpjVEdaWG5MQVpwMEhPYlhoVjBDM2c3ZTQiLCJhY3IiOiJoaWdoIn0.irzFM-GHglKW378pOgT97y6Qul-WHAX6SKD9aBrP3yjZ_nvAmiH5_uJ4jAfd13chtPe8jlmhb6WHxciQJF8LszfIzp6U4E3J4F-R7HJT9QkbHKYiRfSJlmJNpBaGniTfKtdT0d7qsTz2_FX1xN01nrvuIUa84UvH__jbAfXJAE2WoIytNSCL8sxBPZSdfih2nEBGu0qrfHCHl8tdM-UbgIS-Km_Y8udI1Fva6wH99cVFcOPHBcujVmsGHhk6Q3agqt0V6sK50K-eQR1RzV0-qyIJLThJb3dEgkO4vQE1WY2n3fM9xSI18ei7J5XtkLUhF1-4GtKn5Qxaiz3vm1EyHw",
-        "user_agent": "User-Agent-3",
+        "user_agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
         "ip_address": "192.168.1.3"
       }
     }
@@ -75,7 +75,7 @@
       "login_session_id": "00000000-0000-0000-0000-111111111111",
       "context": {
         "tara_id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRhcmFtb2NrIiwidHlwIjoiSldUIn0.eyJqdGkiOiIwMDEiLCJpc3MiOiJodHRwczovL3RhcmEubG9jYWxob3N0OjE1NDQzIiwiYXVkIjoiZ292c3NvIiwiZXhwIjoxNjM5NTUxMTQ1LCJpYXQiOjE2Mzk1NTEwODUsIm5iZiI6MTYzOTU1MTA4NSwic3ViIjoiSXNpa3Vrb29kMyIsInByb2ZpbGVfYXR0cmlidXRlcyI6eyJkYXRlX29mX2JpcnRoIjoiMTk2MS0wNy0xMiIsImdpdmVuX25hbWUiOiJFZXNuaW1pMyIsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMifSwiYW1yIjpbIm1JRCJdLCJzdGF0ZSI6InRvOEJYYlFsS0MxMWhBamlUdmxkWUlCSWhzVHNEN0tsZEg4Y0RaYkpfSUkiLCJub25jZSI6ImNQalJkSEVUSzhTZG45UEdtdlpjVEdaWG5MQVpwMEhPYlhoVjBDM2c3ZTQiLCJhY3IiOiJoaWdoIn0.irzFM-GHglKW378pOgT97y6Qul-WHAX6SKD9aBrP3yjZ_nvAmiH5_uJ4jAfd13chtPe8jlmhb6WHxciQJF8LszfIzp6U4E3J4F-R7HJT9QkbHKYiRfSJlmJNpBaGniTfKtdT0d7qsTz2_FX1xN01nrvuIUa84UvH__jbAfXJAE2WoIytNSCL8sxBPZSdfih2nEBGu0qrfHCHl8tdM-UbgIS-Km_Y8udI1Fva6wH99cVFcOPHBcujVmsGHhk6Q3agqt0V6sK50K-eQR1RzV0-qyIJLThJb3dEgkO4vQE1WY2n3fM9xSI18ei7J5XtkLUhF1-4GtKn5Qxaiz3vm1EyHw",
-        "user_agent": "User-Agent-2",
+        "user_agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
         "ip_address": "192.168.1.2"
       }
     }
@@ -102,7 +102,7 @@
       "login_session_id": "00000000-0000-0000-0000-222222222222",
       "context": {
         "tara_id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRhcmFtb2NrIiwidHlwIjoiSldUIn0.eyJqdGkiOiIwMDEiLCJpc3MiOiJodHRwczovL3RhcmEubG9jYWxob3N0OjE1NDQzIiwiYXVkIjoiZ292c3NvIiwiZXhwIjoxNjM5NTUxMTQ1LCJpYXQiOjE2Mzk1NTEwODUsIm5iZiI6MTYzOTU1MTA4NSwic3ViIjoiSXNpa3Vrb29kMyIsInByb2ZpbGVfYXR0cmlidXRlcyI6eyJkYXRlX29mX2JpcnRoIjoiMTk2MS0wNy0xMiIsImdpdmVuX25hbWUiOiJFZXNuaW1pMyIsImZhbWlseV9uYW1lIjoiUGVyZWtvbm5hbmltaTMifSwiYW1yIjpbIm1JRCJdLCJzdGF0ZSI6InRvOEJYYlFsS0MxMWhBamlUdmxkWUlCSWhzVHNEN0tsZEg4Y0RaYkpfSUkiLCJub25jZSI6ImNQalJkSEVUSzhTZG45UEdtdlpjVEdaWG5MQVpwMEhPYlhoVjBDM2c3ZTQiLCJhY3IiOiJoaWdoIn0.irzFM-GHglKW378pOgT97y6Qul-WHAX6SKD9aBrP3yjZ_nvAmiH5_uJ4jAfd13chtPe8jlmhb6WHxciQJF8LszfIzp6U4E3J4F-R7HJT9QkbHKYiRfSJlmJNpBaGniTfKtdT0d7qsTz2_FX1xN01nrvuIUa84UvH__jbAfXJAE2WoIytNSCL8sxBPZSdfih2nEBGu0qrfHCHl8tdM-UbgIS-Km_Y8udI1Fva6wH99cVFcOPHBcujVmsGHhk6Q3agqt0V6sK50K-eQR1RzV0-qyIJLThJb3dEgkO4vQE1WY2n3fM9xSI18ei7J5XtkLUhF1-4GtKn5Qxaiz3vm1EyHw",
-        "user_agent": "User-Agent-5",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "ip_address": "192.168.1.5"
       }
     }
