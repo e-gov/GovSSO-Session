@@ -406,7 +406,7 @@ public class HydraService {
 
     private void handleConsentRequest(String uri, HttpMethod method) {
         try {
-            requestLogger.logRequest(uri, HttpMethod.DELETE.name());
+            requestLogger.logRequest(uri, method.name());
             ResponseEntity<Void> responseEntity = webclient.method(method)
                     .uri(uri)
                     .retrieve()
