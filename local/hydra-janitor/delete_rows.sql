@@ -1,6 +1,11 @@
 DELETE
-FROM public.hydra_oauth2_authentication_session
-WHERE authenticated_at < NOW() AT TIME ZONE 'UTC' - INTERVAL '1 DAY';
+FROM public.hydra_oauth2_authentication_session s
+WHERE s.authenticated_at < NOW() AT TIME ZONE 'UTC' - INTERVAL '1 DAY'
+   OR (s.authenticated_at IS NULL
+  AND NOT EXISTS (SELECT 1
+    FROM public.hydra_oauth2_flow f
+    WHERE f.login_session_id = s.id
+  AND f.requested_at >= NOW() AT TIME ZONE 'UTC' - INTERVAL '1 DAY'));
 
 DELETE
 FROM public.hydra_oauth2_code
