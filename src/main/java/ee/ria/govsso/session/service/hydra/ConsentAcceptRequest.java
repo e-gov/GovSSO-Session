@@ -35,5 +35,6 @@ public class ConsentAcceptRequest {
         private String phoneNumber;
         private Boolean phoneNumberVerified;
         private RepresenteeList representeeList;
+        private ClientType initiator;
     }
 }

@@ -1,6 +1,8 @@
 package ee.ria.govsso.session.configuration.properties;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.Assert;
@@ -11,6 +13,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 
 @Data
 @Validated
@@ -20,8 +23,10 @@ public class SsoConfigurationProperties {
     @NotNull
     URL baseUrl;
     @Min(1)
+    @Getter(AccessLevel.NONE)
     int sessionMaxUpdateIntervalMinutes;
     @Min(1)
+    @Getter(AccessLevel.NONE)
     int sessionMaxDurationHours;
 
     String selfServiceUrl;
@@ -32,8 +37,12 @@ public class SsoConfigurationProperties {
                 "Max update interval must be at least 1 minute and must be less than max duration.");
     }
 
-    public int getSessionMaxUpdateIntervalInSeconds() {
-        return sessionMaxUpdateIntervalMinutes * 60;
+    public Duration getSessionMaxUpdateInterval() {
+        return Duration.ofMinutes(sessionMaxUpdateIntervalMinutes);
+    }
+
+    public Duration getSessionMaxDuration() {
+        return Duration.ofHours(sessionMaxDurationHours);
     }
 
     @SneakyThrows

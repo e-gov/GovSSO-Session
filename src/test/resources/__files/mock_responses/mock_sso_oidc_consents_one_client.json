@@ -31,7 +31,8 @@
         },
         "access_token_strategy": "jwt"
       },
-      "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
+      "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
+      "authenticated_at": "2023-01-01T00:50:00Z"
     }
   },
   {
@@ -66,7 +67,8 @@
         },
         "access_token_strategy": "jwt"
       },
-      "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a"
+      "login_session_id": "97f38419-c541-40e9-8d55-ad223ea1f46a",
+      "authenticated_at": "2023-01-01T00:50:00Z"
     }
   }
 ]

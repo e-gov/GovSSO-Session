@@ -10,12 +10,16 @@ import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.service.hydra.OidcClient;
 import ee.ria.govsso.session.service.useragent.ParsedUserAgent;
 import ee.ria.govsso.session.service.useragent.UserAgentParserService;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +32,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AdminServiceTest {
+
+    private static final OffsetDateTime NOW = OffsetDateTime.parse("2026-04-27T12:00:00Z");
 
     private HydraService hydraService;
     private UserAgentParserService userAgentParserService;
@@ -44,7 +50,8 @@ class AdminServiceTest {
         properties.setSessionMaxDurationHours(1);
         properties.setSessionMaxUpdateIntervalMinutes(1);
 
-        adminService = new AdminService(hydraService, properties, userAgentParserService);
+        Clock clock = Clock.fixed(NOW.toInstant(), ZoneId.of("Europe/Tallinn"));
+        adminService = new AdminService(clock, hydraService, properties, userAgentParserService);
     }
 
     @Test
@@ -55,15 +62,14 @@ class AdminServiceTest {
         String os = "Windows";
         String browser = "Chrome";
 
-        OffsetDateTime now = OffsetDateTime.now();
-
-        Consent consent = consent(
-                sessionId,
-                "client-1",
-                now.minusMinutes(10),
-                "127.0.0.1",
-                userAgent
-        );
+        Consent consent = new TestConsentBuilder()
+                .sessionId(sessionId)
+                .clientId("client-1")
+                .requestedAt(NOW.minusMinutes(10))
+                .authenticatedAt(NOW.minusMinutes(100))
+                .ip("127.0.0.1")
+                .userAgent(userAgent)
+                .build();
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(consent));
@@ -92,11 +98,26 @@ class AdminServiceTest {
         String os = "Windows";
         String browser = "Chrome";
 
-        OffsetDateTime t1 = OffsetDateTime.now().minusMinutes(20);
-        OffsetDateTime t2 = OffsetDateTime.now().minusMinutes(5);
+        OffsetDateTime oldRequestedAt = NOW.minusMinutes(20);
+        OffsetDateTime newRequestedAt = NOW.minusMinutes(5);
+        OffsetDateTime authenticatedAt = NOW.minusMinutes(100);
 
-        Consent oldConsent = consent(sessionId, "client-1", t1, "127.0.0.1", userAgent);
-        Consent newConsent = consent(sessionId, "client-1", t2, "127.0.0.1", userAgent);
+        Consent oldConsent = new TestConsentBuilder()
+                .sessionId(sessionId)
+                .clientId("client-1")
+                .requestedAt(oldRequestedAt)
+                .authenticatedAt(authenticatedAt)
+                .ip("127.0.0.1")
+                .userAgent(userAgent)
+                .build();
+        Consent newConsent = new TestConsentBuilder()
+                .sessionId(sessionId)
+                .clientId("client-1")
+                .requestedAt(newRequestedAt)
+                .authenticatedAt(authenticatedAt)
+                .ip("127.0.0.1")
+                .userAgent(userAgent)
+                .build();
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(oldConsent, newConsent));
@@ -108,7 +129,7 @@ class AdminServiceTest {
 
         assertThat(sessions, hasSize(1));
         assertThat(sessions.get(0).services(), hasSize(1));
-        assertThat(sessions.get(0).authenticatedAt(), equalTo(t1));
+        assertThat(sessions.get(0).authenticatedAt(), equalTo(authenticatedAt));
     }
 
     @Test
@@ -117,10 +138,22 @@ class AdminServiceTest {
         String os = "Windows";
         String browser = "Chrome";
 
-        Consent s1 = consent("session-1", "client-1",
-                OffsetDateTime.now().minusMinutes(30), "127.0.0.1", "ua1");
-        Consent s2 = consent("session-2", "client-2",
-                OffsetDateTime.now().minusMinutes(10), "127.0.0.2", "ua2");
+        Consent s1 = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(NOW.minusMinutes(30))
+                .authenticatedAt(NOW.minusMinutes(100))
+                .ip("127.0.0.1")
+                .userAgent("ua1")
+                .build();
+        Consent s2 = new TestConsentBuilder()
+                .sessionId("session-2")
+                .clientId("client-2")
+                .requestedAt(NOW.minusMinutes(10))
+                .authenticatedAt(NOW.minusMinutes(100))
+                .ip("127.0.0.2")
+                .userAgent("ua2")
+                .build();
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(s1, s2));
@@ -133,37 +166,46 @@ class AdminServiceTest {
         assertThat(sessions, hasSize(2));
     }
 
-    private Consent consent(
-            String sessionId,
-            String clientId,
-            OffsetDateTime requestedAt,
-            String ip,
-            String userAgent
-    ) {
-        Context context = new Context();
-        context.setIpAddress(ip);
-        context.setUserAgent(userAgent);
+    @Accessors(fluent = true)
+    @Setter
+    private static class TestConsentBuilder {
 
-        OidcClient oidcClient = new OidcClient();
-        oidcClient.setNameTranslations(Map.of("en", "Test service"));
+        private String sessionId;
+        private String clientId;
+        private OffsetDateTime authenticatedAt;
+        private OffsetDateTime requestedAt;
+        private String ip;
+        private String userAgent;
 
-        Metadata metadata = new Metadata();
-        metadata.setOidcClient(oidcClient);
+        public Consent build() {
+            Context context = new Context();
+            context.setIpAddress(ip);
+            context.setUserAgent(userAgent);
 
-        Client client = new Client();
-        client.setClientId(clientId);
-        client.setMetadata(metadata);
+            OidcClient oidcClient = new OidcClient();
+            oidcClient.setNameTranslations(Map.of("en", "Test service"));
 
-        ConsentRequestInfo info = new ConsentRequestInfo();
-        info.setLoginSessionId(sessionId);
-        info.setClient(client);
-        info.setContext(context);
-        info.setRequestedAt(requestedAt);
+            Metadata metadata = new Metadata();
+            metadata.setOidcClient(oidcClient);
 
-        Consent consent = new Consent();
-        consent.setConsentRequest(info);
-        consent.setRememberFor(600);
+            Client client = new Client();
+            client.setClientId(clientId);
+            client.setMetadata(metadata);
 
-        return consent;
+            ConsentRequestInfo info = new ConsentRequestInfo();
+            info.setLoginSessionId(sessionId);
+            info.setClient(client);
+            info.setContext(context);
+            info.setRequestedAt(requestedAt);
+            info.setAuthenticatedAt(authenticatedAt);
+
+            Consent consent = new Consent();
+            consent.setConsentRequest(info);
+            consent.setRememberFor(600);
+
+            return consent;
+        }
+
     }
+
 }
