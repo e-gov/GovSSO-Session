@@ -110,7 +110,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("{\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("{\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"initiator\":\"DEFAULT\"}")));
     }
 
     @Test
@@ -435,7 +435,7 @@ class ConsentInitControllerTest extends BaseTest {
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
                 .withRequestBody(containing("\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[{\"type\":\"LEGAL_PERSON\",\"sub\":\"EE12345678\",\"name\":\"Sukk ja Saabas OÜ\"},{\"type\":\"NATURAL_PERSON\",\"sub\":\"EE47101010033\",\"given_name\":\"Mari-Liis\",\"family_name\":\"Männik\"}]}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"initiator\":\"DEFAULT\",\"auth_time\":1672534800}}")));
     }
 
     @Test
@@ -472,8 +472,8 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE + "\"}}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE + "\"},\"initiator\":\"DEFAULT\"}"))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"initiator\":\"DEFAULT\",\"auth_time\":1672534800}")));
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
     }
@@ -514,7 +514,7 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[]}}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[]},\"initiator\":\"DEFAULT\"}"))
+                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"initiator\":\"DEFAULT\",\"auth_time\":1672534800}")));
     }
 }

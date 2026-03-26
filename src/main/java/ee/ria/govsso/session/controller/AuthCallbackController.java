@@ -62,16 +62,17 @@ public class AuthCallbackController {
             @SsoCookieValue SsoCookie ssoCookie,
             HttpServletRequest request) {
 
-        RequestUtil.setFlowTraceId(ssoCookie.getLoginChallenge());
+        String loginChallenge = ssoCookie.getLoginChallenge();
+        RequestUtil.setFlowTraceId(loginChallenge);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
 
         validateSsoCookie(state, ssoCookie);
 
         if (error != null) {
-            LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
+            LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
             request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 
-            LoginRejectResponse response = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
+            LoginRejectResponse response = hydraService.rejectLogin(loginChallenge);
             statisticsLogger.logReject(loginRequestInfo, START_SESSION);
             return new RedirectView(response.getRedirectTo().toString());
         }
@@ -79,16 +80,16 @@ public class AuthCallbackController {
             throw new SsoException(ErrorCode.USER_INPUT, "code parameter must not be null");
         }
 
-        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
+        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 
-        SignedJWT idToken = taraService.requestIdToken(code);
-        verifyAcr(idToken, loginRequestInfo);
-        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
+        SignedJWT taraIdToken = taraService.requestIdToken(code);
+        verifyAcr(taraIdToken, loginRequestInfo);
+        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), taraIdToken, loginChallenge);
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
 
-        return acceptLogin(ssoCookie, loginRequestInfo, idToken, metadata);
+        return acceptLogin(loginRequestInfo, taraIdToken, metadata);
     }
 
     private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
@@ -116,9 +117,9 @@ public class AuthCallbackController {
         }
     }
 
-    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, metadata);
-        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
+    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, SignedJWT taraIdToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(taraIdToken, loginRequestInfo, metadata);
+        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, taraIdToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
 }

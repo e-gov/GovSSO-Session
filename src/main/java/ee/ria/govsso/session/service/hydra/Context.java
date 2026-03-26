@@ -12,4 +12,6 @@ public class Context {
     private String ipAddress;
     private String userAgent;
     private String ipCountry;
+    private boolean isLongLivingSession;
+
 }

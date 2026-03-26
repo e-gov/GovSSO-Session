@@ -7,6 +7,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
+import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -20,6 +21,7 @@ import ee.ria.govsso.session.service.paasuke.RepresentationService;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -54,7 +56,7 @@ public class RefreshTokenHookController {
     public ResponseEntity<RefreshTokenHookResponse> tokenRefresh(@RequestBody RefreshTokenHookRequest hookRequest, HttpServletRequest request) throws ParseException {
         log.debug("Token refresh request received: {}", request);
 
-        String generatedTraceId = RandomStringUtils.random(32, "0123456789abcdef");
+        String generatedTraceId = RandomStringUtils.secure().next(32, "0123456789abcdef");
         RequestUtil.setFlowTraceId(generatedTraceId);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, UPDATE_SESSION);
 
@@ -77,35 +79,46 @@ public class RefreshTokenHookController {
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
 
         JWTClaimsSet taraIdTokenClaims = taraIdToken.getJWTClaimsSet();
-        IdTokenBuilder idTokenBuilder = RefreshTokenHookResponse.IdToken.builder()
-                .sid(sessionId);
-        RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder()
-                .refreshRememberFor(true)
-                .rememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds())
-                .refreshConsentRememberFor(true)
-                .consentRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
+
+        RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
+        boolean isLongLivingSession = SecureAppUtil.isLongLivingSession(consentRequestInfo);
+        if (isLongLivingSession) {
+            responseBuilder
+                    .refreshRememberFor(false)
+                    .refreshConsentRememberFor(false);
+        } else {
+            int rememberFor = Math.toIntExact(ssoConfigurationProperties.getSessionMaxUpdateInterval().toSeconds());
+            responseBuilder
+                    .refreshRememberFor(true)
+                    .rememberFor(rememberFor)
+                    .refreshConsentRememberFor(true)
+                    .consentRememberFor(rememberFor);
+        }
         Map<String, Object> profileAttributes = taraIdTokenClaims.getJSONObjectClaim("profile_attributes");
-        idTokenBuilder
+        IdTokenBuilder idTokenBuilder = RefreshTokenHookResponse.IdToken.builder()
+                .sid(sessionId)
                 .givenName(profileAttributes.get("given_name").toString())
                 .familyName(profileAttributes.get("family_name").toString())
-                .birthdate(profileAttributes.get("date_of_birth").toString());
+                .birthdate(profileAttributes.get("date_of_birth").toString())
+                .initiator(isLongLivingSession ? ClientType.SECURED_APP : ClientType.DEFAULT);
         if (hookRequest.getGrantedScopes().contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idTokenBuilder
                     .phoneNumber(taraIdTokenClaims.getClaims().get("phone_number").toString())
                     .phoneNumberVerified((Boolean) taraIdTokenClaims.getClaims().get("phone_number_verified"));
         }
-        RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
         String subject = taraIdTokenClaims.getSubject();
         String representeeSubject = getRepresenteeSubject(hookRequest);
-        idToken.setRepresenteeList(getRepresentees(consentRequestInfo, subject, hookRequest));
+        idTokenBuilder.representeeList(getRepresentees(consentRequestInfo, subject, hookRequest));
         if (representeeSubject != null && !subject.equals(representeeSubject)) {
             Representee representee = representationService.getRepresentee(consentRequestInfo, subject, representeeSubject);
-            idToken.setRepresentee(representee);
+            idTokenBuilder.representee(representee);
         }
+        RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
         if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(taraIdTokenClaims, hookRequest.getGrantedScopes());
+            AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(
+                    taraIdTokenClaims, hookRequest.getGrantedScopes(), SecureAppUtil.isLongLivingSession(consents), consentRequestInfo.getAuthenticatedAt().toInstant());
             if (idToken.getRepresentee() != null) {
                 accessTokenClaims.setRepresentee(idToken.getRepresentee());
             }

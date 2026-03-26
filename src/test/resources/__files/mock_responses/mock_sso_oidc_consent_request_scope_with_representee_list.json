@@ -1,4 +1,5 @@
 {
+  "authenticated_at": "2023-01-01T01:00:00Z",
   "challenge": "aaabbbcccdddeeefff00011122233344",
   "login_challenge": "abcdeff098aadfccabcdeff098aadfcc",
   "requested_at": "2023-01-01T01:15:00Z",

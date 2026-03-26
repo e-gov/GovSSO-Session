@@ -39,6 +39,7 @@ webfinger:
       - family_name
       - given_name
       - iat
+      - initiator
       - iss
       - jti
       - nonce
@@ -54,9 +55,11 @@ oauth2:
   allowed_top_level_claims:
     - acr
     - amr
-    - given_name
-    - family_name
+    - auth_time
     - birthdate
+    - family_name
+    - given_name
+    - initiator
     - phone_number
     - phone_number_verified
     - representee

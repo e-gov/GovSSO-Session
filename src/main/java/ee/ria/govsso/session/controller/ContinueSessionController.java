@@ -18,6 +18,7 @@ import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -68,15 +69,21 @@ public class ContinueSessionController {
         }
 
         validateLoginRequestInfo(loginRequestInfo);
+        if (loginRequestInfo.getClient().isSecuredApp()) {
+            throw new SsoException(USER_INPUT, "SECURED_APP client type is not allowed to continue an existing session.");
+        }
         List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
         JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
+        if (SecureAppUtil.isLongLivingSession(consents)) {
+            throw new SsoException(USER_INPUT, "Long-living sessions are not allowed to be continued");
+        }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
         validateIdToken(loginRequestInfo, idToken);
-        return acceptLogin(loginChallenge, loginRequestInfo, idToken, metadata);
+        return acceptLogin(loginRequestInfo, idToken, metadata);
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -114,8 +121,8 @@ public class ContinueSessionController {
         }
     }
 
-    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, metadata);
+    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
         statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }

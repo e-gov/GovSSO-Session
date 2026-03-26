@@ -1,6 +1,7 @@
 [
   {
     "consent_request": {
+      "authenticated_at": "2023-01-01T00:50:00Z",
       "context": {},
       "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
       "client": {
@@ -17,6 +18,7 @@
   },
   {
     "consent_request": {
+      "authenticated_at": "2023-01-01T00:50:00Z",
       "context": {},
       "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
       "client": {
