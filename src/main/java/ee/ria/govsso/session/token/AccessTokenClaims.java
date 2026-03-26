@@ -2,10 +2,16 @@ package ee.ria.govsso.session.token;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ee.ria.govsso.session.configuration.jackson.InstantAsTimestamp;
+import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Representee;
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.Instant;
 
 @Data
 @Builder
@@ -21,5 +27,9 @@ public class AccessTokenClaims {
     private String phoneNumber;
     private Boolean phoneNumberVerified;
     private Representee representee;
+    private ClientType initiator;
+    @JsonSerialize(using = InstantAsTimestamp.Serializer.class)
+    @JsonDeserialize(using = InstantAsTimestamp.Deserializer.class)
+    private Instant authTime;
 
 }

@@ -14,4 +14,5 @@ public class Metadata {
     private List<String> skipUserConsentClientIds;
     private String paasukeParameters;
     private String minimumAcrValue;
+    private ClientType clientType;
 }

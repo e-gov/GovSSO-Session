@@ -9,6 +9,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
+import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,6 +39,8 @@ import static java.util.stream.Collectors.toSet;
 @Service
 @RequiredArgsConstructor
 public class HydraService {
+
+    private static final int REMEMBER_FOR_FOREVER = 0;
 
     @Qualifier("hydraWebClient")
     private final WebClient webclient;
@@ -210,7 +213,11 @@ public class HydraService {
         }
         try {
             JWT idToken = SignedJWT.parse(consents.get(0).getConsentRequest().getContext().getTaraIdToken());
-            if (!isNbfValid(idToken)) {
+            // FIXME: Verifying that session max lifetime has not elapsed should not be done whe so no need to do it heren extracting TARA
+            //  ID token.
+            // Max lifetime for long-living sessions is enforced by Hydra and is longer than max lifetime for regular
+            // sessions, so let's skip that check for long-living sessions.
+            if (!SecureAppUtil.isLongLivingSession(consents) && !isNbfValid(idToken)) {
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
             }
             return idToken;
@@ -220,7 +227,7 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress, String userAgent) {
+    public LoginAcceptResponse acceptLogin(String loginChallenge, JWT idToken, String ipAddress, String userAgent, boolean isLongLivingSession) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login/accept")
                 .queryParam("login_challenge", loginChallenge)
@@ -232,13 +239,17 @@ public class HydraService {
         context.setTaraIdToken(idToken.getParsedString());
         context.setIpAddress(ipAddress);
         context.setUserAgent(userAgent);
+        context.setLongLivingSession(isLongLivingSession);
 
         LoginAcceptRequest request = new LoginAcceptRequest();
         request.setRemember(true);
         request.setAcr(jwtClaimsSet.getStringClaim("acr"));
         request.setSubject(jwtClaimsSet.getSubject());
         request.setContext(context);
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds());
+        int rememberFor = isLongLivingSession ?
+                Math.toIntExact(SecureAppUtil.REMEMBER_FOR.toSeconds()) :
+                ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds();
+        request.setRememberFor(rememberFor);
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
         request.setExtendSessionLifespan(true);
 
@@ -323,7 +334,11 @@ public class HydraService {
         request.setRemember(true);
 
         Duration consentFlowDuration = Duration.between(consentRequestInfo.getRequestedAt(), OffsetDateTime.now());
-        request.setRememberFor(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds() + (int) consentFlowDuration.getSeconds());
+        boolean isLongLivingSession = SecureAppUtil.isLongLivingSession(consentRequestInfo);
+        int rememberFor = isLongLivingSession ?
+                REMEMBER_FOR_FOREVER :
+                ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds() + (int) consentFlowDuration.getSeconds();
+        request.setRememberFor(rememberFor);
 
         JWTClaimsSet taraIdTokenClaims = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken()).getJWTClaimsSet();
 
@@ -334,6 +349,7 @@ public class HydraService {
         idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
+        idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : ClientType.DEFAULT);
         if (List.of(requestedScopes).contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
             idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
@@ -344,7 +360,7 @@ public class HydraService {
         session.setIdToken(idToken);
 
         if (AccessTokenStrategy.JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            session.setAccessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, List.of(requestedScopes)));
+            session.setAccessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, List.of(requestedScopes), isLongLivingSession, consentRequestInfo.getAuthenticatedAt().toInstant()));
             if (consentRequestInfo.getRequestedAccessTokenAudience() != null) {
                 List<String> audiences = Arrays.asList(consentRequestInfo.getRequestedAccessTokenAudience());
                 if (audiences.isEmpty()) {
@@ -469,6 +485,8 @@ public class HydraService {
         }
     }
 
+    // FIXME: This checks if the max age (12h) of the session has elapsed. The name should reflect that.
+    //  Should use consent-authenticatedAt instead of TARA token.
     private boolean isNbfValid(JWT idToken) throws ParseException {
         Date idTokenDate = idToken.getJWTClaimsSet().getNotBeforeTime();
         Date currentDate = new Date();

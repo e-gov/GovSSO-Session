@@ -29,6 +29,7 @@ hsm:
 webfinger:
   oidc_discovery:
     supported_claims:
+      # FIXME: Do we need to update this? Doesn't seem like it, the claims are present in ID token
       - acr
       - amr
       - at_hash
@@ -57,6 +58,8 @@ oauth2:
     - given_name
     - family_name
     - birthdate
+    - initiator
+    - auth_time
     - phone_number
     - phone_number_verified
     - representee

@@ -11,4 +11,6 @@ public class Context {
     private String taraIdToken;
     private String ipAddress;
     private String userAgent;
+    private boolean isLongLivingSession;
+
 }

@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 public class Consent {
     private Integer rememberFor;
     private ConsentRequestInfo consentRequest;
+    private OffsetDateTime authenticatedAt;
 
     public OffsetDateTime getRequestedAt() {
         return consentRequest.getRequestedAt();

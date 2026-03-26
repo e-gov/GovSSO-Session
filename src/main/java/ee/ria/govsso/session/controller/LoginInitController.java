@@ -25,6 +25,7 @@ import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
@@ -98,10 +99,15 @@ public class LoginInitController {
             return authenticateWithTara(loginRequestInfo, response);
         } else {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
+            if (loginRequestInfo.getClient().isSecuredApp()) {
+                throw new SsoException(USER_INPUT, "SECURED_APP client type is not allowed to continue an existing session.");
+            }
             List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
             JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
             if (idToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);
+            } else if (SecureAppUtil.isLongLivingSession(consents)) {
+                throw new SsoException(USER_INPUT, "Long-living sessions are not allowed to be continued");
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
@@ -187,7 +193,7 @@ public class LoginInitController {
     }
 
     private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress, userAgent);
+        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress, userAgent, loginRequestInfo.getClient().isSecuredApp());
         statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
