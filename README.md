@@ -74,7 +74,7 @@ flow implementations.
 
 ## Clean Ory Hydra database
 
-1. Run Ory Hydra janitor container which runs Ory Hydra janitor and a custom clean-up script
+1. Run Ory Hydra janitor container which runs a custom [clean-up](/local/hydra-janitor/delete_rows.sql) script
    ```shell
    docker-compose --profile hydra-janitor up -d
    ```
