@@ -1,15 +1,21 @@
 package ee.ria.govsso.session.service.useragent;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import ua_parser.Client;
-import ua_parser.Parser;
 import ua_parser.OS;
+import ua_parser.Parser;
 import ua_parser.UserAgent;
 
 @Service
 public class UserAgentParserService {
 
-    private final Parser parser = new Parser();
+    private static final String REGEXES_RESOURCE_PATH = "useragent/regexes.yaml";
+
+    private final Parser parser = createParser();
 
     public ParsedUserAgent parse(String userAgent) {
         if (userAgent == null || userAgent.isBlank()) {
@@ -24,14 +30,26 @@ public class UserAgentParserService {
         return new ParsedUserAgent(os, browser);
     }
 
-    private String normalizeOs(ua_parser.OS os) {
+    private Parser createParser() {
+        ClassPathResource resource = new ClassPathResource(REGEXES_RESOURCE_PATH);
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            return new Parser(inputStream);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Failed to load user agent regexes from classpath resource: " + REGEXES_RESOURCE_PATH, e
+            );
+        }
+    }
+
+    private String normalizeOs(OS os) {
         if (os == null || OS.OTHER.equals(os)) {
             return null;
         }
         return os.family;
     }
 
-    private String normalizeUserAgent(ua_parser.UserAgent userAgent) {
+    private String normalizeUserAgent(UserAgent userAgent) {
         if (userAgent == null || UserAgent.OTHER.equals(userAgent)) {
             return null;
         }
