@@ -29,7 +29,6 @@ hsm:
 webfinger:
   oidc_discovery:
     supported_claims:
-      # FIXME: Do we need to update this? Doesn't seem like it, the claims are present in ID token
       - acr
       - amr
       - at_hash
@@ -40,6 +39,7 @@ webfinger:
       - family_name
       - given_name
       - iat
+      - initiator
       - iss
       - jti
       - nonce

@@ -11,7 +11,9 @@ import ee.ria.govsso.session.service.useragent.UserAgentParserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -92,18 +94,32 @@ public class AdminService {
     private ServiceSession mapToServiceSession(Consent c) {
         ConsentRequestInfo consentRequest = c.getConsentRequest();
         Client client = consentRequest.getClient();
-        Integer rememberFor = c.getRememberFor();
         OffsetDateTime requestedAt = c.getRequestedAt();
         Metadata metadata = client.getMetadata();
         Map<String, String> clientNames = metadata.getOidcClient().getNameTranslations();
-        OffsetDateTime expiresAt = requestedAt.plusSeconds(rememberFor);
-        OffsetDateTime lastUpdatedAt = expiresAt.isAfter(now()) ? expiresAt.minusSeconds(ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds()) : expiresAt;
+        OffsetDateTime expiresAt = c.getExpiresAt();
+        OffsetDateTime lastUpdatedAt = getLastUpdatedAt(c);
 
         return ServiceSession.builder()
                 .authenticatedAt(requestedAt)
-                .expiresAt(expiresAt)
+                .expiresAt(expiresAt != null ?
+                        expiresAt :
+                        OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
                 .lastUpdatedAt(lastUpdatedAt)
                 .clientNames(clientNames)
                 .build();
     }
+
+    private OffsetDateTime getLastUpdatedAt(Consent c) {
+        OffsetDateTime expiresAt = c.getExpiresAt();
+        if(expiresAt == null) {
+            return c.getRequestedAt();
+        }
+        if (expiresAt.isAfter(now())) {
+            return expiresAt.minus(ssoConfigurationProperties.getSessionMaxUpdateInterval());
+        }
+        // This doesn't make sense, is consent expiration considered an update?
+        return expiresAt;
+    }
+
 }

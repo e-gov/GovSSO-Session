@@ -193,7 +193,7 @@ public class LoginInitController {
     }
 
     private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginRequestInfo.getChallenge(), idToken, ipAddress, userAgent, loginRequestInfo.getClient().isSecuredApp());
+        LoginAcceptResponse response = hydraService.acceptLogin(idToken, ipAddress, userAgent, loginRequestInfo);
         statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }

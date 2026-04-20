@@ -79,7 +79,7 @@ public class ContinueSessionController {
         }
 
         validateIdToken(loginRequestInfo, idToken);
-        return acceptLogin(loginChallenge, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
+        return acceptLogin(loginRequestInfo, idToken, request.getRemoteAddr(), userAgent);
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -117,8 +117,8 @@ public class ContinueSessionController {
         }
     }
 
-    private RedirectView acceptLogin(String loginChallenge, LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
-        LoginAcceptResponse response = hydraService.acceptLogin(loginChallenge, idToken, ipAddress, userAgent, false);
+    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, String ipAddress, String userAgent) {
+        LoginAcceptResponse response = hydraService.acceptLogin(idToken, ipAddress, userAgent, loginRequestInfo);
         statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }

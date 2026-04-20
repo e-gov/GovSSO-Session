@@ -16,6 +16,7 @@ public class InstantAsTimestamp {
 
     public static class Serializer extends StdSerializer<Instant> {
 
+        @SuppressWarnings("unused") // Required by Jackson
         public Serializer() {
             this(null);
         }
@@ -32,6 +33,7 @@ public class InstantAsTimestamp {
 
     public static class Deserializer extends StdDeserializer<Instant> {
 
+        @SuppressWarnings("unused") // Required by Jackson
         public Deserializer() {
             this(null);
         }

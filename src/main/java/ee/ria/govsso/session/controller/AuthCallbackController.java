@@ -15,7 +15,6 @@ import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieValue;
 import ee.ria.govsso.session.util.RequestUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,19 +57,19 @@ public class AuthCallbackController {
             @RequestParam(name = "error", required = false) @Pattern(regexp = "user_cancel", message = "the only supported value is: 'user_cancel'") String error,
             @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
             @SsoCookieValue SsoCookie ssoCookie,
-            HttpServletRequest request,
-            HttpServletResponse httpResponse) {
+            HttpServletRequest request) {
 
-        RequestUtil.setFlowTraceId(ssoCookie.getLoginChallenge());
+        String loginChallenge = ssoCookie.getLoginChallenge();
+        RequestUtil.setFlowTraceId(loginChallenge);
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
 
         validateSsoCookie(state, ssoCookie);
 
         if (error != null) {
-            LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
+            LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
             request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 
-            LoginRejectResponse response = hydraService.rejectLogin(ssoCookie.getLoginChallenge());
+            LoginRejectResponse response = hydraService.rejectLogin(loginChallenge);
             statisticsLogger.logReject(loginRequestInfo, START_SESSION);
             return new RedirectView(response.getRedirectTo().toString());
         }
@@ -78,14 +77,14 @@ public class AuthCallbackController {
             throw new SsoException(ErrorCode.USER_INPUT, "code parameter must not be null");
         }
 
-        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(ssoCookie.getLoginChallenge());
+        LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
 
-        SignedJWT idToken = taraService.requestIdToken(code);
-        verifyAcr(idToken, loginRequestInfo);
-        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), idToken, ssoCookie.getLoginChallenge());
+        SignedJWT taraIdToken = taraService.requestIdToken(code);
+        verifyAcr(taraIdToken, loginRequestInfo);
+        taraService.verifyIdToken(ssoCookie.getTaraAuthenticationRequestNonce(), taraIdToken, loginChallenge);
 
-        return acceptLogin(ssoCookie, loginRequestInfo, idToken, request.getRemoteAddr(), userAgent, request, httpResponse);
+        return acceptLogin(loginRequestInfo, taraIdToken, request.getRemoteAddr(), userAgent);
     }
 
     private void verifyAcr(SignedJWT idToken, LoginRequestInfo loginRequestInfo) {
@@ -113,18 +112,9 @@ public class AuthCallbackController {
         }
     }
 
-    private RedirectView acceptLogin(SsoCookie ssoCookie, LoginRequestInfo loginRequestInfo, SignedJWT idToken, String ipAddress, String userAgent, HttpServletRequest request, HttpServletResponse httpResponse) {
-        LoginAcceptResponse response = hydraService.acceptLogin(ssoCookie.getLoginChallenge(), idToken, ipAddress, userAgent, loginRequestInfo.getClient().isSecuredApp());
-        /* This does not work, Hydra sets session cookie in a next request.
-        if (client.type == SECURED_APP) {
-            CookieUtil.deleteHydraSessionCookie(request, response);
-        }*/
-        /* This does not work, Hydra sets session cookie in a next request.
-        if (client.type == SECURED_APP) {
-            CookieUtil.deleteHydraSessionCookie(request, response);
-        }*/
-
-        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, idToken, loginRequestInfo);
+    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, SignedJWT taraIdToken, String ipAddress, String userAgent) {
+        LoginAcceptResponse response = hydraService.acceptLogin(taraIdToken, ipAddress, userAgent, loginRequestInfo);
+        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, taraIdToken, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
+import java.time.Duration;
 import java.util.List;
 
 @Data
@@ -16,10 +17,19 @@ public class Client {
     private Metadata metadata;
     private String accessTokenStrategy;
     private List<String> audience;
+    private String authorizationCodeGrantAccessTokenLifespan;
 
     @JsonIgnore
     public boolean isSecuredApp() {
         return metadata.getClientType() == ClientType.SECURED_APP;
+    }
+
+    @JsonIgnore
+    public Duration getLongLivedSessionLifetime() {
+        if (!isSecuredApp()) {
+            throw new IllegalStateException("Client must be marked as \"%s\"".formatted(ClientType.SECURED_APP));
+        }
+        return HydraDurationFormat.parse(authorizationCodeGrantAccessTokenLifespan);
     }
 
 }

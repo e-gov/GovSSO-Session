@@ -87,7 +87,7 @@ public class RefreshTokenHookController {
                     .refreshRememberFor(false)
                     .refreshConsentRememberFor(false);
         } else {
-            int rememberFor = ssoConfigurationProperties.getSessionMaxUpdateIntervalInSeconds();
+            int rememberFor = Math.toIntExact(ssoConfigurationProperties.getSessionMaxUpdateInterval().toSeconds());
             responseBuilder
                     .refreshRememberFor(true)
                     .rememberFor(rememberFor)
