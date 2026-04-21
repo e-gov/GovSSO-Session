@@ -17,7 +17,7 @@ public class Client {
     private Metadata metadata;
     private String accessTokenStrategy;
     private List<String> audience;
-    private String authorizationCodeGrantAccessTokenLifespan;
+    private String authorizationCodeGrantRefreshTokenLifespan;
 
     @JsonIgnore
     public boolean isSecuredApp() {
@@ -29,7 +29,7 @@ public class Client {
         if (!isSecuredApp()) {
             throw new IllegalStateException("Client must be marked as \"%s\"".formatted(ClientType.SECURED_APP));
         }
-        return HydraDurationFormat.parse(authorizationCodeGrantAccessTokenLifespan);
+        return HydraDurationFormat.parse(authorizationCodeGrantRefreshTokenLifespan);
     }
 
 }

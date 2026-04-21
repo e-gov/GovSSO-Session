@@ -7,6 +7,7 @@ import ee.ria.govsso.session.token.AccessTokenClaims;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 @Data
 @JsonNaming(SnakeCaseStrategy.class)
@@ -30,9 +31,8 @@ public final class RefreshTokenHookResponse {
         private int consentRememberFor;
     }
 
-    @Data
     @Builder
-    @AllArgsConstructor
+    @Getter
     @JsonNaming(SnakeCaseStrategy.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static final class IdToken {

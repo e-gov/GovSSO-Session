@@ -106,16 +106,15 @@ public class RefreshTokenHookController {
                     .phoneNumber(taraIdTokenClaims.getClaims().get("phone_number").toString())
                     .phoneNumberVerified((Boolean) taraIdTokenClaims.getClaims().get("phone_number_verified"));
         }
-        RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
         String subject = taraIdTokenClaims.getSubject();
         String representeeSubject = getRepresenteeSubject(hookRequest);
-        // FIXME: use builder instead of setRepresenteeList and setRepresentee
-        idToken.setRepresenteeList(getRepresentees(consentRequestInfo, subject, hookRequest));
+        idTokenBuilder.representeeList(getRepresentees(consentRequestInfo, subject, hookRequest));
         if (representeeSubject != null && !subject.equals(representeeSubject)) {
             Representee representee = representationService.getRepresentee(consentRequestInfo, subject, representeeSubject);
-            idToken.setRepresentee(representee);
+            idTokenBuilder.representee(representee);
         }
+        RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
         if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
             AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(

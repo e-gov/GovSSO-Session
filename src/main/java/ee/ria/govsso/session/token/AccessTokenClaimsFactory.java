@@ -12,7 +12,7 @@ import java.util.Map;
 @Component
 public class AccessTokenClaimsFactory {
 
-    public AccessTokenClaims from(JWTClaimsSet taraIdTokenClaims, List<String> scopes, boolean isLongLivingSession, Instant authorizedAt)
+    public AccessTokenClaims from(JWTClaimsSet taraIdTokenClaims, List<String> scopes, boolean isLongLivingSession, Instant authenticatedAt)
             throws ParseException {
         Map<String, Object> profileAttributes = taraIdTokenClaims.getJSONObjectClaim("profile_attributes");
         AccessTokenClaims.AccessTokenClaimsBuilder builder = AccessTokenClaims.builder()
@@ -22,7 +22,7 @@ public class AccessTokenClaimsFactory {
                 .familyName(profileAttributes.get("family_name").toString())
                 .birthdate(profileAttributes.get("date_of_birth").toString())
                 .initiator(isLongLivingSession ? ClientType.SECURED_APP : ClientType.DEFAULT)
-                .authTime(authorizedAt);
+                .authTime(authenticatedAt);
         if (scopes.contains("phone")) {
             builder
                     .phoneNumber(taraIdTokenClaims.getStringClaim("phone_number"))
