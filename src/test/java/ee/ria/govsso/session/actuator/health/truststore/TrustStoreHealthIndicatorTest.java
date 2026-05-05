@@ -1,7 +1,7 @@
 package ee.ria.govsso.session.actuator.health.truststore;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.health.contributor.Status;
 
 import java.util.ArrayList;
 import java.util.List;

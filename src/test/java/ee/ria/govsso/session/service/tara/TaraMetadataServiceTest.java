@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 
@@ -63,7 +63,7 @@ class TaraMetadataServiceTest extends BaseTest {
 
     private final TaraConfigurationProperties taraConfigurationProperties;
 
-    @SpyBean
+    @MockitoSpyBean
     private TaraMetadataService taraMetadataService;
 
     @Value("${govsso.tara.metadata-max-attempts}")

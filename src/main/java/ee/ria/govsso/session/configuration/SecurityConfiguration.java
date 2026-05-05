@@ -15,8 +15,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.HeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -39,7 +38,7 @@ public class SecurityConfiguration {
     private final SecurityConfigurationProperties securityConfigurationProperties;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, HandlerMappingIntrospector introspector) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
 
         httpSecurity
                 .securityContext(AbstractHttpConfigurer::disable)
@@ -49,11 +48,11 @@ public class SecurityConfiguration {
                 .servletApi(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(AbstractHttpConfigurer::disable)
-                .csrf((csrf) -> csrf
+                .csrf(csrf -> csrf
                         .ignoringRequestMatchers(
-                                new MvcRequestMatcher(introspector, TOKEN_REFRESH_REQUEST_MAPPING),
-                                new MvcRequestMatcher(introspector, ADMIN_SESSIONS_REQUEST_MAPPING),
-                                new MvcRequestMatcher(introspector, ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING))
+                                PathPatternRequestMatcher.pathPattern(TOKEN_REFRESH_REQUEST_MAPPING),
+                                PathPatternRequestMatcher.pathPattern(ADMIN_SESSIONS_REQUEST_MAPPING),
+                                PathPatternRequestMatcher.pathPattern(ADMIN_SESSIONS_BY_ID_REQUEST_MAPPING))
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(csrfRequestHandler()))
                 .headers(headersConfigurer -> headersConfigurer

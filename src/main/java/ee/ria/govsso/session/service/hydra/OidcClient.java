@@ -1,10 +1,10 @@
 package ee.ria.govsso.session.service.hydra;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import net.logstash.logback.util.StringUtils;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.annotation.JsonNaming;
 
 import java.util.HashMap;
 import java.util.Map;

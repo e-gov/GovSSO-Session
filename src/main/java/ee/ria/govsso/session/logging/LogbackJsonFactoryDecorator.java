@@ -1,23 +1,19 @@
 package ee.ria.govsso.session.logging;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-import net.logstash.logback.decorate.JsonFactoryDecorator;
+import net.logstash.logback.decorate.MapperBuilderDecorator;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.util.StdDateFormat;
 
-public class LogbackJsonFactoryDecorator implements JsonFactoryDecorator {
+public class LogbackJsonFactoryDecorator implements MapperBuilderDecorator<JsonMapper, JsonMapper.Builder> {
 
     @Override
-    public JsonFactory decorate(JsonFactory factory) {
-        ObjectMapper objectMapper = (ObjectMapper) factory.getCodec();
-        objectMapper
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .setDateFormat(new StdDateFormat().withColonInTimeZone(false))
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-        return factory;
+    public JsonMapper.Builder decorate(JsonMapper.Builder builder) {
+        builder.defaultDateFormat(new StdDateFormat().withColonInTimeZone(false));
+        builder.changeDefaultPropertyInclusion(inclusion ->
+                JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL));
+        builder.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        return builder;
     }
 }

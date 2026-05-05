@@ -2,8 +2,8 @@ package ee.ria.govsso.session.actuator.health;
 
 import ee.ria.govsso.session.service.paasuke.PaasukeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>4.0.6</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -33,8 +33,10 @@
         <elastic-apm.version>1.55.6</elastic-apm.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <jquery.version>3.7.1</jquery.version>
-        <logstash-logback-encoder.version>8.1</logstash-logback-encoder.version><!-- TODO Upgrade to logstash-logback-encoder 9.x with Spring Boot 4.x, both upgrade to Jackson 3 -->
+        <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
         <nimbus-oauth2-oidc-sdk.version>11.37.2</nimbus-oauth2-oidc-sdk.version>
+        <rest-assured.version>6.0.0</rest-assured.version>
+        <spring-retry.version>2.0.12</spring-retry.version>
         <uap-java.version>1.6.1</uap-java.version>
         <wiremock.version>3.13.2</wiremock.version>
     </properties>
@@ -49,10 +51,6 @@
             <groupId>co.elastic.apm</groupId>
             <artifactId>apm-agent-attach</artifactId>
             <version>${elastic-apm.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.ua-parser</groupId>
@@ -113,6 +111,10 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
@@ -136,12 +138,18 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webclient</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
+            <version>${spring-retry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>spring-mock-mvc</artifactId>
+            <version>${rest-assured.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

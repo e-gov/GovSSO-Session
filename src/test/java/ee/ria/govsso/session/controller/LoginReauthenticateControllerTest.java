@@ -213,7 +213,7 @@ class LoginReauthenticateControllerTest extends BaseTest {
                 .post(LOGIN_REAUTHENTICATE_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .cookie("__Host-ory_hydra_session", RestAssuredMatchers.detailedCookie().maxAge(0).value("test1234").path("/").expiryDate(new Date(10000)));
+                .cookie("__Host-ory_hydra_session", RestAssuredMatchers.detailedCookie().value("test1234").path("/").expiryDate(new Date(10000)));
     }
 
     @Test

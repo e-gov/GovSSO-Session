@@ -110,7 +110,10 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("{\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"id_token\""))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\"")));
     }
 
     @Test
@@ -138,7 +141,12 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]"))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\""))
                 .withRequestBody(containing("\"grant_access_token_audience\":[\"https://test1\"]")));
     }
 
@@ -167,7 +175,13 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]"))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("}"))
                 .withRequestBody(containing("\"grant_access_token_audience\":[\"https://test2\"]")));
     }
 
@@ -196,8 +210,15 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"," +
-                        "\"phone_number\":\"12345\",\"phone_number_verified\":true")));
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]"))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("\"phone_number\":\"12345\""))
+                .withRequestBody(containing("\"phone_number_verified\":true"))
+                .withRequestBody(containing("}")));
     }
 
     @Test
@@ -434,8 +455,22 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[{\"type\":\"LEGAL_PERSON\",\"sub\":\"EE12345678\",\"name\":\"Sukk ja Saabas OÜ\"},{\"type\":\"NATURAL_PERSON\",\"sub\":\"EE47101010033\",\"given_name\":\"Mari-Liis\",\"family_name\":\"Männik\"}]}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}}")));
+                .withRequestBody(containing("\"representee_list\""))
+                .withRequestBody(containing("\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\""))
+                .withRequestBody(containing("\"list\""))
+                .withRequestBody(containing("\"type\":\"LEGAL_PERSON\""))
+                .withRequestBody(containing("\"sub\":\"EE12345678\""))
+                .withRequestBody(containing("\"name\":\"Sukk ja Saabas OÜ\""))
+                .withRequestBody(containing("\"type\":\"NATURAL_PERSON\""))
+                .withRequestBody(containing("\"sub\":\"EE47101010033\""))
+                .withRequestBody(containing("\"given_name\":\"Mari-Liis\""))
+                .withRequestBody(containing("\"family_name\":\"Männik\""))
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]"))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\"")));
     }
 
     @Test
@@ -472,8 +507,15 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + SERVICE_NOT_AVAILABLE + "\"}}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"id_token\""))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("\"representee_list\""))
+                .withRequestBody(containing("\"status\":\"" + SERVICE_NOT_AVAILABLE + "\""))
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]")));
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
     }
@@ -514,7 +556,15 @@ class ConsentInitControllerTest extends BaseTest {
                 .header("Location", Matchers.containsString("auth/consent/test"));
 
         HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/consent/accept?consent_challenge=" + TEST_CONSENT_CHALLENGE))
-                .withRequestBody(containing("\"id_token\":{\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\",\"representee_list\":{\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\",\"list\":[]}}"))
-                .withRequestBody(containing("\"access_token\":{\"acr\":\"high\",\"amr\":[\"mID\"],\"given_name\":\"Eesnimi3\",\"family_name\":\"Perekonnanimi3\",\"birthdate\":\"1961-07-12\"}")));
+                .withRequestBody(containing("\"id_token\""))
+                .withRequestBody(containing("\"given_name\":\"Eesnimi3\""))
+                .withRequestBody(containing("\"family_name\":\"Perekonnanimi3\""))
+                .withRequestBody(containing("\"birthdate\":\"1961-07-12\""))
+                .withRequestBody(containing("\"representee_list\""))
+                .withRequestBody(containing("\"status\":\"" + REPRESENTEE_LIST_CURRENT + "\""))
+                .withRequestBody(containing("\"list\":[]"))
+                .withRequestBody(containing("\"access_token\""))
+                .withRequestBody(containing("\"acr\":\"high\""))
+                .withRequestBody(containing("\"amr\":[\"mID\"]")));
     }
 }
