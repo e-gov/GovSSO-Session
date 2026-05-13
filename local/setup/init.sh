@@ -30,3 +30,6 @@ echo 'Adding client Mock ACR Substantial'
 
 echo 'Adding client Mock ACR High'
 ./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS $OIDC_SERVICE_URL '70000003' './institution-mock.json' 'client-mock-acr-high' './client-mock-acr-high.json' 'secret'
+
+echo 'Adding client Mock SECURED APP'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS $OIDC_SERVICE_URL '70000003' './institution-mock.json' 'client-mock-secured-app' './client-mock-secured-app.json' 'secret'
