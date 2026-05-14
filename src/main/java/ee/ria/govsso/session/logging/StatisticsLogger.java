@@ -23,6 +23,7 @@ import java.util.Map;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_CANCELED;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_FAILED;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_SUCCESS;
+import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LANGUAGE;
 import static java.util.Arrays.stream;
 import static net.logstash.logback.marker.Markers.appendFields;
 
@@ -32,6 +33,7 @@ public class StatisticsLogger {
     public static final String LOGIN_REQUEST_INFO = "LOGIN_REQUEST_INFO";
     public static final String CONSENT_REQUEST_INFO = "CONSENT_REQUEST_INFO";
     public static final String AUTHENTICATION_REQUEST_TYPE = "AUTHENTICATION_REQUEST_TYPE";
+    public static final String LOG_MESSAGE = "Statistics";
     private final Map<String, String> authenticationTypes = Map.of(
             "smartid", "SMART_ID",
             "mID", "MOBILE_ID",
@@ -57,7 +59,8 @@ public class StatisticsLogger {
     private void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull Client client,
             @NonNull String sessionId, LevelOfAssurance requestAcr) throws ParseException {
-        var institution = client.getMetadata().getOidcClient().getInstitution();
+        var oidcClient = client.getMetadata().getOidcClient();
+        var institution = oidcClient.getInstitution();
         var claims = taraIdToken.getJWTClaimsSet();
         var subject = claims.getSubject();
         var country = subject.substring(0, 2);
@@ -72,6 +75,8 @@ public class StatisticsLogger {
 
         SessionStatistics sessionStatistics = SessionStatistics.builder()
                 .clientId(client.getClientId())
+                .clientName(oidcClient.getNameTranslations().get(DEFAULT_LANGUAGE))
+                .clientShortName(oidcClient.getShortNameTranslations().get(DEFAULT_LANGUAGE))
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
                 .sessionId(sessionId)
@@ -88,16 +93,19 @@ public class StatisticsLogger {
             sessionStatistics.setRequestedAcr(requestAcr.name());
         }
 
-        log.info(appendFields(sessionStatistics), "Statistics");
+        log.info(appendFields(sessionStatistics), LOG_MESSAGE);
     }
 
     public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType) {
         var client = loginRequestInfo.getClient();
-        var institution = client.getMetadata().getOidcClient().getInstitution();
+        var oidcClient = client.getMetadata().getOidcClient();
+        var institution = oidcClient.getInstitution();
         var sid = loginRequestInfo.getSessionId();
 
         SessionStatistics sessionStatistics = SessionStatistics.builder()
                 .clientId(client.getClientId())
+                .clientName(oidcClient.getNameTranslations().get(DEFAULT_LANGUAGE))
+                .clientShortName(oidcClient.getShortNameTranslations().get(DEFAULT_LANGUAGE))
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
                 .sessionId(sid)
@@ -105,15 +113,18 @@ public class StatisticsLogger {
                 .authenticationState(AUTHENTICATION_CANCELED)
                 .build();
 
-        log.info(appendFields(sessionStatistics), "Statistics");
+        log.info(appendFields(sessionStatistics), LOG_MESSAGE);
     }
 
     public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull Client
             client, @NonNull String sid, AuthenticationRequestType requestType) {
-        var institution = client.getMetadata().getOidcClient().getInstitution();
+        var oidcClient = client.getMetadata().getOidcClient();
+        var institution = oidcClient.getInstitution();
 
         SessionStatistics sessionStatistics = SessionStatistics.builder()
                 .clientId(client.getClientId())
+                .clientName(oidcClient.getNameTranslations().get(DEFAULT_LANGUAGE))
+                .clientShortName(oidcClient.getShortNameTranslations().get(DEFAULT_LANGUAGE))
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
                 .sessionId(sid)
@@ -122,7 +133,7 @@ public class StatisticsLogger {
                 .errorCode(errorCode)
                 .build();
 
-        log.error(appendFields(sessionStatistics), "Statistics", ex);
+        log.error(appendFields(sessionStatistics), LOG_MESSAGE, ex);
     }
 
     enum AuthenticationState {AUTHENTICATION_SUCCESS, AUTHENTICATION_CANCELED, AUTHENTICATION_FAILED}
@@ -134,6 +145,12 @@ public class StatisticsLogger {
     static class SessionStatistics {
         @JsonProperty("client.id")
         private String clientId;
+
+        @JsonProperty("client.name")
+        private String clientName;
+
+        @JsonProperty("client.short_name")
+        private String clientShortName;
 
         @JsonProperty("institution.registry_code")
         private String registryCode;
