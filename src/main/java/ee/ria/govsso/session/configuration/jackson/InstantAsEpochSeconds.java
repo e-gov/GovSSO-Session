@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.time.Instant;
 
 @UtilityClass
-public class InstantAsTimestamp {
+public class InstantAsEpochSeconds {
 
     public static class Serializer extends StdSerializer<Instant> {
 

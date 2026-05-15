@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import ee.ria.govsso.session.configuration.jackson.InstantAsTimestamp;
+import ee.ria.govsso.session.configuration.jackson.InstantAsEpochSeconds;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Representee;
 import lombok.Builder;
@@ -28,8 +28,8 @@ public class AccessTokenClaims {
     private Boolean phoneNumberVerified;
     private Representee representee;
     private ClientType initiator;
-    @JsonSerialize(using = InstantAsTimestamp.Serializer.class)
-    @JsonDeserialize(using = InstantAsTimestamp.Deserializer.class)
+    @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
+    @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
     private Instant authTime;
 
 }
