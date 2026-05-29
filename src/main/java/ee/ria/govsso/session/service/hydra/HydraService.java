@@ -234,6 +234,7 @@ public class HydraService {
         context.setTaraIdToken(taraIdToken.getParsedString());
         context.setIpAddress(ipAddress);
         context.setUserAgent(userAgent);
+        context.setLongLivingSession(isLongLivingSession);
 
         LoginAcceptRequest request = new LoginAcceptRequest();
         request.setRemember(true);
