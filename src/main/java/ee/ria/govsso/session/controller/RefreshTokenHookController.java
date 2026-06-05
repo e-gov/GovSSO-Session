@@ -100,7 +100,7 @@ public class RefreshTokenHookController {
                 .givenName(profileAttributes.get("given_name").toString())
                 .familyName(profileAttributes.get("family_name").toString())
                 .birthdate(profileAttributes.get("date_of_birth").toString())
-                .initiator(isLongLivingSession ? ClientType.SECURED_APP : ClientType.DEFAULT);
+                .initiator(isLongLivingSession ? ClientType.SECURED_APP : null);
         if (hookRequest.getGrantedScopes().contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idTokenBuilder
                     .phoneNumber(taraIdTokenClaims.getClaims().get("phone_number").toString())
