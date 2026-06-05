@@ -350,7 +350,7 @@ public class HydraService {
         idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
-        idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : ClientType.DEFAULT);
+        idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : null);
         if (List.of(requestedScopes).contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
             idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
