@@ -22,7 +22,7 @@ public class AccessTokenClaimsFactory {
                 .familyName(profileAttributes.get("family_name").toString())
                 .birthdate(profileAttributes.get("date_of_birth").toString())
                 .initiator(isLongLivingSession ? ClientType.SECURED_APP : null)
-                .authTime(authenticatedAt);
+                .authTime(isLongLivingSession ? authenticatedAt : null);
         if (scopes.contains("phone")) {
             builder
                     .phoneNumber(taraIdTokenClaims.getStringClaim("phone_number"))
