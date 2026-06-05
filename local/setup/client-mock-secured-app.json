@@ -55,6 +55,12 @@
   "sla_notification_emails": [
     "slanotifications.client-mock-secured-app@example.org"
   ],
+  "access_token_jwt_enabled": true,
+  "access_token_audience_uris": [
+    "https://test1.test/123",
+    "https://test2.test/123"
+  ],
+  "access_token_lifespan": "10m",
   "client_type": "SECURED_APP",
   "session_lifespan": "6d",
   "is_user_consent_required": true
