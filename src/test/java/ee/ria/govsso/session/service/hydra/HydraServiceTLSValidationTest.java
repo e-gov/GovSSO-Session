@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import ee.ria.govsso.session.Application;
 import ee.ria.govsso.session.MockPropertyBeanConfiguration;
+import ee.ria.govsso.session.configuration.TestSchedulingConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Import({BuildProperties.class})
 @SpringBootTest(properties = "govsso.hydra.admin-url=https://hydra.localhost:9001",
-        classes = {Application.class, MockPropertyBeanConfiguration.class})
+        classes = {Application.class, MockPropertyBeanConfiguration.class, TestSchedulingConfiguration.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class HydraServiceTLSValidationTest {
 
