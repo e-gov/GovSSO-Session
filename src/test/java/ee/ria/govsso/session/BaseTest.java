@@ -115,6 +115,7 @@ public abstract class BaseTest extends BaseTestLoggingAssertion {
         ADMIN_MOCK_SERVER.resetAll();
         PAASUKE_MOCK_SERVER.resetAll();
         TARA_MOCK_SERVER.resetAll();
+        try { Thread.sleep(500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         setUpTaraMetadataMocks();
     }
 
