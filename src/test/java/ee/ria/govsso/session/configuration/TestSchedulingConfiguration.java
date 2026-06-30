@@ -9,7 +9,7 @@ import org.springframework.scheduling.support.NoOpTaskScheduler;
 public class TestSchedulingConfiguration {
 
     @Bean
-    public TaskScheduler taskScheduler() {
+    public TaskScheduler noOpTaskScheduler() {
         return new NoOpTaskScheduler();
     }
 
