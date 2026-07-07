@@ -2,3 +2,4 @@
 .mvn/wrapper/maven-wrapper.jar
 *.iml
 target/
+.vscode
