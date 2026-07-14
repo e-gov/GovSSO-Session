@@ -2,7 +2,6 @@ package ee.ria.govsso.session.actuator.health.truststore;
 
 import ee.ria.govsso.session.Application;
 import ee.ria.govsso.session.MockPropertyBeanConfiguration;
-import ee.ria.govsso.session.configuration.TestSchedulingConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SpringBootTest(classes = {Application.class, MockPropertyBeanConfiguration.class, TestSchedulingConfiguration.class})
+@SpringBootTest(classes = {Application.class, MockPropertyBeanConfiguration.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class CertificateInfoLoaderTest {
 

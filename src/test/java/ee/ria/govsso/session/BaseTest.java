@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.nimbusds.jose.jwk.RSAKey;
-import ee.ria.govsso.session.configuration.TestSchedulingConfiguration;
 import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -28,7 +27,7 @@ import static org.springframework.http.HttpHeaders.ORIGIN;
 
 @Slf4j
 @SpringBootTest(webEnvironment = RANDOM_PORT,
-        classes = {Application.class, MockPropertyBeanConfiguration.class, TestSchedulingConfiguration.class})
+        classes = {Application.class, MockPropertyBeanConfiguration.class})
 public abstract class BaseTest extends BaseTestLoggingAssertion {
 
     protected static final String TEST_LOGIN_CHALLENGE = "abcdeff098aadfccabcdeff098aadfcc";
