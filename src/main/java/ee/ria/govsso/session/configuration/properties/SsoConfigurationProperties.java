@@ -31,6 +31,8 @@ public class SsoConfigurationProperties {
 
     String selfServiceUrl;
 
+    boolean authHandoverEnabled = false;
+
     @PostConstruct
     public void validateConfiguration() {
         Assert.isTrue(sessionMaxUpdateIntervalMinutes >= 1 && sessionMaxUpdateIntervalMinutes <= (sessionMaxDurationHours * 60),

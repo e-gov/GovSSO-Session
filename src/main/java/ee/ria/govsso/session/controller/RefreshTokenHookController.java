@@ -134,24 +134,33 @@ public class RefreshTokenHookController {
         return ResponseEntity.ok(response);
     }
 
-    private static void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {
-        if (hookRequest.getRequestedScopes() != null) {
-            boolean containsRepresenteeWithSubject = false;
-            for (String requestedScope: hookRequest.getRequestedScopes()) {
-                if (StringUtils.isEmpty(requestedScope)) {
-                    continue;
+    private void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {
+        List<String> requestedScopes = hookRequest.getRequestedScopes();
+        if (requestedScopes == null) {
+            return;
+        }
+        if (requestedScopes.contains("auth_handover")) {
+            if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+                throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain auth handover scope because issuing auth handover tokens is disabled.");
+            }
+            validateAuthHandoverScopes(requestedScopes);
+            return;
+        }
+        boolean containsRepresenteeWithSubject = false;
+        for (String requestedScope: requestedScopes) {
+            if (StringUtils.isEmpty(requestedScope)) {
+                continue;
+            }
+            if (requestedScope.startsWith("representee.") && !requestedScope.equals("representee.*")) {
+                if (!hookRequest.getGrantedScopes().contains("representee.*")) {
+                    throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a representee scope with subject when 'representee.*' is not in the list of granted scopes.");
                 }
-                if (requestedScope.startsWith("representee.") && !requestedScope.equals("representee.*")) {
-                    if (!hookRequest.getGrantedScopes().contains("representee.*")) {
-                        throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a representee scope with subject when 'representee.*' is not in the list of granted scopes.");
-                    }
-                    if (containsRepresenteeWithSubject) {
-                        throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain multiple representee scopes with subjects.");
-                    }
-                    containsRepresenteeWithSubject = true;
-                } else if (!hookRequest.getGrantedScopes().contains(requestedScope)) {
-                    throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a requested scope that is not in the list of granted scopes.");
+                if (containsRepresenteeWithSubject) {
+                    throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain multiple representee scopes with subjects.");
                 }
+                containsRepresenteeWithSubject = true;
+            } else if (!hookRequest.getGrantedScopes().contains(requestedScope)) {
+                throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a requested scope that is not in the list of granted scopes.");
             }
         }
     }
@@ -185,5 +194,15 @@ public class RefreshTokenHookController {
                 .map(Consent::getConsentRequest)
                 .filter(consentRequestInfo -> consentRequestInfo.getClient().getClientId().equals(clientId))
                 .findFirst().orElse(null);
+    }
+
+    private static void validateAuthHandoverScopes(List<String> requestedScopes) {
+        // TODO Is openid presence already validated somewhere?
+        if (!requestedScopes.contains("openid")) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must contain openid scope when auth handover is set.");
+        }
+        if (!requestedScopes.stream().allMatch(s -> s.matches("^(openid|auth_handover)$")) || requestedScopes.size() > 2) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain any other scopes when auth handover and openid are set.");
+        }
     }
 }
