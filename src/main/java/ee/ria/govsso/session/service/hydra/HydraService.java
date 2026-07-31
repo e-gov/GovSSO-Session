@@ -222,8 +222,13 @@ public class HydraService {
     }
 
     @SneakyThrows
+    public LoginAcceptResponse acceptLogin(JWT taraIdToken, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
+        return acceptLogin(taraIdToken, loginRequestInfo, metadata, null);
+    }
+
+    @SneakyThrows
     public LoginAcceptResponse acceptLogin(JWT taraIdToken, LoginRequestInfo loginRequestInfo,
-                                           ClientRequestMetadata metadata) {
+                                           ClientRequestMetadata metadata, Duration sessionMaxDuration) {
         String loginChallenge = loginRequestInfo.getChallenge();
         Client client = loginRequestInfo.getClient();
 
@@ -243,9 +248,14 @@ public class HydraService {
         request.setAcr(jwtClaimsSet.getStringClaim("acr"));
         request.setSubject(jwtClaimsSet.getSubject());
         request.setContext(context);
-        Duration rememberFor = isLongLivingSession ?
-                client.getLongLivedSessionLifetime() :
-                ssoConfigurationProperties.getSessionMaxUpdateInterval();
+        Duration rememberFor;
+        if (sessionMaxDuration != null) {
+            rememberFor = sessionMaxDuration;
+        } else {
+            rememberFor = isLongLivingSession ?
+                    client.getLongLivedSessionLifetime() :
+                    ssoConfigurationProperties.getSessionMaxUpdateInterval();
+        }
         request.setRememberFor(Math.toIntExact(rememberFor.toSeconds()));
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
         request.setExtendSessionLifespan(true);

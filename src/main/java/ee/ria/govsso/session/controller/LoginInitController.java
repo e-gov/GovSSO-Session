@@ -1,15 +1,22 @@
 package ee.ria.govsso.session.controller;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
+import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
+import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
@@ -45,16 +52,25 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.AUTH_HANDOVER;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
@@ -72,9 +88,11 @@ public class LoginInitController {
     private final TaraService taraService;
     private final StatisticsLogger statisticsLogger;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final SecurityConfigurationProperties securityConfigurationProperties;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
     @Autowired(required = false)
     private AlertsService alertsService;
+    private final Clock clock;
 
     @GetMapping(value = LOGIN_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView loginInit(
@@ -97,7 +115,28 @@ public class LoginInitController {
         Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
-        if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
+
+        String govssoAuthHandoverToken = extractQueryParam(loginRequestInfo.getRequestUrl(), "govsso_auth_handover_token");
+        if (govssoAuthHandoverToken != null) {
+            if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+                throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
+            }
+            JWT authHandoverToken;
+            try {
+                authHandoverToken = SignedJWT.parse(govssoAuthHandoverToken);
+            } catch (ParseException ex) {
+                throw new SsoException(USER_INPUT, "Unable to parse govsso_auth_handover_token", ex);
+            }
+            validateAuthHandoverToken(authHandoverToken);
+            if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
+                throw new SsoException(USER_INPUT, "Only DEFAULT_APP client type is allowed to use an auth handover token");
+            }
+            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
+            ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
+            JWT idToken = createAuthHandoverIdToken(authHandoverToken);
+            Duration sessionMaxDuration = resolveAuthHandoverSessionMaxDuration(authHandoverToken);
+            return acceptLogin(loginRequestInfo, idToken, metadata, AUTH_HANDOVER, sessionMaxDuration);
+        } else if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             return authenticateWithTara(loginRequestInfo, response);
         } else {
@@ -115,7 +154,7 @@ public class LoginInitController {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-                return acceptLogin(loginRequestInfo, idToken, metadata);
+                return acceptLogin(loginRequestInfo, idToken, metadata, CONTINUE_SESSION, null);
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                     return openSessionContinuationView(loginRequestInfo, idToken);
@@ -196,9 +235,10 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata, StatisticsLogger.AuthenticationRequestType requestType
+            , Duration sessionMaxDuration) {
+        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata, sessionMaxDuration);
+        statisticsLogger.logAccept(requestType, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
@@ -254,6 +294,92 @@ public class LoginInitController {
             return tokenAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
+        }
+    }
+
+    private void validateAuthHandoverToken(JWT token) {
+        JWTClaimsSet claims;
+        try {
+            claims = token.getJWTClaimsSet();
+        } catch (ParseException e) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from auth handover token");
+        }
+        if (!ssoConfigurationProperties.getBaseUrl().toString().equals(claims.getIssuer())) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token issuer does not match");
+        }
+        Instant now = clock.instant();
+        Date issueTime = claims.getIssueTime();
+        if (issueTime == null || issueTime.toInstant().isAfter(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token issued-at time is in the future");
+        }
+        Date expirationTime = claims.getExpirationTime();
+        if (expirationTime == null || expirationTime.toInstant().isBefore(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token is expired");
+        }
+    }
+
+    private JWT createAuthHandoverIdToken(JWT authHandoverToken) {
+        JWTClaimsSet handoverClaims;
+        try {
+            handoverClaims = authHandoverToken.getJWTClaimsSet();
+        } catch (ParseException e) {
+            throw new SsoException(TECHNICAL_GENERAL, "Failed to parse claim set from auth handover token");
+        }
+
+        Map<String, Object> profileAttributes = new LinkedHashMap<>();
+        profileAttributes.put("given_name", handoverClaims.getClaim("given_name"));
+        profileAttributes.put("family_name", handoverClaims.getClaim("family_name"));
+        profileAttributes.put("date_of_birth", handoverClaims.getClaim("birthdate"));
+
+        JWTClaimsSet.Builder taraIdTokenClaims = new JWTClaimsSet.Builder()
+                .subject(handoverClaims.getSubject())
+                .issueTime(handoverClaims.getIssueTime())
+                .claim("acr", handoverClaims.getClaim("acr"))
+                .claim("amr", handoverClaims.getClaim("amr"))
+                .claim("profile_attributes", profileAttributes);
+        if (handoverClaims.getClaim("phone_number") != null) {
+            taraIdTokenClaims.claim("phone_number", handoverClaims.getClaim("phone_number"));
+            taraIdTokenClaims.claim("phone_number_verified", handoverClaims.getClaim("phone_number_verified"));
+        }
+
+        try {
+            SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), taraIdTokenClaims.build());
+            signedJWT.sign(new MACSigner(securityConfigurationProperties.getCookieSigningSecret()));
+            return SignedJWT.parse(signedJWT.serialize());
+        } catch (JOSEException | ParseException e) {
+            throw new SsoException(TECHNICAL_GENERAL, "Failed to create auth handover ID token", e);
+        }
+    }
+
+    private Duration resolveAuthHandoverSessionMaxDuration(JWT authHandoverToken) {
+        return Duration.ofHours(12);
+//        JWTClaimsSet claims;
+//        Date authTime;
+//        try {
+//            claims = authHandoverToken.getJWTClaimsSet();
+//            authTime = claims.getDateClaim("auth_time");
+//        } catch (ParseException e) {
+//            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse auth handover token");
+//        }
+//        Date expirationTime = claims.getExpirationTime();
+//        Duration configuredMaxDuration = ssoConfigurationProperties.getSessionMaxDuration();
+//        if (authTime == null || expirationTime == null) {
+//            return configuredMaxDuration;
+//        }
+//        Duration previousSessionRemainingLifetime = Duration.between(authTime.toInstant(), expirationTime.toInstant());
+//        return previousSessionRemainingLifetime.compareTo(configuredMaxDuration) < 0
+//                ? previousSessionRemainingLifetime
+//                : configuredMaxDuration;
+    }
+
+    private String extractQueryParam(URL url, String paramName) {
+        try {
+            return UriComponentsBuilder.fromUri(url.toURI())
+                    .build()
+                    .getQueryParams()
+                    .getFirst(paramName);
+        } catch (URISyntaxException e) {
+            throw new SsoException(USER_INPUT, "Failed to parse auth handover token from the query parameters");
         }
     }
 }

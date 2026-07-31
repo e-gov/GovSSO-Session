@@ -138,7 +138,7 @@ public class StatisticsLogger {
 
     enum AuthenticationState {AUTHENTICATION_SUCCESS, AUTHENTICATION_CANCELED, AUTHENTICATION_FAILED}
 
-    public enum AuthenticationRequestType {START_SESSION, CONTINUE_SESSION, UPDATE_SESSION}
+    public enum AuthenticationRequestType {START_SESSION, CONTINUE_SESSION, UPDATE_SESSION, AUTH_HANDOVER}
 
     @Builder
     @Data
