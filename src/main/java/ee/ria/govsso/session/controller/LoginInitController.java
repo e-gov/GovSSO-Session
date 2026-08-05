@@ -74,6 +74,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 
 @Slf4j
 @Validated
@@ -219,7 +220,7 @@ public class LoginInitController {
             model.addObject("familyName", profileAttributes.get("family_name"));
             if (profileAttributes.get("date_of_birth") != null)
                 model.addObject("dateOfBirth", LocalDate.parse((String) profileAttributes.get("date_of_birth")));
-            if (List.of(requestedScopes).contains("phone"))
+            if (List.of(requestedScopes).contains(SCOPE_PHONE))
                 model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
             model.addObject("subject", loginRequestInfo.getSubject());
             model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));

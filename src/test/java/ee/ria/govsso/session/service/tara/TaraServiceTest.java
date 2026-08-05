@@ -43,6 +43,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static com.nimbusds.jose.JWSAlgorithm.RS384;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
@@ -87,7 +89,7 @@ class TaraServiceTest extends BaseTest { // TODO: Consider moving these tests un
         assertThat(authenticationRequest.getUILocales().get(0).toString(), equalTo(LocaleUtil.DEFAULT_LOCALE.getLanguage()));
         List<String> scopes = authenticationRequest.getScope().toStringList();
         assertThat(authenticationRequest.getResponseType().toString(), equalTo("code"));
-        assertThat(scopes, contains("openid", "phone"));
+        assertThat(scopes, contains(SCOPE_OPENID, SCOPE_PHONE));
     }
 
     @Test

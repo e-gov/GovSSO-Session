@@ -39,6 +39,11 @@ import java.util.Map;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDOVER;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE_LIST;
 
 
 @Slf4j
@@ -101,7 +106,7 @@ public class RefreshTokenHookController {
                 .familyName(profileAttributes.get("family_name").toString())
                 .birthdate(profileAttributes.get("date_of_birth").toString())
                 .initiator(isLongLivingSession ? ClientType.SECURED_APP : null);
-        if (hookRequest.getGrantedScopes().contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
+        if (hookRequest.getGrantedScopes().contains(SCOPE_PHONE) && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idTokenBuilder
                     .phoneNumber(taraIdTokenClaims.getClaims().get("phone_number").toString())
                     .phoneNumberVerified((Boolean) taraIdTokenClaims.getClaims().get("phone_number_verified"));
@@ -139,7 +144,7 @@ public class RefreshTokenHookController {
         if (requestedScopes == null) {
             return;
         }
-        if (requestedScopes.contains("auth_handover")) {
+        if (requestedScopes.contains(SCOPE_AUTH_HANDOVER)) {
             if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
                 throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain auth handover scope because issuing auth handover tokens is disabled.");
             }
@@ -151,8 +156,8 @@ public class RefreshTokenHookController {
             if (StringUtils.isEmpty(requestedScope)) {
                 continue;
             }
-            if (requestedScope.startsWith("representee.") && !requestedScope.equals("representee.*")) {
-                if (!hookRequest.getGrantedScopes().contains("representee.*")) {
+            if (requestedScope.startsWith("representee.") && !requestedScope.equals(SCOPE_REPRESENTEE)) {
+                if (!hookRequest.getGrantedScopes().contains(SCOPE_REPRESENTEE)) {
                     throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a representee scope with subject when 'representee.*' is not in the list of granted scopes.");
                 }
                 if (containsRepresenteeWithSubject) {
@@ -183,7 +188,7 @@ public class RefreshTokenHookController {
     }
 
     private RepresenteeList getRepresentees(ConsentRequestInfo consentRequestInfo, String subject, RefreshTokenHookRequest hookRequest) {
-        if (hookRequest.getRequestedScopes() == null || !hookRequest.getRequestedScopes().contains("representee_list")) {
+        if (hookRequest.getRequestedScopes() == null || !hookRequest.getRequestedScopes().contains(SCOPE_REPRESENTEE_LIST)) {
             return null;
         }
         return representationService.getRepresentees(consentRequestInfo, subject);
@@ -198,7 +203,7 @@ public class RefreshTokenHookController {
 
     private static void validateAuthHandoverScopes(List<String> requestedScopes) {
         // TODO Is openid presence already validated somewhere?
-        if (!requestedScopes.contains("openid")) {
+        if (!requestedScopes.contains(SCOPE_OPENID)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must contain openid scope when auth handover is set.");
         }
         if (!requestedScopes.stream().allMatch(s -> s.matches("^(openid|auth_handover)$")) || requestedScopes.size() > 2) {

@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static java.util.stream.Collectors.toSet;
 
 @Service
@@ -363,7 +364,7 @@ public class HydraService {
         idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
         idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
         idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : null);
-        if (List.of(requestedScopes).contains("phone") && taraIdTokenClaims.getClaims().get("phone_number") != null) {
+        if (List.of(requestedScopes).contains(SCOPE_PHONE) && taraIdTokenClaims.getClaims().get("phone_number") != null) {
             idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
             idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
         }

@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+
 @Component
 public class AccessTokenClaimsFactory {
 
@@ -23,7 +25,7 @@ public class AccessTokenClaimsFactory {
                 .birthdate(profileAttributes.get("date_of_birth").toString())
                 .initiator(isLongLivingSession ? ClientType.SECURED_APP : null)
                 .authTime(isLongLivingSession ? authenticatedAt : null);
-        if (scopes.contains("phone")) {
+        if (scopes.contains(SCOPE_PHONE)) {
             builder
                     .phoneNumber(taraIdTokenClaims.getStringClaim("phone_number"))
                     .phoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));

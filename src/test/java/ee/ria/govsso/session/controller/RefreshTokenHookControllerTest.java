@@ -26,6 +26,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE_LIST;
 import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.REPRESENTEE_LIST_CURRENT;
 import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeListRequestStatus.SERVICE_NOT_AVAILABLE;
 import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
@@ -44,7 +48,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_WhenHydraRespondsWith404_ThrowsTechnicalGeneralError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
 
         given()
                 .request().body(hookRequest)
@@ -60,7 +64,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_WhenConsentsAreMissing_ThrowsTechnicalGeneralError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -83,7 +87,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_WhenConsentsDontHaveValidClientId_ThrowsTechnicalGeneralError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, "client-x", List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, "client-x", List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -106,7 +110,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_ok() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -142,7 +146,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenPhoneScopeIsRequested_ok() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_PHONE));
         hookRequest.setSubject("testSubject");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -180,7 +184,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenSessionIdIsMissing_throwsTechnicalGeneralError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(null, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(null, CLIENT_ID, List.of(SCOPE_OPENID));
 
         given()
                 .request().body(hookRequest)
@@ -196,7 +200,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenAccessTokenStrategyIsOpaque_ok() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -227,7 +231,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @ParameterizedTest
     @ValueSource(strings = {"representee.ABC123", "openid representee.ABC123", "representee.ABC123 openid", "representee.* representee.ABC123", "representee.ABC123 representee.*"})
     void tokenRefresh_whenRepresenteeScopeProvided_ok(String scopes) {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(Arrays.asList(scopes.split(" ")));
 
@@ -269,7 +273,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenRepresenteeIdHasOnlyCaseDifference_ok() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of( "representee.EEISIKUKOOD3"));
 
@@ -311,7 +315,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenAuthenticatedUserIsNotAllowedToRepresentRepresentee_representeeIsOmitted() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
@@ -361,7 +365,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenMandatesRequestFails_representeeIsOmitted() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
@@ -408,7 +412,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenRequestedScopesIsAnEmptyList_representeeIsOmitted() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
         hookRequest.setRequestedScopes(List.of());
 
@@ -432,11 +436,11 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"openid"})
+    @ValueSource(strings = {SCOPE_OPENID})
     void tokenRefresh_whenRequestedScopesIsWithoutRepresentee_RepresenteeIsNotAddedToIdTokenOrAccessToken(String scope) {
         List<String> scopesList = new ArrayList<>();
         scopesList.add(scope);
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
         hookRequest.setRequestedScopes(scopesList);
 
@@ -460,7 +464,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenRepresenteeScopeSubjectIsNotAtLeast1CharacterLong_ThrowsUserInputError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone", "representee.*"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_PHONE, SCOPE_REPRESENTEE));
         hookRequest.setSubject("testSubject");
         hookRequest.setRequestedScopes(List.of("representee."));
 
@@ -498,7 +502,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenRepresenteeSubjectEqualsAuthenticatedUserSubject_RepresenteeIsNotAddedToIdTokenOrAccessToken() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone", "representee.*"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_PHONE, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.EEisikukood3"));
 
@@ -522,7 +526,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenAccessTokenStrategyIsOpaque_RepresenteeIsNotAddedToAccessToken() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "phone", "representee.*"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_PHONE, SCOPE_REPRESENTEE));
         hookRequest.setSubject("EEisikukood3");
         hookRequest.setRequestedScopes(List.of("representee.ABC123"));
 
@@ -564,8 +568,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenMultipleRepresenteesAreRequested_ThrowsUserInvalidOidcRequestError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee.*"));
-        hookRequest.setRequestedScopes(List.of("openid", "representee.A", "representee.B"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE));
+        hookRequest.setRequestedScopes(List.of(SCOPE_OPENID, "representee.A", "representee.B"));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -587,8 +591,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
     @Test
     void tokenRefresh_whenRepresenteeScopeIsRequestedButNotGranted_ThrowsUserInvalidOidcRequestError() {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
-        hookRequest.setRequestedScopes(List.of("openid", "representee.A"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
+        hookRequest.setRequestedScopes(List.of(SCOPE_OPENID, "representee.A"));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -611,9 +615,9 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
 
     @ParameterizedTest
-    @ValueSource(strings = {"phone", "REPRESENTEE.X", "OPENID"})
+    @ValueSource(strings = {SCOPE_PHONE, "REPRESENTEE.X", "OPENID"})
     void tokenRefresh_whenScopeIsRequestedButNotGranted_ThrowsUserInvalidOidcRequestError(String scope) {
-        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid"));
+        RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setRequestedScopes(List.of(scope));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
@@ -637,9 +641,9 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenRepresenteeListIsRequested_representeeListIsAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE_LIST));
         hookRequest.setSubject("EEisikukood3");
-        hookRequest.setRequestedScopes(List.of("representee_list"));
+        hookRequest.setRequestedScopes(List.of(SCOPE_REPRESENTEE_LIST));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -680,9 +684,9 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenRepresenteeListIsEmpty_emptyRepresenteeListIsAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE_LIST));
         hookRequest.setSubject("EEisikukood3");
-        hookRequest.setRequestedScopes(List.of("representee_list"));
+        hookRequest.setRequestedScopes(List.of(SCOPE_REPRESENTEE_LIST));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()
@@ -717,9 +721,9 @@ class RefreshTokenHookControllerTest extends BaseTest {
     @Test
     void tokenRefresh_whenRepresenteeListRequestFails_RepresenteeListIsNotAddedToIdToken() {
         RefreshTokenHookRequest hookRequest =
-                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of("openid", "representee_list"));
+                createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_REPRESENTEE_LIST));
         hookRequest.setSubject("EEisikukood3");
-        hookRequest.setRequestedScopes(List.of("representee_list"));
+        hookRequest.setRequestedScopes(List.of(SCOPE_REPRESENTEE_LIST));
 
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=EEisikukood3&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                 .willReturn(aResponse()

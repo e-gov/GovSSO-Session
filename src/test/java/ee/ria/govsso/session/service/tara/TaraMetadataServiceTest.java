@@ -34,6 +34,14 @@ import static com.nimbusds.oauth2.sdk.ResponseType.CODE;
 import static com.nimbusds.openid.connect.sdk.SubjectType.PUBLIC;
 import static com.nimbusds.openid.connect.sdk.claims.ClaimType.NORMAL;
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_TARA_UNAVAILABLE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_EIDAS;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_EIDAS_ONLY;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_EMAIL;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_IDCARD;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_MID;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_SMARTID;
 import static java.util.List.of;
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
@@ -181,14 +189,14 @@ class TaraMetadataServiceTest extends BaseTest {
                 "represents_legal_person.name",
                 "represents_legal_person.registry_code"));
         assertThat(metadata.getScopes().stream().map(Identifier::getValue).collect(toList()), contains(
-                "openid",
-                "idcard",
-                "mid",
-                "smartid",
-                "email",
-                "phone",
-                "eidas",
-                "eidasonly",
+                SCOPE_OPENID,
+                SCOPE_IDCARD,
+                SCOPE_MID,
+                SCOPE_SMARTID,
+                SCOPE_EMAIL,
+                SCOPE_PHONE,
+                SCOPE_EIDAS,
+                SCOPE_EIDAS_ONLY,
                 "eidas:country:es",
                 "eidas:country:de",
                 "eidas:country:it",

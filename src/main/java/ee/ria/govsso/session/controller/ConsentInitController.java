@@ -18,6 +18,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
 
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE_LIST;
+
 @Slf4j
 @Validated
 @Controller
@@ -37,7 +39,7 @@ public class ConsentInitController {
         RequestUtil.setFlowTraceId(consentRequestInfo.getLoginChallenge());
 
         RepresenteeList representeeList = null;
-        if (List.of(consentRequestInfo.getRequestedScope()).contains("representee_list")) {
+        if (List.of(consentRequestInfo.getRequestedScope()).contains(SCOPE_REPRESENTEE_LIST)) {
             representeeList = getRepresentees(consentRequestInfo);
         }
         ConsentAcceptResponse response = hydraService.acceptConsent(consentChallenge, consentRequestInfo, representeeList);

@@ -10,13 +10,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
+
 @UtilityClass
 public class LoginRequestInfoUtil {
 
     public void validateScopes(LoginRequestInfo loginRequestInfo) {
         List<String> requestedScopes = Arrays.asList(loginRequestInfo.getRequestedScope());
         Set<String> set = new HashSet<>(requestedScopes);
-        if (!requestedScopes.contains("openid") ||
+        if (!requestedScopes.contains(SCOPE_OPENID) ||
                 !requestedScopes.stream().allMatch(s -> s.matches("^(openid|phone|representee_list|representee\\.\\*)$")) ||
                 set.size() != requestedScopes.size() && requestedScopes.size() > 4) {
             throw new SsoException(ErrorCode.USER_INPUT, "Requested scope must contain openid and may contain phone, representee.* and representee_list, but nothing else");
