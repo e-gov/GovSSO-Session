@@ -148,7 +148,6 @@ public class RefreshTokenHookController {
             if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
                 throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain auth handover scope because issuing auth handover tokens is disabled.");
             }
-            validateAuthHandoverScopes(requestedScopes);
             return;
         }
         boolean containsRepresenteeWithSubject = false;
@@ -199,15 +198,5 @@ public class RefreshTokenHookController {
                 .map(Consent::getConsentRequest)
                 .filter(consentRequestInfo -> consentRequestInfo.getClient().getClientId().equals(clientId))
                 .findFirst().orElse(null);
-    }
-
-    private static void validateAuthHandoverScopes(List<String> requestedScopes) {
-        // TODO Is openid presence already validated somewhere?
-        if (!requestedScopes.contains(SCOPE_OPENID)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must contain openid scope when auth handover is set.");
-        }
-        if (!requestedScopes.stream().allMatch(s -> s.matches("^(openid|auth_handover)$")) || requestedScopes.size() > 2) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain any other scopes when auth handover and openid are set.");
-        }
     }
 }
