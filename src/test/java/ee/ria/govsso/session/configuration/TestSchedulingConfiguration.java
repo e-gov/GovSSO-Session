@@ -1,11 +1,11 @@
 package ee.ria.govsso.session.configuration;
 
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.NoOpTaskScheduler;
 
-@TestConfiguration
+@AutoConfiguration
 public class TestSchedulingConfiguration {
 
     @Bean
