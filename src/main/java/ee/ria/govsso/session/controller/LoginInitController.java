@@ -83,6 +83,7 @@ import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 public class LoginInitController {
 
     public static final String LOGIN_INIT_REQUEST_MAPPING = "/login/init";
+    public static final String AUTH_HANDOVER_TOKEN_PARAM = "govsso_auth_handover_token";
 
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
@@ -117,7 +118,7 @@ public class LoginInitController {
 
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
 
-        String govssoAuthHandoverToken = extractQueryParam(loginRequestInfo.getRequestUrl(), "govsso_auth_handover_token");
+        String govssoAuthHandoverToken = extractQueryParam(loginRequestInfo.getRequestUrl(), AUTH_HANDOVER_TOKEN_PARAM);
         if (govssoAuthHandoverToken != null) {
             if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
                 throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
