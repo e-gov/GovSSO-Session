@@ -123,21 +123,7 @@ public class LoginInitController {
             if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
                 throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
             }
-            JWT authHandoverToken;
-            try {
-                authHandoverToken = SignedJWT.parse(govssoAuthHandoverToken);
-            } catch (ParseException ex) {
-                throw new SsoException(USER_INPUT, "Unable to parse govsso_auth_handover_token", ex);
-            }
-            validateAuthHandoverToken(authHandoverToken);
-            if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
-                throw new SsoException(USER_INPUT, "Only DEFAULT_APP client type is allowed to use an auth handover token");
-            }
-            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
-            ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-            JWT idToken = createAuthHandoverIdToken(authHandoverToken);
-            Duration sessionMaxDuration = resolveAuthHandoverSessionMaxDuration(authHandoverToken);
-            return acceptLogin(loginRequestInfo, idToken, metadata, AUTH_HANDOVER, sessionMaxDuration);
+            return authenticateWithHandoverToken(govssoAuthHandoverToken, loginRequestInfo, request);
         } else if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             return authenticateWithTara(loginRequestInfo, response);
@@ -192,6 +178,25 @@ public class LoginInitController {
         if (prompt != Prompt.CONSENT) {
             throw new SsoException(USER_INPUT, "Request URL must contain prompt=consent");
         }
+    }
+
+    private ModelAndView authenticateWithHandoverToken(String govssoAuthHandoverToken, LoginRequestInfo loginRequestInfo,
+                                                       HttpServletRequest request) {
+        JWT authHandoverToken;
+        try {
+            authHandoverToken = SignedJWT.parse(govssoAuthHandoverToken);
+        } catch (ParseException ex) {
+            throw new SsoException(USER_INPUT, "Unable to parse govsso_auth_handover_token", ex);
+        }
+        validateAuthHandoverToken(authHandoverToken);
+        if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
+            throw new SsoException(USER_INPUT, "Only DEFAULT_APP client type is allowed to use an auth handover token");
+        }
+        request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
+        ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
+        JWT idToken = createAuthHandoverIdToken(authHandoverToken);
+        Duration sessionMaxDuration = resolveAuthHandoverSessionMaxDuration(authHandoverToken);
+        return acceptLogin(loginRequestInfo, idToken, metadata, AUTH_HANDOVER, sessionMaxDuration);
     }
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
