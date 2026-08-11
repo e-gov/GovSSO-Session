@@ -12,6 +12,7 @@ public class Context {
     private String ipAddress;
     private String userAgent;
     private String ipCountry;
+    // TODO Remove after fully migrating to SessionType
     private boolean isLongLivingSession;
-
+    private SessionType sessionType;
 }
