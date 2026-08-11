@@ -223,13 +223,50 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public LoginAcceptResponse acceptLogin(JWT taraIdToken, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
-        return acceptLogin(taraIdToken, loginRequestInfo, metadata, null);
+    public LoginAcceptResponse acceptSecuredAppWebSessionLogin(JWT authHandoverToken, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
+        String loginChallenge = loginRequestInfo.getChallenge();
+        Client client = loginRequestInfo.getClient();
+
+        JWTClaimsSet jwtClaimsSet = authHandoverToken.getJWTClaimsSet();
+
+        Context context = new Context();
+        context.setAuthHandoverToken(authHandoverToken.getParsedString());
+        context.setIpAddress(metadata.ipAddress());
+        context.setUserAgent(metadata.userAgent());
+        context.setIpCountry(metadata.ipCountry());
+        context.setLongLivingSession(false);
+        context.setSessionType(SessionType.SECURED_APP_WEB_SESSION);
+
+        LoginAcceptRequest request = new LoginAcceptRequest();
+        request.setRemember(true);
+        request.setAcr(jwtClaimsSet.getStringClaim("acr"));
+        request.setSubject(jwtClaimsSet.getSubject());
+        request.setContext(context);
+        request.setRememberFor(Math.toIntExact(ssoConfigurationProperties.getSessionMaxUpdateInterval().toSeconds()));
+        request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
+        request.setExtendSessionLifespan(true);
+
+        String uri = UriComponentsBuilder
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/requests/login/accept")
+                .queryParam("login_challenge", loginChallenge)
+                .toUriString();
+        requestLogger.logRequest(uri, HttpMethod.PUT.name(), request);
+        LoginAcceptResponse response = webclient.put()
+                .uri(uri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(request))
+                .retrieve()
+                .bodyToMono(LoginAcceptResponse.class)
+                .blockOptional().orElseThrow();
+
+        requestLogger.logResponse(HttpStatus.OK.value(), response);
+        return response;
     }
 
     @SneakyThrows
     public LoginAcceptResponse acceptLogin(JWT taraIdToken, LoginRequestInfo loginRequestInfo,
-                                           ClientRequestMetadata metadata, Duration sessionMaxDuration) {
+                                           ClientRequestMetadata metadata) {
         String loginChallenge = loginRequestInfo.getChallenge();
         Client client = loginRequestInfo.getClient();
 
@@ -249,14 +286,9 @@ public class HydraService {
         request.setAcr(jwtClaimsSet.getStringClaim("acr"));
         request.setSubject(jwtClaimsSet.getSubject());
         request.setContext(context);
-        Duration rememberFor;
-        if (sessionMaxDuration != null) {
-            rememberFor = sessionMaxDuration;
-        } else {
-            rememberFor = isLongLivingSession ?
-                    client.getLongLivedSessionLifetime() :
-                    ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        }
+        Duration rememberFor = isLongLivingSession ?
+                client.getLongLivedSessionLifetime() :
+                ssoConfigurationProperties.getSessionMaxUpdateInterval();
         request.setRememberFor(Math.toIntExact(rememberFor.toSeconds()));
         request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
         request.setExtendSessionLifespan(true);

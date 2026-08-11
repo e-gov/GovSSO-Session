@@ -15,4 +15,5 @@ public class Context {
     // TODO Remove after fully migrating to SessionType
     private boolean isLongLivingSession;
     private SessionType sessionType;
+    private String authHandoverToken;
 }

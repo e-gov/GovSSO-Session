@@ -142,7 +142,7 @@ public class LoginInitController {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-                return acceptLogin(loginRequestInfo, idToken, metadata, CONTINUE_SESSION, null);
+                return acceptLogin(loginRequestInfo, idToken, metadata);
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                     return openSessionContinuationView(loginRequestInfo, idToken);
@@ -194,9 +194,7 @@ public class LoginInitController {
         }
         request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-        JWT idToken = createAuthHandoverIdToken(authHandoverToken);
-        Duration sessionMaxDuration = resolveAuthHandoverSessionMaxDuration(authHandoverToken);
-        return acceptLogin(loginRequestInfo, idToken, metadata, AUTH_HANDOVER, sessionMaxDuration);
+        return acceptAuthHandoverLogin(loginRequestInfo, authHandoverToken, metadata);
     }
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
@@ -242,10 +240,16 @@ public class LoginInitController {
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata, StatisticsLogger.AuthenticationRequestType requestType
-            , Duration sessionMaxDuration) {
-        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata, sessionMaxDuration);
-        statisticsLogger.logAccept(requestType, idToken, loginRequestInfo);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
+        statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
+        return new ModelAndView("redirect:" + response.getRedirectTo());
+    }
+
+    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
+        // TODO Add a logger method that accepts auth handover token.
+//        statisticsLogger.logAccept(requestType, idToken, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
