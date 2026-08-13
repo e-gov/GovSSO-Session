@@ -3,9 +3,13 @@ package ee.ria.govsso.session.token;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 
 public record UserAttributes(
+        String subject,
+        Instant issuedAt,
         String acr,
         String[] amr,
         String givenName,
@@ -17,6 +21,8 @@ public record UserAttributes(
     public static UserAttributes fromTaraIdToken(JWTClaimsSet claims) throws ParseException {
         Map<String, Object> profileAttributes = claims.getJSONObjectClaim("profile_attributes");
         return new UserAttributes(
+                claims.getSubject(),
+                toInstant(claims.getIssueTime()),
                 claims.getStringClaim("acr"),
                 claims.getStringArrayClaim("amr"),
                 profileAttributes.get("given_name").toString(),
@@ -28,6 +34,8 @@ public record UserAttributes(
 
     public static UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
         return new UserAttributes(
+                claims.getSubject(),
+                toInstant(claims.getIssueTime()),
                 claims.getStringClaim("acr"),
                 claims.getStringArrayClaim("amr"),
                 claims.getStringClaim("given_name"),
@@ -35,5 +43,9 @@ public record UserAttributes(
                 claims.getStringClaim("birthdate"),
                 claims.getStringClaim("phone_number"),
                 claims.getBooleanClaim("phone_number_verified"));
+    }
+
+    private static Instant toInstant(Date date) {
+        return date == null ? null : date.toInstant();
     }
 }

@@ -31,7 +31,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static java.util.stream.Collectors.toSet;
@@ -39,6 +41,8 @@ import static java.util.stream.Collectors.toSet;
 @Service
 @RequiredArgsConstructor
 public class HydraService {
+
+    private static final String AUTH_TIME_CLAIM = "auth_time";
 
     @Qualifier("hydraWebClient")
     private final WebClient webclient;
@@ -149,23 +153,27 @@ public class HydraService {
                 .stream()
                 .filter(c -> c.isValidAt(validAt))
                 .toList();
-        validateTaraIdToken(consents);
+        validateContextTokens(consents);
         return consents;
     }
 
     public List<Consent> getValidConsents(String subject, String sessionId) {
         List<Consent> consents = getConsents(subject, sessionId, IncludeExpiredStrategy.ALL_ACTIVE);
-        validateTaraIdToken(consents);
+        validateContextTokens(consents);
         return consents;
     }
 
-    private static void validateTaraIdToken(List<Consent> consents) {
+    private static void validateContextTokens(List<Consent> consents) {
         if (consents.isEmpty()) {
             return;
         }
-        var taraIdToken = consents.get(0).getConsentRequest().getContext().getTaraIdToken();
-        if (!consents.stream().allMatch(s -> s.getConsentRequest().getContext().getTaraIdToken().equals(taraIdToken))) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical tara_id_token values");
+        Context context = consents.get(0).getConsentRequest().getContext();
+        boolean allIdentical = consents.stream()
+                .map(c -> c.getConsentRequest().getContext())
+                .allMatch(c -> Objects.equals(c.getTaraIdToken(), context.getTaraIdToken())
+                        && Objects.equals(c.getAuthHandoverToken(), context.getAuthHandoverToken()));
+        if (!allIdentical) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Valid consents did not have identical session token values");
         }
     }
 
@@ -210,16 +218,20 @@ public class HydraService {
             JWT idToken = SignedJWT.parse(consents.get(0).getConsentRequest().getContext().getTaraIdToken());
             // TODO: Verifying that session max lifetime has not elapsed should not be done when extracting TARA
             //  ID token.
-            // Max lifetime for long-living sessions is enforced by Hydra and is longer than max lifetime for regular
-            // sessions, so we can skip that check for long-living sessions. Max lifetime for long-living sessions is
-            // longer than max lifetime of regular sessions anyway.
-            if (!SecureAppUtil.isLongLivingSession(consents) && !isSessionMaxAgeNotReached(idToken)) {
-                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
-            }
+            validateSessionMaxAgeNotReached(consents);
             return idToken;
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Unable to parse ID token", ex);
         }
+    }
+
+    @SneakyThrows
+    public UserAttributes getUserAttributesFromConsentContext(List<Consent> consents) {
+        if (consents.isEmpty()) {
+            return null;
+        }
+        validateSessionMaxAgeNotReached(consents);
+        return extractUserAttributes(consents.get(0).getConsentRequest().getContext());
     }
 
     @SneakyThrows
@@ -417,11 +429,19 @@ public class HydraService {
 
     private UserAttributes extractUserAttributes(Context context) throws ParseException {
         SessionType sessionType = getSessionTypeOrFallback(context);
+        JWTClaimsSet claims = parseContextToken(context, sessionType);
         return switch (sessionType) {
-            case SECURED_APP_WEB_SESSION -> UserAttributes.fromAuthHandoverToken(
-                    parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token"));
-            case WEB_SESSION, SECURED_APP_SESSION -> UserAttributes.fromTaraIdToken(
-                    parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token"));
+            case SECURED_APP_WEB_SESSION -> UserAttributes.fromAuthHandoverToken(claims);
+            case WEB_SESSION, SECURED_APP_SESSION -> UserAttributes.fromTaraIdToken(claims);
+        };
+    }
+
+    private JWTClaimsSet parseContextToken(Context context, SessionType sessionType) throws ParseException {
+        return switch (sessionType) {
+            case SECURED_APP_WEB_SESSION ->
+                    parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
+            case WEB_SESSION, SECURED_APP_SESSION ->
+                    parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
         };
     }
 
@@ -541,10 +561,32 @@ public class HydraService {
         }
     }
 
-    private boolean isSessionMaxAgeNotReached(JWT taraIdToken) throws ParseException {
-        Instant taraIdTokenNotBefore = taraIdToken.getJWTClaimsSet().getNotBeforeTime().toInstant();
-        Instant sessionMaxAgeExpiration = taraIdTokenNotBefore.plus(ssoConfigurationProperties.getSessionMaxDuration());
-        Instant now = Instant.now();
-        return now.compareTo(sessionMaxAgeExpiration) <= 0;
+    private void validateSessionMaxAgeNotReached(List<Consent> consents) throws ParseException {
+        if (SecureAppUtil.isLongLivingSession(consents)) {
+            return;
+        }
+        Context context = consents.get(0).getConsentRequest().getContext();
+        if (Instant.now().isAfter(getSessionMaxAgeExpiration(context))) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
+        }
+    }
+
+    private Instant getSessionMaxAgeExpiration(Context context) throws ParseException {
+        SessionType sessionType = getSessionTypeOrFallback(context);
+        JWTClaimsSet claims = parseContextToken(context, sessionType);
+        return switch (sessionType) {
+            case SECURED_APP_WEB_SESSION -> {
+                // TODO This needs to be reviewed.
+                Date authTime = claims.getDateClaim(AUTH_TIME_CLAIM);
+                Date sessionStartTime = authTime != null ? authTime : claims.getIssueTime();
+                if (sessionStartTime == null) {
+                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
+                            "Auth handover token does not contain %s or iat claim".formatted(AUTH_TIME_CLAIM));
+                }
+                yield sessionStartTime.toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+            }
+            case WEB_SESSION, SECURED_APP_SESSION ->
+                    claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+        };
     }
 }

@@ -7,6 +7,7 @@ import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.token.UserAttributes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -14,7 +15,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Locale;
@@ -44,31 +44,32 @@ public class StatisticsLogger {
     public void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken,
             @NonNull LoginRequestInfo loginRequestInfo) {
+        var claims = taraIdToken.getJWTClaimsSet();
         logAccept(
-                requestType, taraIdToken, loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
+                requestType, claims.getSubject(), claims.getIssueTime().toInstant(), claims.getStringClaim("acr"),
+                claims.getStringArrayClaim("amr"), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
                 loginRequestInfo.getAcr());
     }
 
-    @SneakyThrows
     public void logAccept(
-            @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken,
+            @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
             @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
-        logAccept(requestType, taraIdToken, consentRequestInfo.getClient(), sessionId, null);
+        logAccept(
+                requestType, userAttributes.subject(), userAttributes.issuedAt(), userAttributes.acr(),
+                userAttributes.amr(), consentRequestInfo.getClient(), sessionId, null);
     }
 
     private void logAccept(
-            @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken, @NonNull Client client,
-            @NonNull String sessionId, LevelOfAssurance requestAcr) throws ParseException {
+            @NonNull AuthenticationRequestType requestType, @NonNull String subject, @NonNull Instant issuedAt,
+            @NonNull String acr, @NonNull String[] amrClaim, @NonNull Client client, @NonNull String sessionId,
+            LevelOfAssurance requestAcr) {
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
-        var claims = taraIdToken.getJWTClaimsSet();
-        var subject = claims.getSubject();
         var country = subject.substring(0, 2);
         var idCode = subject.substring(2);
-        var iat = claims.getIssueTime();
-        var sessionTime = Instant.now().getEpochSecond() - iat.toInstant().getEpochSecond();
-        var grantedAcr = claims.getStringClaim("acr").toUpperCase(Locale.ROOT);
-        var amr = stream(claims.getStringArrayClaim("amr"))
+        var sessionTime = Instant.now().getEpochSecond() - issuedAt.getEpochSecond();
+        var grantedAcr = acr.toUpperCase(Locale.ROOT);
+        var amr = stream(amrClaim)
                 .filter(authenticationTypes::containsKey)
                 .map(authenticationTypes::get)
                 .findFirst();
@@ -80,7 +81,7 @@ public class StatisticsLogger {
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
                 .sessionId(sessionId)
-                .sessionStartTime(iat)
+                .sessionStartTime(Date.from(issuedAt))
                 .sessionDuration(sessionTime)
                 .country(country)
                 .idCode(idCode)

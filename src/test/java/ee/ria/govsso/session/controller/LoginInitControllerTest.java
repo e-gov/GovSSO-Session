@@ -807,7 +807,7 @@ class LoginInitControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        assertErrorIsLogged("SsoException: Valid consents did not have identical tara_id_token values");
+        assertErrorIsLogged("SsoException: Valid consents did not have identical session token values");
     }
 
     @Test
