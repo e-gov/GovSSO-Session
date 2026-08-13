@@ -10,6 +10,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
+import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static java.util.stream.Collectors.toSet;
@@ -370,20 +370,17 @@ public class HydraService {
                         consentFlowDuration.getSeconds());
         request.setRememberFor(rememberFor);
 
-        // TODO There is no ID token in case of auth handover
-        JWTClaimsSet taraIdTokenClaims = SignedJWT.parse(consentRequestInfo.getContext().getTaraIdToken()).getJWTClaimsSet();
-
-        Map<String, Object> profileAttributesClaim = taraIdTokenClaims.getJSONObjectClaim("profile_attributes");
+        UserAttributes userAttributes = extractUserAttributes(consentRequestInfo.getContext());
 
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
-        idToken.setGivenName(profileAttributesClaim.get("given_name").toString());
-        idToken.setFamilyName(profileAttributesClaim.get("family_name").toString());
-        idToken.setBirthdate(profileAttributesClaim.get("date_of_birth").toString());
+        idToken.setGivenName(userAttributes.givenName());
+        idToken.setFamilyName(userAttributes.familyName());
+        idToken.setBirthdate(userAttributes.birthdate());
         idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : null);
-        if (List.of(requestedScopes).contains(SCOPE_PHONE) && taraIdTokenClaims.getClaims().get("phone_number") != null) {
-            idToken.setPhoneNumber(taraIdTokenClaims.getStringClaim("phone_number"));
-            idToken.setPhoneNumberVerified(taraIdTokenClaims.getBooleanClaim("phone_number_verified"));
+        if (List.of(requestedScopes).contains(SCOPE_PHONE) && userAttributes.phoneNumber() != null) {
+            idToken.setPhoneNumber(userAttributes.phoneNumber());
+            idToken.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
         }
         if (representeeList != null) {
             idToken.setRepresenteeList(representeeList);
@@ -391,7 +388,7 @@ public class HydraService {
         session.setIdToken(idToken);
 
         if (AccessTokenStrategy.JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            session.setAccessToken(accessTokenClaimsFactory.from(taraIdTokenClaims, List.of(requestedScopes), isLongLivingSession, consentRequestInfo.getAuthenticatedAt().toInstant()));
+            session.setAccessToken(accessTokenClaimsFactory.from(userAttributes, List.of(requestedScopes), isLongLivingSession, consentRequestInfo.getAuthenticatedAt().toInstant()));
             if (consentRequestInfo.getRequestedAccessTokenAudience() != null) {
                 List<String> audiences = Arrays.asList(consentRequestInfo.getRequestedAccessTokenAudience());
                 if (audiences.isEmpty()) {
@@ -416,6 +413,34 @@ public class HydraService {
 
         requestLogger.logResponse(HttpStatus.OK.value(), response);
         return response;
+    }
+
+    private UserAttributes extractUserAttributes(Context context) throws ParseException {
+        SessionType sessionType = getSessionTypeOrFallback(context);
+        return switch (sessionType) {
+            case SECURED_APP_WEB_SESSION -> UserAttributes.fromAuthHandoverToken(
+                    parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token"));
+            case WEB_SESSION, SECURED_APP_SESSION -> UserAttributes.fromTaraIdToken(
+                    parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token"));
+        };
+    }
+
+    // TODO Temporary solution. Remove after all sessions created before session type was added to context have
+    //  expired, and instead throw when session type is missing.
+    private SessionType getSessionTypeOrFallback(Context context) {
+        SessionType sessionType = context.getSessionType();
+        if (sessionType != null) {
+            return sessionType;
+        }
+        return context.isLongLivingSession() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
+    }
+
+    private JWTClaimsSet parseRequiredContextToken(String token, String tokenDescription) throws ParseException {
+        if (token == null) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
+                    "Session context does not contain %s".formatted(tokenDescription));
+        }
+        return SignedJWT.parse(token).getJWTClaimsSet();
     }
 
     public void deleteConsentBySubject(String subject) {
