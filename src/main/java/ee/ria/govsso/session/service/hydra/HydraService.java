@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.toSet;
 @RequiredArgsConstructor
 public class HydraService {
 
-    private static final String AUTH_TIME_CLAIM = "auth_time";
+    public static final String SESSION_EXPIRY_CLAIM = "session_expiry";
 
     @Qualifier("hydraWebClient")
     private final WebClient webclient;
@@ -546,6 +546,9 @@ public class HydraService {
     }
 
     private void validateSessionMaxAgeNotReached(List<Consent> consents) throws ParseException {
+        // Max lifetime for long-living sessions is enforced by Hydra and is longer than max lifetime for regular
+        // sessions, so we can skip that check for long-living sessions. Max lifetime for long-living sessions is
+        // longer than max lifetime of regular sessions anyway.
         if (SecureAppUtil.isSecuredAppSession(consents)) {
             return;
         }
@@ -561,19 +564,19 @@ public class HydraService {
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> {
                 claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
-                // TODO This needs to be reviewed.
-                Date authTime = claims.getDateClaim(AUTH_TIME_CLAIM);
-                Date sessionStartTime = authTime != null ? authTime : claims.getIssueTime();
-                if (sessionStartTime == null) {
+                Date sessionExpiry = claims.getDateClaim(SESSION_EXPIRY_CLAIM);
+                if (sessionExpiry == null) {
                     throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
-                            "Auth handover token does not contain %s or iat claim".formatted(AUTH_TIME_CLAIM));
+                            "Auth handover token does not contain %s claim".formatted(SESSION_EXPIRY_CLAIM));
                 }
-                yield sessionStartTime.toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+                yield sessionExpiry.toInstant();
             }
-            case WEB_SESSION, SECURED_APP_SESSION -> {
+            case WEB_SESSION -> {
                 claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
                 yield claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
             }
+            case SECURED_APP_SESSION -> throw new IllegalStateException(
+                    "Session max age expiration is not applicable to %s, its max lifetime is enforced by Hydra".formatted(sessionType));
         };
     }
 }

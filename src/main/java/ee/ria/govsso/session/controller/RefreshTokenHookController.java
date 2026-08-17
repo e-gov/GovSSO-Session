@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import java.util.List;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -81,6 +82,11 @@ public class RefreshTokenHookController {
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
+        if (isAuthHandoverTokenRequest(hookRequest) && !consentRequestInfo.getClient().isSecuredApp()) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Refresh token hook request must not contain auth handover scope, because only %s clients are allowed to issue auth handover tokens."
+                            .formatted(ClientType.SECURED_APP));
+        }
         if (isLongLivingSession) {
             responseBuilder
                     .refreshRememberFor(false)
@@ -120,6 +126,9 @@ public class RefreshTokenHookController {
             if (idToken.getRepresentee() != null) {
                 accessTokenClaims.setRepresentee(idToken.getRepresentee());
             }
+            if (isAuthHandoverTokenRequest(hookRequest)) {
+                accessTokenClaims.setSessionExpiry(getSessionExpiry(consentRequestInfo));
+            }
             responseBuilder.accessToken(accessTokenClaims);
         }
 
@@ -130,6 +139,16 @@ public class RefreshTokenHookController {
                 .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
+    }
+
+    private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
+        List<String> requestedScopes = hookRequest.getRequestedScopes();
+        return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
+    }
+
+    private Instant getSessionExpiry(ConsentRequestInfo consentRequestInfo) {
+        return consentRequestInfo.getAuthenticatedAt().toInstant()
+                .plus(consentRequestInfo.getClient().getLongLivedSessionLifetime());
     }
 
     private void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {

@@ -59,7 +59,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
@@ -75,6 +74,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Slf4j
 @Validated
@@ -327,6 +327,21 @@ public class LoginInitController {
         if (expirationTime == null || expirationTime.toInstant().isBefore(now)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token is expired");
         }
+        Date sessionExpiry;
+        try {
+            sessionExpiry = claims.getDateClaim(SESSION_EXPIRY_CLAIM);
+        } catch (ParseException e) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token %s claim is not a valid date".formatted(SESSION_EXPIRY_CLAIM));
+        }
+        if (sessionExpiry == null) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token does not contain %s claim".formatted(SESSION_EXPIRY_CLAIM));
+        }
+        if (sessionExpiry.toInstant().isBefore(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Session handed over by the auth handover token has expired");
+        }
     }
 
     private JWT createAuthHandoverIdToken(JWT authHandoverToken) {
@@ -360,27 +375,6 @@ public class LoginInitController {
         } catch (JOSEException | ParseException e) {
             throw new SsoException(TECHNICAL_GENERAL, "Failed to create auth handover ID token", e);
         }
-    }
-
-    private Duration resolveAuthHandoverSessionMaxDuration(JWT authHandoverToken) {
-        return Duration.ofHours(12);
-//        JWTClaimsSet claims;
-//        Date authTime;
-//        try {
-//            claims = authHandoverToken.getJWTClaimsSet();
-//            authTime = claims.getDateClaim("auth_time");
-//        } catch (ParseException e) {
-//            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse auth handover token");
-//        }
-//        Date expirationTime = claims.getExpirationTime();
-//        Duration configuredMaxDuration = ssoConfigurationProperties.getSessionMaxDuration();
-//        if (authTime == null || expirationTime == null) {
-//            return configuredMaxDuration;
-//        }
-//        Duration previousSessionRemainingLifetime = Duration.between(authTime.toInstant(), expirationTime.toInstant());
-//        return previousSessionRemainingLifetime.compareTo(configuredMaxDuration) < 0
-//                ? previousSessionRemainingLifetime
-//                : configuredMaxDuration;
     }
 
     private String extractQueryParam(URL url, String paramName) {
