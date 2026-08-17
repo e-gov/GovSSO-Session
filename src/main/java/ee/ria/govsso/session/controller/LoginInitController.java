@@ -136,8 +136,8 @@ public class LoginInitController {
             JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
             if (idToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);
-            } else if (SecureAppUtil.isLongLivingSession(consents)) {
-                throw new SsoException(USER_INPUT, "Long-living sessions are not allowed to be continued");
+            } else if (SecureAppUtil.isSecuredAppSession(consents)) {
+                throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {

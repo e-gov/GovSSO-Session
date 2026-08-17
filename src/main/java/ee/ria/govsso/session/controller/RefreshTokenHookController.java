@@ -80,7 +80,7 @@ public class RefreshTokenHookController {
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
-        boolean isLongLivingSession = SecureAppUtil.isLongLivingSession(consentRequestInfo);
+        boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
         if (isLongLivingSession) {
             responseBuilder
                     .refreshRememberFor(false)

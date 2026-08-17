@@ -77,8 +77,8 @@ public class ContinueSessionController {
         if (idToken == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
-        if (SecureAppUtil.isLongLivingSession(consents)) {
-            throw new SsoException(USER_INPUT, "Long-living sessions are not allowed to be continued");
+        if (SecureAppUtil.isSecuredAppSession(consents)) {
+            throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
         }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);

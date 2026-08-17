@@ -236,7 +236,7 @@ public class HydraService {
 
     @SneakyThrows
     public LoginAcceptResponse acceptSecuredAppWebSessionLogin(JWT authHandoverToken, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
-        Context context = createContext(metadata, false, SessionType.SECURED_APP_WEB_SESSION);
+        Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION);
         context.setAuthHandoverToken(authHandoverToken.getParsedString());
         Duration rememberFor = ssoConfigurationProperties.getSessionMaxUpdateInterval();
         LoginAcceptRequest request = createLoginAcceptRequest(authHandoverToken, context, rememberFor);
@@ -254,7 +254,7 @@ public class HydraService {
                 SessionType.SECURED_APP_SESSION :
                 SessionType.WEB_SESSION;
 
-        Context context = createContext(metadata, isLongLivingSession, sessionType);
+        Context context = createContext(metadata, sessionType);
         context.setTaraIdToken(taraIdToken.getParsedString());
         Duration rememberFor = isLongLivingSession ?
                 client.getLongLivedSessionLifetime() :
@@ -265,12 +265,12 @@ public class HydraService {
         return getLoginAcceptResponse(request, loginChallenge);
     }
 
-    private Context createContext(ClientRequestMetadata metadata, boolean isLongLivingSession, SessionType sessionType) {
+    private Context createContext(ClientRequestMetadata metadata, SessionType sessionType) {
         Context context = new Context();
         context.setIpAddress(metadata.ipAddress());
         context.setUserAgent(metadata.userAgent());
         context.setIpCountry(metadata.ipCountry());
-        context.setLongLivingSession(isLongLivingSession);
+        context.setLongLivingSession(sessionType == SessionType.SECURED_APP_SESSION);
         context.setSessionType(sessionType);
         return context;
     }
@@ -374,7 +374,7 @@ public class HydraService {
         request.setRemember(true);
 
         Duration consentFlowDuration = Duration.between(consentRequestInfo.getRequestedAt(), OffsetDateTime.now());
-        boolean isLongLivingSession = SecureAppUtil.isLongLivingSession(consentRequestInfo);
+        boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
         int rememberFor = isLongLivingSession ?
                 Consent.REMEMBER_FOR_FOREVER :
                 Math.toIntExact(
@@ -428,38 +428,22 @@ public class HydraService {
     }
 
     private UserAttributes extractUserAttributes(Context context) throws ParseException {
-        SessionType sessionType = getSessionTypeOrFallback(context);
-        JWTClaimsSet claims = parseContextToken(context, sessionType);
+        SessionType sessionType = context.getSessionTypeOrFallback();
+        JWTClaimsSet claims;
         return switch (sessionType) {
-            case SECURED_APP_WEB_SESSION -> UserAttributes.fromAuthHandoverToken(claims);
-            case WEB_SESSION, SECURED_APP_SESSION -> UserAttributes.fromTaraIdToken(claims);
+            case SECURED_APP_WEB_SESSION -> {
+                claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
+                yield UserAttributes.fromAuthHandoverToken(claims);
+            }
+            case WEB_SESSION, SECURED_APP_SESSION -> {
+                claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
+                yield UserAttributes.fromTaraIdToken(claims);
+            }
         };
-    }
-
-    private JWTClaimsSet parseContextToken(Context context, SessionType sessionType) throws ParseException {
-        return switch (sessionType) {
-            case SECURED_APP_WEB_SESSION ->
-                    parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
-            case WEB_SESSION, SECURED_APP_SESSION ->
-                    parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
-        };
-    }
-
-    // TODO Temporary solution. Remove after all sessions created before session type was added to context have
-    //  expired, and instead throw when session type is missing.
-    private SessionType getSessionTypeOrFallback(Context context) {
-        SessionType sessionType = context.getSessionType();
-        if (sessionType != null) {
-            return sessionType;
-        }
-        return context.isLongLivingSession() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
     }
 
     private JWTClaimsSet parseRequiredContextToken(String token, String tokenDescription) throws ParseException {
-        if (token == null) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
-                    "Session context does not contain %s".formatted(tokenDescription));
-        }
+        Objects.requireNonNull(token, "Session context does not contain %s".formatted(tokenDescription));
         return SignedJWT.parse(token).getJWTClaimsSet();
     }
 
@@ -562,7 +546,7 @@ public class HydraService {
     }
 
     private void validateSessionMaxAgeNotReached(List<Consent> consents) throws ParseException {
-        if (SecureAppUtil.isLongLivingSession(consents)) {
+        if (SecureAppUtil.isSecuredAppSession(consents)) {
             return;
         }
         Context context = consents.get(0).getConsentRequest().getContext();
@@ -572,10 +556,11 @@ public class HydraService {
     }
 
     private Instant getSessionMaxAgeExpiration(Context context) throws ParseException {
-        SessionType sessionType = getSessionTypeOrFallback(context);
-        JWTClaimsSet claims = parseContextToken(context, sessionType);
+        SessionType sessionType = context.getSessionTypeOrFallback();
+        JWTClaimsSet claims;
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> {
+                claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
                 // TODO This needs to be reviewed.
                 Date authTime = claims.getDateClaim(AUTH_TIME_CLAIM);
                 Date sessionStartTime = authTime != null ? authTime : claims.getIssueTime();
@@ -585,8 +570,10 @@ public class HydraService {
                 }
                 yield sessionStartTime.toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
             }
-            case WEB_SESSION, SECURED_APP_SESSION ->
-                    claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+            case WEB_SESSION, SECURED_APP_SESSION -> {
+                claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
+                yield claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+            }
         };
     }
 }

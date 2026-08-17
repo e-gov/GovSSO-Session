@@ -16,4 +16,14 @@ public class Context {
     private boolean isLongLivingSession;
     private SessionType sessionType;
     private String authHandoverToken;
+
+    // TODO Temporary solution. Remove after all sessions created before session type was added to context have
+    //  expired, and instead throw when session type is missing.
+    public SessionType getSessionTypeOrFallback() {
+        SessionType sessionType = this.getSessionType();
+        if (sessionType != null) {
+            return sessionType;
+        }
+        return this.isLongLivingSession() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
+    }
 }
