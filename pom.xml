@@ -12,7 +12,7 @@
 
     <groupId>ee.ria.govsso</groupId>
     <artifactId>govsso-session</artifactId>
-    <version>1.8.1</version>
+    <version>1.8.2</version>
 
     <name>GovSSO Session Service</name>
     <licenses>
@@ -30,11 +30,11 @@
         <imageName>${project.artifactId}:latest</imageName>
         <githubMirror>https://github.com</githubMirror>
 
-        <elastic-apm.version>1.55.6</elastic-apm.version>
-        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+        <elastic-apm.version>1.56.0</elastic-apm.version>
+        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
         <jquery.version>3.7.1</jquery.version>
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
-        <nimbus-oauth2-oidc-sdk.version>11.37.2</nimbus-oauth2-oidc-sdk.version>
+        <nimbus-oauth2-oidc-sdk.version>11.38.2</nimbus-oauth2-oidc-sdk.version>
         <rest-assured.version>6.0.0</rest-assured.version>
         <spring-retry.version>2.0.12</spring-retry.version>
         <uap-java.version>1.6.1</uap-java.version>
@@ -78,10 +78,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
