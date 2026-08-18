@@ -82,10 +82,13 @@ public class RefreshTokenHookController {
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
-        if (isAuthHandoverTokenRequest(hookRequest) && !consentRequestInfo.getClient().isSecuredApp()) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Refresh token hook request must not contain auth handover scope, because only %s clients are allowed to issue auth handover tokens."
-                            .formatted(ClientType.SECURED_APP));
+        if (isAuthHandoverTokenRequest(hookRequest)) {
+            if (!consentRequestInfo.getClient().isSecuredApp()) {
+                throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                        "Refresh token hook request must not contain auth handover scope, because only %s clients are allowed to issue auth handover tokens."
+                                .formatted(ClientType.SECURED_APP));
+            }
+            validateGrantedAudience(hookRequest);
         }
         if (isLongLivingSession) {
             responseBuilder
@@ -140,6 +143,13 @@ public class RefreshTokenHookController {
                 .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
+    }
+
+    private void validateGrantedAudience(RefreshTokenHookRequest hookRequest) {
+        List<String> audience = hookRequest.getGrantedAudience();
+        if (audience.size() != 1 || !ssoConfigurationProperties.getBaseUrl().toString().equals(audience.get(0))) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured base URL");
+        }
     }
 
     private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
