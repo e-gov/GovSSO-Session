@@ -12,6 +12,7 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,5 +35,6 @@ public class AccessTokenClaims {
     @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
     @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
     private Instant sessionExpiry;
+    private List<String> scope;
 
 }

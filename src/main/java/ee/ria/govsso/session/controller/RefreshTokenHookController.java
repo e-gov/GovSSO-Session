@@ -128,6 +128,7 @@ public class RefreshTokenHookController {
             }
             if (isAuthHandoverTokenRequest(hookRequest)) {
                 accessTokenClaims.setSessionExpiry(getSessionExpiry(consentRequestInfo));
+                accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
             }
             responseBuilder.accessToken(accessTokenClaims);
         }
