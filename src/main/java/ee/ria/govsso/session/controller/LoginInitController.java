@@ -120,12 +120,13 @@ public class LoginInitController {
         validateLoginRequestInfoForAuthenticationAndContinuation(loginRequestInfo, prompt);
 
         String govssoAuthHandoverToken = extractQueryParam(loginRequestInfo.getRequestUrl(), AUTH_HANDOVER_TOKEN_PARAM);
-        if (govssoAuthHandoverToken != null) {
-            if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
-                throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
+        if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
+            if (govssoAuthHandoverToken != null) {
+                if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+                    throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
+                }
+                return authenticateWithHandoverToken(govssoAuthHandoverToken, loginRequestInfo, request);
             }
-            return authenticateWithHandoverToken(govssoAuthHandoverToken, loginRequestInfo, request);
-        } else if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             return authenticateWithTara(loginRequestInfo, response);
         } else {
@@ -143,6 +144,11 @@ public class LoginInitController {
                 // authentication process and since the session cookie will be missing, a new session will be created.
                 CookieUtil.deleteHydraSessionCookie(request, response);
                 return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
+            } else if (govssoAuthHandoverToken != null) {
+                if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+                    throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
+                }
+                return reauthenticate(loginRequestInfo, request, response);
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
