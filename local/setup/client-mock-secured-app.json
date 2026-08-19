@@ -58,6 +58,7 @@
   ],
   "access_token_jwt_enabled": true,
   "access_token_audience_uris": [
+    "https://inproxy.localhost:13443/",
     "https://test1.test/123",
     "https://test2.test/123"
   ],

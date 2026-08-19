@@ -23,6 +23,7 @@ import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
+import ee.ria.govsso.session.token.AuthHandoverTokenVerifier;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
@@ -83,6 +84,7 @@ public class LoginInitController {
     private final StatisticsLogger statisticsLogger;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
+    private final AuthHandoverTokenVerifier authHandoverTokenVerifier;
     @Autowired(required = false)
     private AlertsService alertsService;
     private final Clock clock;
@@ -175,7 +177,7 @@ public class LoginInitController {
 
     private ModelAndView authenticateWithHandoverToken(String govssoAuthHandoverToken, LoginRequestInfo loginRequestInfo,
                                                        HttpServletRequest request) {
-        JWT authHandoverToken;
+        SignedJWT authHandoverToken;
         try {
             authHandoverToken = SignedJWT.parse(govssoAuthHandoverToken);
         } catch (ParseException ex) {
@@ -297,25 +299,9 @@ public class LoginInitController {
         }
     }
 
-    private void validateAuthHandoverToken(JWT token) {
-        JWTClaimsSet claims;
-        try {
-            claims = token.getJWTClaimsSet();
-        } catch (ParseException e) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from auth handover token");
-        }
-        if (!ssoConfigurationProperties.getBaseUrl().toString().equals(claims.getIssuer())) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token issuer does not match");
-        }
+    private void validateAuthHandoverToken(SignedJWT token) {
+        JWTClaimsSet claims = authHandoverTokenVerifier.verify(token);
         Instant now = clock.instant();
-        Date issueTime = claims.getIssueTime();
-        if (issueTime == null || issueTime.toInstant().isAfter(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token issued-at time is in the future");
-        }
-        Date expirationTime = claims.getExpirationTime();
-        if (expirationTime == null || expirationTime.toInstant().isBefore(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token is expired");
-        }
         Instant sessionExpiry = extractAndValidateDateClaim(claims, SESSION_EXPIRY_CLAIM);
         if (sessionExpiry.isBefore(now)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,

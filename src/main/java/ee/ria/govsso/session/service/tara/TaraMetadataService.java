@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import static com.nimbusds.jose.JWSAlgorithm.RS256;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
+import static com.nimbusds.jose.jwk.source.JWKSourceBuilder.DEFAULT_HTTP_SIZE_LIMIT;
 import static com.nimbusds.oauth2.sdk.GrantType.AUTHORIZATION_CODE;
 import static com.nimbusds.oauth2.sdk.ResponseType.CODE;
 import static com.nimbusds.oauth2.sdk.WellKnownPathComposeStrategy.INFIX;
