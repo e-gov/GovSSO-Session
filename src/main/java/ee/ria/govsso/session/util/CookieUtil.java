@@ -62,6 +62,7 @@ public class CookieUtil {
 
     private Cookie createCookie(String name, String value) {
         Cookie cookie = new Cookie(name, value);
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         return cookie;
