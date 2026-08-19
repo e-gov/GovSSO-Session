@@ -74,6 +74,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
 import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Slf4j
@@ -327,54 +328,31 @@ public class LoginInitController {
         if (expirationTime == null || expirationTime.toInstant().isBefore(now)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token is expired");
         }
-        Date sessionExpiry;
-        try {
-            sessionExpiry = claims.getDateClaim(SESSION_EXPIRY_CLAIM);
-        } catch (ParseException e) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token %s claim is not a valid date".formatted(SESSION_EXPIRY_CLAIM));
-        }
-        if (sessionExpiry == null) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token does not contain %s claim".formatted(SESSION_EXPIRY_CLAIM));
-        }
-        if (sessionExpiry.toInstant().isBefore(now)) {
+        Instant sessionExpiry = extractAndValidateDateClaim(claims, SESSION_EXPIRY_CLAIM);
+        if (sessionExpiry.isBefore(now)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     "Session handed over by the auth handover token has expired");
         }
+        Instant authTime = extractAndValidateDateClaim(claims, AUTH_TIME_CLAIM);
+        if (authTime.plus(ssoConfigurationProperties.getSessionMaxDuration()).isBefore(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Session handed over by the auth handover token has reached the maximum session duration");
+        }
     }
 
-    private JWT createAuthHandoverIdToken(JWT authHandoverToken) {
-        JWTClaimsSet handoverClaims;
+    private Instant extractAndValidateDateClaim(JWTClaimsSet claims, String claimName) {
+        Date claimValue;
         try {
-            handoverClaims = authHandoverToken.getJWTClaimsSet();
+            claimValue = claims.getDateClaim(claimName);
         } catch (ParseException e) {
-            throw new SsoException(TECHNICAL_GENERAL, "Failed to parse claim set from auth handover token");
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token %s claim is not a valid date".formatted(claimName));
         }
-
-        Map<String, Object> profileAttributes = new LinkedHashMap<>();
-        profileAttributes.put("given_name", handoverClaims.getClaim("given_name"));
-        profileAttributes.put("family_name", handoverClaims.getClaim("family_name"));
-        profileAttributes.put("date_of_birth", handoverClaims.getClaim("birthdate"));
-
-        JWTClaimsSet.Builder taraIdTokenClaims = new JWTClaimsSet.Builder()
-                .subject(handoverClaims.getSubject())
-                .issueTime(handoverClaims.getIssueTime())
-                .claim("acr", handoverClaims.getClaim("acr"))
-                .claim("amr", handoverClaims.getClaim("amr"))
-                .claim("profile_attributes", profileAttributes);
-        if (handoverClaims.getClaim("phone_number") != null) {
-            taraIdTokenClaims.claim("phone_number", handoverClaims.getClaim("phone_number"));
-            taraIdTokenClaims.claim("phone_number_verified", handoverClaims.getClaim("phone_number_verified"));
+        if (claimValue == null) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token does not contain %s claim".formatted(claimName));
         }
-
-        try {
-            SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), taraIdTokenClaims.build());
-            signedJWT.sign(new MACSigner(securityConfigurationProperties.getCookieSigningSecret()));
-            return SignedJWT.parse(signedJWT.serialize());
-        } catch (JOSEException | ParseException e) {
-            throw new SsoException(TECHNICAL_GENERAL, "Failed to create auth handover ID token", e);
-        }
+        return claimValue.toInstant();
     }
 
     private String extractQueryParam(URL url, String paramName) {

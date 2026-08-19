@@ -43,6 +43,7 @@ import static java.util.stream.Collectors.toSet;
 public class HydraService {
 
     public static final String SESSION_EXPIRY_CLAIM = "session_expiry";
+    public static final String AUTH_TIME_CLAIM = "auth_time";
 
     @Qualifier("hydraWebClient")
     private final WebClient webclient;
@@ -569,7 +570,14 @@ public class HydraService {
                     throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
                             "Auth handover token does not contain %s claim".formatted(SESSION_EXPIRY_CLAIM));
                 }
-                yield sessionExpiry.toInstant();
+                Date authTime = claims.getDateClaim(AUTH_TIME_CLAIM);
+                if (authTime == null) {
+                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
+                            "Auth handover token does not contain %s claim".formatted(AUTH_TIME_CLAIM));
+                }
+                Instant maxDurationExpiration = authTime.toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
+                Instant handoverExpiration = sessionExpiry.toInstant();
+                yield handoverExpiration.isBefore(maxDurationExpiration) ? handoverExpiration : maxDurationExpiration;
             }
             case WEB_SESSION -> {
                 claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
