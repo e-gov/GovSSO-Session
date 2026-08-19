@@ -4,8 +4,12 @@ import ee.ria.govsso.session.service.hydra.ConsentAcceptResponse;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.RepresenteeList;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.service.paasuke.RepresentationService;
+import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.RequestUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -33,7 +37,9 @@ public class ConsentInitController {
     @GetMapping(value = CONSENT_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView consentInit(
             @RequestParam(name = "consent_challenge")
-            @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge) {
+            @Pattern(regexp = "^[a-f0-9]{32}$") String consentChallenge,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
         ConsentRequestInfo consentRequestInfo = hydraService.fetchConsentRequestInfo(consentChallenge);
         RequestUtil.setFlowTraceId(consentRequestInfo.getLoginChallenge());
@@ -43,6 +49,11 @@ public class ConsentInitController {
             representeeList = getRepresentees(consentRequestInfo);
         }
         ConsentAcceptResponse response = hydraService.acceptConsent(consentChallenge, consentRequestInfo, representeeList);
+        /* Sessions of type `SECURED_APP_SESSION` cannot be continued, so let's remove the session cookie after
+         * the session is created. */
+        if (consentRequestInfo.getContext().getSessionTypeOrFallback() == SessionType.SECURED_APP_SESSION) {
+            CookieUtil.deleteHydraSessionCookie(httpRequest, httpResponse);
+        }
         return new RedirectView(response.getRedirectTo().toString());
     }
 

@@ -138,7 +138,11 @@ public class LoginInitController {
             if (idToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);
             } else if (SecureAppUtil.isSecuredAppSession(consents)) {
-                throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
+                // Sessions of type `SECURED_APP_SESSION` cannot be continued, so let's remove the session cookie and
+                // redirect the user back to the initial authentication endpoint. This will effectively restart the
+                // authentication process and since the session cookie will be missing, a new session will be created.
+                CookieUtil.deleteHydraSessionCookie(request, response);
+                return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
             } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
