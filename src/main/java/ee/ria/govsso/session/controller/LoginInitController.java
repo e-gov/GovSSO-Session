@@ -218,7 +218,7 @@ public class LoginInitController {
                                                        HttpServletRequest request, SignedJWT authHandoverToken) {
         validateAuthHandoverToken(authHandoverToken);
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
-            throw new SsoException(USER_INPUT, "Only DEFAULT_APP client type is allowed to use an auth handover token");
+            throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
         return acceptAuthHandoverLogin(loginRequestInfo, authHandoverToken, metadata);
