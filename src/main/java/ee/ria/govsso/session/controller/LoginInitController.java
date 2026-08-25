@@ -330,10 +330,6 @@ public class LoginInitController {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     "Session handed over by the auth handover token has reached the maximum session duration");
         }
-        List<String> audience = claims.getAudience();
-        if (audience.size() != 1 || !ssoConfigurationProperties.getBaseUrl().toString().equals(audience.get(0))) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover token aud claim can contain only the configured base URL");
-        }
     }
 
     private Instant extractAndValidateDateClaim(JWTClaimsSet claims, String claimName) {
