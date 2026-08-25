@@ -117,8 +117,10 @@ flow implementations.
     * https://tara.localhost:16443/oidc/authorize
     * https://tara.localhost:16443/oidc/token
 * Admin Service
-    * https://admin.localhost:17443/ - UI (username admin, password admin)
+    * https://admin.localhost:17443/ - UI (username admin, password admin or login with the local OIDC provider)
     * https://admin.localhost:17443/actuator - maintenance endpoints
+* Admin OIDC provider (NAV mock-oauth2-server)
+    * https://admin-oidc-provider.localhost:10443/ - local OIDC provider for Admin Service
 * MailHog
     * http://localhost:18080/ - UI
 * Kibana
@@ -271,3 +273,4 @@ govsso.alerts.static-alert.message-templates[2].locale=ru
 * [jquery](https://jquery.com) - MIT license
 * [Roboto font](https://fonts.google.com/specimen/Roboto) - Apache 2.0 license
 * [Maven Wrapper](https://maven.apache.org/wrapper/) - Apache 2.0 license
+* [mock-oauth2-server](https://github.com/navikt/mock-oauth2-server) - MIT license

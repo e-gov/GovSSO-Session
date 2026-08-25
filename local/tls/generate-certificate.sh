@@ -14,6 +14,12 @@ if [ -z "$applicationName" ]; then
   exit 1
 fi
 
+keyAlgorithm=${3:-ec}
+signatureDigest=sha512
+if [ "$keyAlgorithm" = "rsa" ]; then
+  signatureDigest=sha256
+fi
+
 host=$applicationName.localhost # ex. admin.localhost
 
 echo "--------------------------- Generating certificate for '$host'"
@@ -21,18 +27,25 @@ echo "--------------------------- Generating certificate for '$host'"
 # Create application TLS folder if does not exist
 mkdir -p "$applicationName"
 
-# Generate ECDSA key
-openssl ecparam \
-  -name prime256v1 \
-  -genkey \
-  -out "$applicationName/$host.key"
+# Generate private key
+if [ "$keyAlgorithm" = "rsa" ]; then
+  openssl genpkey \
+    -algorithm RSA \
+    -pkeyopt rsa_keygen_bits:2048 \
+    -out "$applicationName/$host.key"
+else
+  openssl ecparam \
+    -name prime256v1 \
+    -genkey \
+    -out "$applicationName/$host.key"
+fi
 
 # Generate CSR from key
 # MSYS_NO_PATHCOW=1 needed for Git Bash on Windows users - unable to handle "/"-s in -subj parameter.
 MSYS_NO_PATHCONV=1 \
   openssl req \
   -new \
-  -sha512 \
+  -"$signatureDigest" \
   -nodes \
   -key "$applicationName/$host.key" \
   -subj "/CN=$host" \
@@ -44,7 +57,7 @@ export SAN="DNS:$host"
 # Generate CA signed certificate
 openssl x509 \
   -req \
-  -sha512 \
+  -"$signatureDigest" \
   -in "$applicationName/$host.csr" \
   -CA "$ca/$ca.localhost.crt" \
   -CAkey "$ca/$ca.localhost.key" \

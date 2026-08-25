@@ -1,0 +1,27 @@
+{
+  "interactiveLogin": true,
+  "httpServer": {
+    "type": "NettyWrapper",
+    "ssl": {
+      "keyPassword": "changeit",
+      "keystoreFile": "/config/admin-oidc-provider.localhost.keystore.p12",
+      "keystoreType": "PKCS12",
+      "keystorePassword": "changeit"
+    }
+  },
+  "tokenCallbacks": [
+    {
+      "issuerId": "oidc",
+      "tokenExpiry": 900,
+      "requestMappings": [
+        {
+          "requestParam": "subject",
+          "match": ".*",
+          "claims": {
+            "aud": "${clientId}"
+          }
+        }
+      ]
+    }
+  ]
+}

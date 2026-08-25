@@ -273,6 +273,7 @@ services:
     image: tara-admin:latest
     depends_on: # TODO AUT-2090: Test whether services are healthy
       - admin-db
+      - admin-oidc-provider
       - hydra
       - smtp
     deploy:
@@ -281,6 +282,15 @@ services:
           memory: 650M
     environment:
       - spring.application.name=govsso-admin
+      - SPRING_PROFILES_ACTIVE=inMemoryAuth,oidcAuth
+      - spring.security.oauth2.client.provider.oidc.issuer-uri=https://admin-oidc-provider.localhost:10443/oidc
+      - spring.security.oauth2.client.registration.oidc.provider=oidc
+      - spring.security.oauth2.client.registration.oidc.client-id=govsso-admin-local
+      - spring.security.oauth2.client.registration.oidc.client-secret=local-secret
+      - spring.security.oauth2.client.registration.oidc.client-authentication-method=client_secret_basic
+      - spring.security.oauth2.client.registration.oidc.authorization-grant-type=authorization_code
+      - spring.security.oauth2.client.registration.oidc.redirect-uri={baseUrl}/login/oauth2/code/oidc
+      - spring.security.oauth2.client.registration.oidc.scope=openid,profile,email
       - tara-oidc.url=https://hydra.localhost:4445/
       - auth.tls-truststore-path=/var/certs/admin.localhost.truststore.p12
       - auth.tls-truststore-password=changeit
@@ -303,6 +313,7 @@ services:
       - BPL_DEBUG_ENABLED=true
       # TODO Tune memory calculator (see https://stackoverflow.com/a/67595951 for more information).
       - BPL_JVM_THREAD_COUNT=10
+      - JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/var/certs/admin.localhost.truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12
     networks:
       default:
         aliases:
@@ -314,6 +325,23 @@ services:
     volumes:
       - ./local/tls/admin/admin.localhost.truststore.p12:/var/certs/admin.localhost.truststore.p12:ro
       - ./local/tls/admin/admin.localhost.keystore.p12:/var/certs/admin.localhost.keystore.p12:ro
+
+  admin-oidc-provider: # Map to host ports 10xxx. Local OIDC provider for Admin.
+    image: ghcr.io/navikt/mock-oauth2-server:4.0.0
+    environment:
+      - JSON_CONFIG_PATH=/config/config.json
+      - SERVER_PORT=10443
+      - JAVA_TOOL_OPTIONS=-Djdk.tls.server.protocols=TLSv1.2
+    networks:
+      default:
+        aliases:
+          - admin-oidc-provider.localhost
+    ports:
+      - '10443:10443'
+    volumes:
+      - ./local/admin-oidc-provider/config.json:/config/config.json:ro
+      - ./local/admin-oidc-provider/login.ftl:/app/resources/templates/login.ftl:ro
+      - ./local/tls/admin-oidc-provider/admin-oidc-provider.localhost.keystore.p12:/config/admin-oidc-provider.localhost.keystore.p12:ro
 
   smtp: # Map to host ports 18xxx.
     image: mailhog/mailhog:v1.0.1
