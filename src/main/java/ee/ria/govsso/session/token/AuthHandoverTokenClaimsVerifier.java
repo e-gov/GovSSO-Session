@@ -3,7 +3,9 @@ package ee.ria.govsso.session.token;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
+import com.nimbusds.jwt.util.DateUtils;
 
 import java.time.Clock;
 import java.util.Date;
@@ -28,6 +30,21 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
                         JWTClaimNames.EXPIRATION_TIME,
                         CLIENT_ID_CLAIM));
         this.clock = clock;
+    }
+
+    @Override
+    public void verify(JWTClaimsSet claimsSet, SecurityContext context) throws BadJWTException {
+        super.verify(claimsSet, context);
+        // Expiration time validation is achieved by the combination of including it in required claims
+        // and DefaultJWTClaimsVerifier.verify.
+        verifyIssueTime(claimsSet);
+    }
+
+    private void verifyIssueTime(JWTClaimsSet claimsSet) throws BadJWTException {
+        Date issueTime = claimsSet.getIssueTime();
+        if (DateUtils.isAfter(issueTime, currentTime(), getMaxClockSkew())) {
+            throw new BadJWTException("JWT issue time ahead of current time");
+        }
     }
 
     @Override
