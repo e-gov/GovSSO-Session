@@ -1,15 +1,19 @@
 package ee.ria.govsso.session.token;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import lombok.Builder;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
+import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
+
+@Builder
 public record UserAttributes(
         String subject,
-        Instant issuedAt,
+        Instant sessionStartTime,
         String acr,
         String[] amr,
         String givenName,
@@ -20,29 +24,31 @@ public record UserAttributes(
 
     public static UserAttributes fromTaraIdToken(JWTClaimsSet claims) throws ParseException {
         Map<String, Object> profileAttributes = claims.getJSONObjectClaim("profile_attributes");
-        return new UserAttributes(
-                claims.getSubject(),
-                toInstant(claims.getIssueTime()),
-                claims.getStringClaim("acr"),
-                claims.getStringArrayClaim("amr"),
-                profileAttributes.get("given_name").toString(),
-                profileAttributes.get("family_name").toString(),
-                profileAttributes.get("date_of_birth").toString(),
-                claims.getStringClaim("phone_number"),
-                claims.getBooleanClaim("phone_number_verified"));
+        return UserAttributes.builder()
+                .subject(claims.getSubject())
+                .sessionStartTime(toInstant(claims.getIssueTime()))
+                .acr(claims.getStringClaim("acr"))
+                .amr(claims.getStringArrayClaim("amr"))
+                .givenName(profileAttributes.get("given_name").toString())
+                .familyName(profileAttributes.get("family_name").toString())
+                .birthdate(profileAttributes.get("date_of_birth").toString())
+                .phoneNumber(claims.getStringClaim("phone_number"))
+                .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
+                .build();
     }
 
     public static UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
-        return new UserAttributes(
-                claims.getSubject(),
-                toInstant(claims.getIssueTime()),
-                claims.getStringClaim("acr"),
-                claims.getStringArrayClaim("amr"),
-                claims.getStringClaim("given_name"),
-                claims.getStringClaim("family_name"),
-                claims.getStringClaim("birthdate"),
-                claims.getStringClaim("phone_number"),
-                claims.getBooleanClaim("phone_number_verified"));
+        return UserAttributes.builder()
+                .subject(claims.getSubject())
+                .sessionStartTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
+                .acr(claims.getStringClaim("acr"))
+                .amr(claims.getStringArrayClaim("amr"))
+                .givenName(claims.getStringClaim("given_name"))
+                .familyName(claims.getStringClaim("family_name"))
+                .birthdate(claims.getStringClaim("birthdate"))
+                .phoneNumber(claims.getStringClaim("phone_number"))
+                .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
+                .build();
     }
 
     private static Instant toInstant(Date date) {

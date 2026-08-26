@@ -53,21 +53,30 @@ public class StatisticsLogger {
 
     public void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
+            @NonNull LoginRequestInfo loginRequestInfo) {
+        logAccept(
+                requestType, userAttributes.subject(), userAttributes.sessionStartTime(), userAttributes.acr(),
+                userAttributes.amr(), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
+                loginRequestInfo.getAcr());
+    }
+
+    public void logAccept(
+            @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
             @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
         logAccept(
-                requestType, userAttributes.subject(), userAttributes.issuedAt(), userAttributes.acr(),
+                requestType, userAttributes.subject(), userAttributes.sessionStartTime(), userAttributes.acr(),
                 userAttributes.amr(), consentRequestInfo.getClient(), sessionId, null);
     }
 
     private void logAccept(
-            @NonNull AuthenticationRequestType requestType, @NonNull String subject, @NonNull Instant issuedAt,
+            @NonNull AuthenticationRequestType requestType, @NonNull String subject, @NonNull Instant sessionStartTime,
             @NonNull String acr, @NonNull String[] amrClaim, @NonNull Client client, @NonNull String sessionId,
             LevelOfAssurance requestAcr) {
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
         var country = subject.substring(0, 2);
         var idCode = subject.substring(2);
-        var sessionTime = Instant.now().getEpochSecond() - issuedAt.getEpochSecond();
+        var sessionTime = Instant.now().getEpochSecond() - sessionStartTime.getEpochSecond();
         var grantedAcr = acr.toUpperCase(Locale.ROOT);
         var amr = stream(amrClaim)
                 .filter(authenticationTypes::containsKey)
@@ -81,7 +90,7 @@ public class StatisticsLogger {
                 .registryCode(institution.getRegistryCode())
                 .sector(institution.getSector())
                 .sessionId(sessionId)
-                .sessionStartTime(Date.from(issuedAt))
+                .sessionStartTime(Date.from(sessionStartTime))
                 .sessionDuration(sessionTime)
                 .country(country)
                 .idCode(idCode)
