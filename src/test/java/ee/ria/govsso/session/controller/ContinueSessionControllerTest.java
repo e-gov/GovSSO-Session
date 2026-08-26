@@ -386,7 +386,7 @@ class ContinueSessionControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
-        assertErrorIsLogged("SsoException: ID Token acr value must be equal to or higher than hydra login request acr");
+        assertErrorIsLogged("SsoException: Session acr value must be equal to or higher than hydra login request acr");
     }
 
     @Test

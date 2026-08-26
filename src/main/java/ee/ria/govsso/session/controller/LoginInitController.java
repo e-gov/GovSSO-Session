@@ -21,6 +21,8 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.service.hydra.SessionToken;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
@@ -32,7 +34,6 @@ import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.ModelUtil;
 import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
-import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
@@ -60,9 +61,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
@@ -134,10 +133,10 @@ public class LoginInitController {
                 throw new SsoException(USER_INPUT, "SECURED_APP client type is not allowed to continue an existing session.");
             }
             List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
-            JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
-            if (idToken == null) {
+            SessionToken sessionToken = hydraService.getSessionTokenFromConsentContext(consents);
+            if (sessionToken == null) {
                 return reauthenticate(loginRequestInfo, request, response);
-            } else if (SecureAppUtil.isSecuredAppSession(consents)) {
+            } else if (sessionToken.sessionType() == SessionType.SECURED_APP_SESSION) {
                 // Sessions of type `SECURED_APP_SESSION` cannot be continued, so let's remove the session cookie and
                 // redirect the user back to the initial authentication endpoint. This will effectively restart the
                 // authentication process and since the session cookie will be missing, a new session will be created.
@@ -148,14 +147,14 @@ public class LoginInitController {
                     throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
                 }
                 return reauthenticate(loginRequestInfo, request, response);
-            } else if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
+            } else if (!isAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, sessionToken.userAttributes())) {
                 return openAcrView(loginRequestInfo);
             } else if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-                return acceptLogin(loginRequestInfo, idToken, metadata);
+                return acceptLogin(loginRequestInfo, sessionToken, metadata);
             } else {
                 if (CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
-                    return openSessionContinuationView(loginRequestInfo, idToken);
+                    return openSessionContinuationView(loginRequestInfo, sessionToken.userAttributes());
                 } else {
                     throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
                 }
@@ -221,52 +220,29 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + authenticationRequest.toURI().toString());
     }
 
-    @SneakyThrows
-    private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
+    private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {
         ModelAndView model = new ModelAndView("authView");
-        JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
-        String[] requestedScopes = loginRequestInfo.getRequestedScope();
+        addCommonViewObjects(model, loginRequestInfo);
 
-        if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
-            String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
-
-            model.addObject("givenName", profileAttributes.get("given_name"));
-            model.addObject("familyName", profileAttributes.get("family_name"));
-            if (profileAttributes.get("date_of_birth") != null)
-                model.addObject("dateOfBirth", LocalDate.parse((String) profileAttributes.get("date_of_birth")));
-            if (List.of(requestedScopes).contains(SCOPE_PHONE))
-                model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
-            model.addObject("subject", loginRequestInfo.getSubject());
-            model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
-            model.addObject("loginChallenge", loginRequestInfo.getChallenge());
-            model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
-            if (alertsService != null) {
-                model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
-                model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
-            }
-            model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-            ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
+        model.addObject("subject", loginRequestInfo.getSubject());
+        model.addObject("givenName", userAttributes.givenName());
+        model.addObject("familyName", userAttributes.familyName());
+        if (userAttributes.birthdate() != null) {
+            model.addObject("dateOfBirth", LocalDate.parse(userAttributes.birthdate()));
+        }
+        if (List.of(loginRequestInfo.getRequestedScope()).contains(SCOPE_PHONE)) {
+            model.addObject("phoneNumber", userAttributes.phoneNumber());
         }
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
-        return new ModelAndView("redirect:" + response.getRedirectTo());
-    }
-
-    @SneakyThrows
-    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken,
-                                                 ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
-        UserAttributes userAttributes = UserAttributes.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
-        statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
-        return new ModelAndView("redirect:" + response.getRedirectTo());
-    }
-
     private ModelAndView openAcrView(LoginRequestInfo loginRequestInfo) {
         ModelAndView model = new ModelAndView("acrView");
+        addCommonViewObjects(model, loginRequestInfo);
+        return model;
+    }
+
+    private void addCommonViewObjects(ModelAndView model, LoginRequestInfo loginRequestInfo) {
         String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
         model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
         model.addObject("loginChallenge", loginRequestInfo.getChallenge());
@@ -277,7 +253,21 @@ public class LoginInitController {
         }
         model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
         ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
-        return model;
+    }
+
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, SessionToken sessionToken, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptSessionContinuation(sessionToken, loginRequestInfo, metadata);
+        statisticsLogger.logAccept(CONTINUE_SESSION, sessionToken.userAttributes(), loginRequestInfo);
+        return new ModelAndView("redirect:" + response.getRedirectTo());
+    }
+
+    @SneakyThrows
+    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken,
+                                                 ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
+        UserAttributes userAttributes = UserAttributes.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+        statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
+        return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
     private boolean shouldSkipContinuationView(Metadata metadata, List<Consent> consents) {
@@ -309,15 +299,11 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
     }
 
-    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        try {
-            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
-            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
-            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
-            return tokenAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
-        }
+    private boolean isAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {
+        LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+        LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+        LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
+        return sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
     }
 
     private void validateAuthHandoverToken(SignedJWT token) {

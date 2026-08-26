@@ -1,6 +1,7 @@
 package ee.ria.govsso.session.token;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import lombok.Builder;
 
 import java.text.ParseException;
@@ -33,6 +34,13 @@ public record UserAttributes(
         };
     }
 
+    public static UserAttributes from(SessionType sessionType, JWTClaimsSet claims) throws ParseException {
+        return switch (sessionType) {
+            case SECURED_APP_WEB_SESSION -> fromAuthHandoverToken(claims);
+            case WEB_SESSION, SECURED_APP_SESSION -> fromTaraIdToken(claims);
+        };
+    }
+
     public static UserAttributes fromTaraIdToken(JWTClaimsSet claims) throws ParseException {
         Map<String, Object> profileAttributes = claims.getJSONObjectClaim("profile_attributes");
         return UserAttributes.builder()
@@ -42,9 +50,9 @@ public record UserAttributes(
                 .authTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
-                .givenName(profileAttributes.get("given_name").toString())
-                .familyName(profileAttributes.get("family_name").toString())
-                .birthdate(profileAttributes.get("date_of_birth").toString())
+                .givenName(toStringOrNull(profileAttributes.get("given_name")))
+                .familyName(toStringOrNull(profileAttributes.get("family_name")))
+                .birthdate(toStringOrNull(profileAttributes.get("date_of_birth")))
                 .phoneNumber(claims.getStringClaim("phone_number"))
                 .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
                 .build();
@@ -68,5 +76,9 @@ public record UserAttributes(
 
     private static Instant toInstant(Date date) {
         return date == null ? null : date.toInstant();
+    }
+
+    private static String toStringOrNull(Object value) {
+        return value == null ? null : value.toString();
     }
 }
