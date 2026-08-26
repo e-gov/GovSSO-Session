@@ -24,6 +24,7 @@ import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.token.AuthHandoverTokenVerifier;
+import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
@@ -240,10 +241,12 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
-    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken, ClientRequestMetadata metadata) {
+    @SneakyThrows
+    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken,
+                                                 ClientRequestMetadata metadata) {
         LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
-        // TODO Add a logger method that accepts auth handover token.
-//        statisticsLogger.logAccept(requestType, idToken, loginRequestInfo);
+        UserAttributes userAttributes = UserAttributes.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+        statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
