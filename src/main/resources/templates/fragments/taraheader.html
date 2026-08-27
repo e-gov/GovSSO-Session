@@ -7,15 +7,15 @@
             <nav role="navigation" th:aria-label="#{label.aria.language-selection.navigation}">
                 <ul class="c-lang-list">
                     <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('et')}">
-                        <a class="c-lang-list__link" th:href="@{''(lang='et')}"
+                        <a class="c-lang-list__link" th:href="${localeUrls.et}"
                            th:hreflang="et" th:lang="et" th:text="#{label.header.et}">EESTI</a>
                     </li>
                     <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('en')}">
-                        <a class="c-lang-list__link" th:href="@{''(lang='en')}"
+                        <a class="c-lang-list__link" th:href="${localeUrls.en}"
                            th:hreflang="en" th:lang="en" th:text="#{label.header.en}">ENGLISH</a>
                     </li>
                     <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('ru')}">
-                        <a class="c-lang-list__link" th:href="@{''(lang='ru')}"
+                        <a class="c-lang-list__link" th:href="${localeUrls.ru}"
                            th:hreflang="ru" th:lang="ru" th:text="#{label.header.ru}">РУССКИЙ</a>
                     </li>
                 </ul>
