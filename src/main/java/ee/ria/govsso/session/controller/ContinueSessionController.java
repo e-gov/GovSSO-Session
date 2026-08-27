@@ -16,7 +16,6 @@ import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
-import ee.ria.govsso.session.util.PromptUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -99,7 +98,7 @@ public class ContinueSessionController {
         LoginRequestInfoUtil.validateScopes(loginRequestInfo);
         loginRequestInfo.validateAcr();
 
-        Prompt prompt = PromptUtil.getAndValidatePromptFromRequestUrl(loginRequestInfo.getRequestUrl());
+        Prompt prompt = loginRequestInfo.getAndValidatePrompt();
         if (prompt != Prompt.CONSENT) {
             throw new SsoException(ErrorCode.USER_INPUT, "Request URL must contain prompt=consent");
         }

@@ -19,11 +19,6 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Cookie;
 import io.restassured.matcher.DetailedCookieMatcher;
 import io.restassured.matcher.RestAssuredMatchers;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +36,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.NestedTestConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -1474,7 +1473,7 @@ class LoginInitControllerTest extends BaseTest {
                 .cookies(emptyMap())
                 .body("error", equalTo("USER_INPUT"));
 
-        assertErrorIsLogged("SsoException: Request URL contains more than 1 prompt values");
+        assertErrorIsLogged("SsoException: Request URL contains more than 1 parameter with name \"prompt\"");
     }
 
     @Test
