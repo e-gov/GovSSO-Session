@@ -119,7 +119,7 @@ public class LoginInitController {
         } else {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
             if (loginRequestInfo.getClient().isSecuredApp()) {
-                throw new SsoException(USER_INPUT, "SECURED_APP client type is not allowed to continue an existing session.");
+                return reauthenticate(loginRequestInfo, request, response);
             }
             List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
             JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
