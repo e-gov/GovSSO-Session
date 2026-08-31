@@ -18,6 +18,7 @@ public class Client {
     private String accessTokenStrategy;
     private List<String> audience;
     private String authorizationCodeGrantRefreshTokenLifespan;
+    private String scope;
 
     @JsonIgnore
     public boolean isSecuredApp() {

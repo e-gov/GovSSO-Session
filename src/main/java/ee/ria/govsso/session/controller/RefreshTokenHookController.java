@@ -83,10 +83,10 @@ public class RefreshTokenHookController {
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
         if (isAuthHandoverTokenRequest(hookRequest)) {
-            if (!consentRequestInfo.getClient().isSecuredApp()) {
+            if (!consentRequestInfo.getClient().getScope().contains(SCOPE_AUTH_HANDOVER)) {
                 throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                        "Refresh token hook request must not contain auth handover scope, because only %s clients are allowed to issue auth handover tokens."
-                                .formatted(ClientType.SECURED_APP));
+                        ("Refresh token hook request must not contain auth handover scope, because %s scope is " +
+                                "not included in the list of scopes for the client.").formatted(SCOPE_AUTH_HANDOVER));
             }
             validateGrantedAudience(hookRequest);
         }
