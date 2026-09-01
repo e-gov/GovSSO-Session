@@ -53,10 +53,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +65,6 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
-import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
-import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Slf4j
 @Validated
@@ -88,7 +83,6 @@ public class LoginInitController {
     private final AuthHandoverTokenVerifier authHandoverTokenVerifier;
     @Autowired(required = false)
     private AlertsService alertsService;
-    private final Clock clock;
 
     @GetMapping(value = LOGIN_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView loginInit(
@@ -184,7 +178,7 @@ public class LoginInitController {
         } catch (ParseException ex) {
             throw new SsoException(USER_INPUT, "Unable to parse govsso_auth_handover_token", ex);
         }
-        validateAuthHandoverToken(authHandoverToken);
+        authHandoverTokenVerifier.verify(authHandoverToken);
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only default client type is allowed to use an auth handover token");
         }
@@ -300,36 +294,6 @@ public class LoginInitController {
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
-    }
-
-    private void validateAuthHandoverToken(SignedJWT token) {
-        JWTClaimsSet claims = authHandoverTokenVerifier.verify(token);
-        Instant now = clock.instant();
-        Instant sessionExpiry = extractAndValidateDateClaim(claims, SESSION_EXPIRY_CLAIM);
-        if (sessionExpiry.isBefore(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Session handed over by the auth handover token has expired");
-        }
-        Instant authTime = extractAndValidateDateClaim(claims, AUTH_TIME_CLAIM);
-        if (authTime.plus(ssoConfigurationProperties.getSessionMaxDuration()).isBefore(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Session handed over by the auth handover token has reached the maximum session duration");
-        }
-    }
-
-    private Instant extractAndValidateDateClaim(JWTClaimsSet claims, String claimName) {
-        Date claimValue;
-        try {
-            claimValue = claims.getDateClaim(claimName);
-        } catch (ParseException e) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token %s claim is not a valid date".formatted(claimName));
-        }
-        if (claimValue == null) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token does not contain %s claim".formatted(claimName));
-        }
-        return claimValue.toInstant();
     }
 
     private String extractQueryParam(URL url, String paramName) {

@@ -30,11 +30,17 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.security.KeyStore;
+import java.text.ParseException;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 
 import static com.nimbusds.jose.jwk.source.JWKSourceBuilder.DEFAULT_HTTP_SIZE_LIMIT;
 import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.HYDRA;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDOVER;
+import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
+import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Slf4j
 @Component
@@ -49,6 +55,8 @@ public class AuthHandoverTokenVerifier {
     private final ClientRequestLogger requestLogger =
             new ClientRequestLogger(AuthHandoverTokenVerifier.class, HYDRA);
     private final DefaultJWTProcessor<SecurityContext> jwtProcessor;
+    private final Duration sessionMaxDuration;
+    private final Clock clock;
 
     @SneakyThrows
     AuthHandoverTokenVerifier(
@@ -66,11 +74,14 @@ public class AuthHandoverTokenVerifier {
         jwtProcessor = new DefaultJWTProcessor<>();
         jwtProcessor.setJWSKeySelector(new JWSVerificationKeySelector<>(EXPECTED_SIGNING_ALGORITHM, jwkSource));
         jwtProcessor.setJWTClaimsSetVerifier(claimsVerifier);
+        sessionMaxDuration = ssoConfigurationProperties.getSessionMaxDuration();
+        this.clock = clock;
     }
 
-    public JWTClaimsSet verify(SignedJWT token) {
+    public void verify(SignedJWT token) {
+        JWTClaimsSet claims;
         try {
-            return jwtProcessor.process(token, null);
+            claims = jwtProcessor.process(token, null);
         } catch (KeySourceException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
                     "Unable to retrieve JSON web key set for auth handover token verification", ex);
@@ -78,6 +89,36 @@ public class AuthHandoverTokenVerifier {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     "Auth handover token verification failed", ex);
         }
+        verifySessionNotExpired(claims);
+    }
+
+    private void verifySessionNotExpired(JWTClaimsSet claims) {
+        Instant now = clock.instant();
+        Instant sessionExpiry = extractAndValidateDateClaim(claims, SESSION_EXPIRY_CLAIM);
+        if (sessionExpiry.isBefore(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Session handed over by the auth handover token has expired");
+        }
+        Instant authTime = extractAndValidateDateClaim(claims, AUTH_TIME_CLAIM);
+        if (authTime.plus(sessionMaxDuration).isBefore(now)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Session handed over by the auth handover token has reached the maximum session duration");
+        }
+    }
+
+    private Instant extractAndValidateDateClaim(JWTClaimsSet claims, String claimName) {
+        Date claimValue;
+        try {
+            claimValue = claims.getDateClaim(claimName);
+        } catch (ParseException e) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token %s claim is not a valid date".formatted(claimName));
+        }
+        if (claimValue == null) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token does not contain %s claim".formatted(claimName));
+        }
+        return claimValue.toInstant();
     }
 
     private ResourceRetriever createResourceRetriever(KeyStore trustStore) {
