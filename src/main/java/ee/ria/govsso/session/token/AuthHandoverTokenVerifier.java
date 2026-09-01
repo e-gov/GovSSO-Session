@@ -14,23 +14,23 @@ import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URL;
-import java.security.KeyStore;
 import java.time.Clock;
+import java.time.Duration;
 
 import static com.nimbusds.jose.jwk.source.JWKSourceBuilder.DEFAULT_HTTP_SIZE_LIMIT;
 import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.HYDRA;
@@ -40,11 +40,12 @@ import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDO
 @Component
 public class AuthHandoverTokenVerifier {
 
-    static final String JWK_SET_PATH = ".well-known/jwks.json";
+    static final String JWT_ACCESS_TOKEN_PATH = "admin/keys/hydra.jwt.access-token";
+    private static final String SCOPE_CLAIM = "scope";
     private static final JWSAlgorithm EXPECTED_SIGNING_ALGORITHM = JWSAlgorithm.RS256;
-    private static final int CONNECT_TIMEOUT_MILLISECONDS = 5000;
-    private static final int READ_TIMEOUT_MILLISECONDS = 5000;
-    private static final int MAX_CLOCK_SKEW_SECONDS = 0;
+    private static final Duration CONNECT_TIMEOUT = Duration.ofMillis(5000);
+    private static final Duration READ_TIMEOUT = Duration.ofMillis(5000);
+    private static final Duration MAX_CLOCK_SKEW = Duration.ZERO;
 
     private final ClientRequestLogger requestLogger =
             new ClientRequestLogger(AuthHandoverTokenVerifier.class, HYDRA);
@@ -53,24 +54,40 @@ public class AuthHandoverTokenVerifier {
     @SneakyThrows
     AuthHandoverTokenVerifier(
             SsoConfigurationProperties ssoConfigurationProperties,
-            @Qualifier("hydraTrustStore") KeyStore hydraTrustStore,
+            HydraConfigurationProperties hydraConfigurationProperties,
+            @Qualifier("hydraTrustContext") SSLContext hydraTrustContext,
             Clock clock) {
-        URL baseUrl = ssoConfigurationProperties.getBaseUrl();
-        URL jwkSetUrl = new URL(baseUrl, JWK_SET_PATH);
+        URL jwkSetUrl = new URL(hydraConfigurationProperties.adminUrl(), JWT_ACCESS_TOKEN_PATH);
+        /*
+         * JWKSourceBuilder defaults: no JWK set is fetched at startup, nor periodically.
+         * The JWK set is fetched on the first validation and cached for 5 minutes.
+         * If a token's kid or alg matches no key in the cached set, a refetch is attempted,
+         * rate-limited to once per 30 seconds.
+         * Thirty seconds before the cache expires, a window opens during which a validation
+         * triggers a background refetch; validations keep using the cached set meanwhile.
+         * If no validation occurs within that 4:30-5:00 window, no refetch is triggered and
+         * the next validation waits for the JWK set to be retrieved.
+         * Retries and outage tolerance are off, so a failed fetch fails the validation.
+         */
         JWKSource<SecurityContext> jwkSource = JWKSourceBuilder
-                .create(jwkSetUrl, createResourceRetriever(hydraTrustStore))
+                .create(jwkSetUrl, createResourceRetriever(hydraTrustContext))
+                .build();
+        URL baseUrl = ssoConfigurationProperties.getBaseUrl();
+        JWTClaimsSet exactMatchClaims = new JWTClaimsSet.Builder()
+                .issuer(baseUrl.toString())
+                .claim(SCOPE_CLAIM, SCOPE_AUTH_HANDOVER)
                 .build();
         AuthHandoverTokenClaimsVerifier claimsVerifier = new AuthHandoverTokenClaimsVerifier(
-                baseUrl.toString(), baseUrl.toString(), SCOPE_AUTH_HANDOVER, clock);
-        claimsVerifier.setMaxClockSkew(MAX_CLOCK_SKEW_SECONDS);
+                baseUrl.toString(), exactMatchClaims, clock);
+        claimsVerifier.setMaxClockSkew(Math.toIntExact(MAX_CLOCK_SKEW.toSeconds()));
         jwtProcessor = new DefaultJWTProcessor<>();
         jwtProcessor.setJWSKeySelector(new JWSVerificationKeySelector<>(EXPECTED_SIGNING_ALGORITHM, jwkSource));
         jwtProcessor.setJWTClaimsSetVerifier(claimsVerifier);
     }
 
-    public JWTClaimsSet verify(SignedJWT token) {
+    public void verify(SignedJWT token) {
         try {
-            return jwtProcessor.process(token, null);
+            jwtProcessor.process(token, null);
         } catch (KeySourceException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
                     "Unable to retrieve JSON web key set for auth handover token verification", ex);
@@ -80,13 +97,13 @@ public class AuthHandoverTokenVerifier {
         }
     }
 
-    private ResourceRetriever createResourceRetriever(KeyStore trustStore) {
+    private ResourceRetriever createResourceRetriever(SSLContext hydraTrustContext) {
         DefaultResourceRetriever resourceRetriever = new DefaultResourceRetriever(
-                CONNECT_TIMEOUT_MILLISECONDS,
-                READ_TIMEOUT_MILLISECONDS,
+                Math.toIntExact(CONNECT_TIMEOUT.toMillis()),
+                Math.toIntExact(READ_TIMEOUT.toMillis()),
                 DEFAULT_HTTP_SIZE_LIMIT,
                 true,
-                createSslSocketFactory(trustStore));
+                hydraTrustContext.getSocketFactory());
         return url -> {
             requestLogger.request(HttpMethod.GET, url.toString()).log();
             try {
@@ -98,14 +115,5 @@ public class AuthHandoverTokenVerifier {
                 throw ex;
             }
         };
-    }
-
-    @SneakyThrows
-    private SSLSocketFactory createSslSocketFactory(KeyStore trustStore) {
-        return SSLContextBuilder.create()
-                .setKeyStoreType(trustStore.getType())
-                .loadTrustMaterial(trustStore, null)
-                .build()
-                .getSocketFactory();
     }
 }

@@ -9,6 +9,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -137,6 +139,15 @@ class WebClientConfiguration {
         return SslContextBuilder.forClient()
                 .trustManager(trustManagerFactory)
                 .keyManager(keyManagerFactory)
+                .build();
+    }
+
+    @Bean
+    @SneakyThrows
+    SSLContext hydraTrustContext(KeyStore hydraTrustStore) {
+        return SSLContextBuilder.create()
+                .setKeyStoreType(hydraTrustStore.getType())
+                .loadTrustMaterial(hydraTrustStore, null)
                 .build();
     }
 

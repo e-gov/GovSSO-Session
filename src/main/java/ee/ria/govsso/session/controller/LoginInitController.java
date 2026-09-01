@@ -71,7 +71,6 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
-import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Slf4j
 @Validated
@@ -217,7 +216,7 @@ public class LoginInitController {
 
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo,
                                                        HttpServletRequest request, SignedJWT authHandoverToken) {
-        validateAuthHandoverToken(authHandoverToken);
+        authHandoverTokenVerifier.verify(authHandoverToken);
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }
@@ -274,11 +273,21 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
-    @SneakyThrows
     private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken,
                                                  ClientRequestMetadata metadata) {
         LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
-        UserAttributes userAttributes = UserAttributes.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+        JWTClaimsSet jwtClaimsSet;
+        try {
+            jwtClaimsSet = authHandoverToken.getJWTClaimsSet();
+        } catch (ParseException ex) {
+            throw new SsoException(USER_INPUT, "Unable to parse auth handover token claims", ex);
+        }
+        UserAttributes userAttributes;
+        try {
+            userAttributes = UserAttributes.fromAuthHandoverToken(jwtClaimsSet);
+        } catch (ParseException ex) {
+            throw new SsoException(USER_INPUT, "Unable to parse user attributes", ex);
+        }
         statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
@@ -333,36 +342,6 @@ public class LoginInitController {
         } catch (ParseException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
         }
-    }
-
-    private void validateAuthHandoverToken(SignedJWT token) {
-        JWTClaimsSet claims = authHandoverTokenVerifier.verify(token);
-        Instant now = clock.instant();
-        Instant sessionExpiry = extractAndValidateDateClaim(claims, SESSION_EXPIRY_CLAIM);
-        if (sessionExpiry.isBefore(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Session handed over by the auth handover token has expired");
-        }
-        Instant authTime = extractAndValidateDateClaim(claims, AUTH_TIME_CLAIM);
-        if (authTime.plus(ssoConfigurationProperties.getSessionMaxDuration()).isBefore(now)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Session handed over by the auth handover token has reached the maximum session duration");
-        }
-    }
-
-    private Instant extractAndValidateDateClaim(JWTClaimsSet claims, String claimName) {
-        Date claimValue;
-        try {
-            claimValue = claims.getDateClaim(claimName);
-        } catch (ParseException e) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token %s claim is not a valid date".formatted(claimName));
-        }
-        if (claimValue == null) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token does not contain %s claim".formatted(claimName));
-        }
-        return claimValue.toInstant();
     }
 
     private String extractQueryParam(URL url, String paramName) {

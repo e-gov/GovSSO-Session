@@ -13,22 +13,32 @@ import java.util.Set;
 
 public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<SecurityContext> {
 
-    private static final String SCOPE_CLAIM = "scope";
     private static final String CLIENT_ID_CLAIM = "client_id";
+    private static final String ACR_CLAIM = "acr";
+    private static final String AMR_CLAIM = "amr";
+    private static final String AUTH_TIME_CLAIM = "auth_time";
+    private static final String BIRTHDATE_CLAIM = "birthdate";
+    private static final String FAMILY_NAME_CLAIM = "family_name";
+    private static final String GIVEN_NAME_CLAIM = "given_name";
+    private static final String INITIATOR_CLAIM = "initiator";
+    private static final String SESSION_EXPIRY_CLAIM = "session_expiry";
+
+    private static final Set<String> requiredClaims = Set.of(
+            JWTClaimNames.SUBJECT,
+            JWTClaimNames.ISSUED_AT,
+            JWTClaimNames.EXPIRATION_TIME,
+            JWTClaimNames.JWT_ID,
+            CLIENT_ID_CLAIM, ACR_CLAIM,
+            AMR_CLAIM, AUTH_TIME_CLAIM,
+            BIRTHDATE_CLAIM, FAMILY_NAME_CLAIM,
+            GIVEN_NAME_CLAIM, INITIATOR_CLAIM,
+            SESSION_EXPIRY_CLAIM
+    );
 
     private final Clock clock;
 
-    AuthHandoverTokenClaimsVerifier(String expectedIssuer, String expectedAudience, String expectedScope,
-                                    Clock clock) {
-        super(expectedAudience,
-                new JWTClaimsSet.Builder()
-                        .issuer(expectedIssuer)
-                        .claim(SCOPE_CLAIM, expectedScope)
-                        .build(),
-                Set.of(JWTClaimNames.SUBJECT,
-                        JWTClaimNames.ISSUED_AT,
-                        JWTClaimNames.EXPIRATION_TIME,
-                        CLIENT_ID_CLAIM));
+    AuthHandoverTokenClaimsVerifier(String expectedAudience, JWTClaimsSet exactMatchClaims, Clock clock) {
+        super(expectedAudience, exactMatchClaims, requiredClaims);
         this.clock = clock;
     }
 
