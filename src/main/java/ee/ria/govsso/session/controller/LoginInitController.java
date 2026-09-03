@@ -11,6 +11,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -52,6 +53,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
@@ -112,7 +114,11 @@ public class LoginInitController {
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             if (govssoAuthHandoverToken != null) {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
-                return authenticateWithHandoverToken(govssoAuthHandoverToken, loginRequestInfo, request);
+                SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
+                if (clientAcceptsAuthHandover(loginRequestInfo.getClient(), authHandoverToken)) {
+                    request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
+                    return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken);
+                }
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             return authenticateWithTara(loginRequestInfo, response);
@@ -173,14 +179,41 @@ public class LoginInitController {
         }
     }
 
-    private ModelAndView authenticateWithHandoverToken(String govssoAuthHandoverToken, LoginRequestInfo loginRequestInfo,
-                                                       HttpServletRequest request) {
-        JWT authHandoverToken;
+    private boolean clientAcceptsAuthHandover(Client client, JWT authHandoverToken) {
+        Metadata metadata = client.getMetadata();
+        if (!metadata.getAllowSecuredAppWebSession()) {
+            return false;
+        }
+        Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
+        if (securedAppSessionMaxDuration != null) {
+            Date authTime;
+            try {
+                authTime = authHandoverToken.getJWTClaimsSet().getDateClaim(HydraService.AUTH_TIME_CLAIM);
+            } catch (ParseException ex) {
+                throw new SsoException(USER_INPUT, "Unable to parse auth handover token claims", ex);
+            }
+            if (authTime == null) {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
+                        "Auth handover token does not contain %s claim".formatted(AUTH_TIME_CLAIM));
+            }
+            Duration securedAppSessionAge = Duration.between(authTime.toInstant(), Instant.now(clock));
+            if (securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private SignedJWT parseAuthHandoverToken(String govssoAuthHandoverToken) {
         try {
-            authHandoverToken = SignedJWT.parse(govssoAuthHandoverToken);
+            return SignedJWT.parse(govssoAuthHandoverToken);
         } catch (ParseException ex) {
             throw new SsoException(USER_INPUT, "Unable to parse govsso_auth_handover_token", ex);
         }
+    }
+
+    private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo,
+                                                       HttpServletRequest request, SignedJWT authHandoverToken) {
         validateAuthHandoverToken(authHandoverToken);
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only DEFAULT_APP client type is allowed to use an auth handover token");
