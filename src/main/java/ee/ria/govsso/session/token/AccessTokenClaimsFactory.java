@@ -1,10 +1,8 @@
 package ee.ria.govsso.session.token;
 
-import com.nimbusds.jwt.JWTClaimsSet;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 
@@ -12,11 +10,6 @@ import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 
 @Component
 public class AccessTokenClaimsFactory {
-
-    public AccessTokenClaims from(JWTClaimsSet taraIdTokenClaims, List<String> scopes, boolean isLongLivingSession, Instant authenticatedAt)
-            throws ParseException {
-        return from(UserAttributes.fromTaraIdToken(taraIdTokenClaims), scopes, isLongLivingSession, authenticatedAt);
-    }
 
     public AccessTokenClaims from(UserAttributes userAttributes, List<String> scopes, boolean isLongLivingSession, Instant authenticatedAt) {
         AccessTokenClaims.AccessTokenClaimsBuilder builder = AccessTokenClaims.builder()
