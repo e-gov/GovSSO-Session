@@ -22,13 +22,13 @@ public class Metadata {
     private Boolean allowSecuredAppWebSession;
     private String securedAppSessionMaxDuration;
 
-    public boolean getAllowSecuredAppWebSession() {
+    public boolean isAllowSecuredAppWebSession() {
         return requireNonNullElse(allowSecuredAppWebSession, false);
     }
 
     @JsonIgnore
     public Duration getSecuredAppSessionMaxAge() {
-        if (!getAllowSecuredAppWebSession()) {
+        if (!isAllowSecuredAppWebSession()) {
             throw new IllegalStateException(
                     "Client must allow %s sessions".formatted(SessionType.SECURED_APP_WEB_SESSION));
         }

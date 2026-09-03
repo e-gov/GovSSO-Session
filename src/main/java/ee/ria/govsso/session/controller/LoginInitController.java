@@ -181,7 +181,7 @@ public class LoginInitController {
 
     private boolean clientAcceptsAuthHandover(Client client, JWT authHandoverToken) {
         Metadata metadata = client.getMetadata();
-        if (!metadata.getAllowSecuredAppWebSession()) {
+        if (!metadata.isAllowSecuredAppWebSession()) {
             return false;
         }
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
