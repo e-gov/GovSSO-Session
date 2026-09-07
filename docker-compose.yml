@@ -290,7 +290,6 @@ services:
       - spring.security.oauth2.client.provider.oidc.issuer-uri=https://admin-oidc-provider.localhost:27443/oidc
       - spring.security.oauth2.client.registration.oidc.client-id=govsso-admin-local
       - spring.security.oauth2.client.registration.oidc.client-secret=local-secret
-      - spring.security.oauth2.client.registration.oidc.scope=openid
       - tara-oidc.url=https://hydra.localhost:4445/
       - auth.tls-truststore-path=/var/certs/admin.localhost.truststore.p12
       - auth.tls-truststore-password=changeit
