@@ -65,5 +65,7 @@
     "https://test2.test"
   ],
   "access_token_lifespan": "15m",
-  "paasuke_parameters": "ns=BR_REPRIGHT"
+  "paasuke_parameters": "ns=BR_REPRIGHT",
+  "allow_secured_app_web_session": true,
+  "secured_app_session_max_duration": "6d"
 }

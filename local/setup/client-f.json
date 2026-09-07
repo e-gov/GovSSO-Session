@@ -58,5 +58,7 @@
   "is_user_consent_required": true,
   "skip_user_consent_client_ids": [
     "client-c"
-  ]
+  ],
+  "allow_secured_app_web_session": true,
+  "secured_app_session_max_duration": "6d"
 }

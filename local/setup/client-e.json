@@ -55,5 +55,7 @@
   "sla_notification_emails": [
     "slanotifications.cliente@example.org"
   ],
-  "is_user_consent_required": false
+  "is_user_consent_required": false,
+  "allow_secured_app_web_session": true,
+  "secured_app_session_max_duration": "6d"
 }

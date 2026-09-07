@@ -56,5 +56,7 @@
     "slanotifications.client-mock-acr-high@example.org"
   ],
   "is_user_consent_required": true,
-  "minimum_acr_value": "high"
+  "minimum_acr_value": "high",
+  "allow_secured_app_web_session": true,
+  "secured_app_session_max_duration": "6d"
 }
