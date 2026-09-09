@@ -26,6 +26,7 @@ import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.token.AuthHandoverTokenVerifier;
 import ee.ria.govsso.session.token.UserAttributes;
+import ee.ria.govsso.session.token.UserAttributesFactory;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
@@ -87,6 +88,7 @@ public class LoginInitController {
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
     private final AuthHandoverTokenVerifier authHandoverTokenVerifier;
+    private final UserAttributesFactory userAttributesFactory;
     @Autowired(required = false)
     private AlertsService alertsService;
     private final Clock clock;
@@ -284,7 +286,7 @@ public class LoginInitController {
         }
         UserAttributes userAttributes;
         try {
-            userAttributes = UserAttributes.fromAuthHandoverToken(jwtClaimsSet);
+            userAttributes = userAttributesFactory.fromAuthHandoverToken(jwtClaimsSet);
         } catch (ParseException ex) {
             throw new SsoException(USER_INPUT, "Unable to parse user attributes", ex);
         }

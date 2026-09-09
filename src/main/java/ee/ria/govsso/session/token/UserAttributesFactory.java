@@ -1,0 +1,48 @@
+package ee.ria.govsso.session.token;
+
+import com.nimbusds.jwt.JWTClaimsSet;
+import org.springframework.stereotype.Component;
+
+import java.text.ParseException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
+
+import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
+
+@Component
+public class UserAttributesFactory {
+
+    public UserAttributes fromTaraIdToken(JWTClaimsSet claims) throws ParseException {
+        Map<String, Object> profileAttributes = claims.getJSONObjectClaim("profile_attributes");
+        return UserAttributes.builder()
+                .subject(claims.getSubject())
+                .sessionStartTime(toInstant(claims.getIssueTime()))
+                .acr(claims.getStringClaim("acr"))
+                .amr(claims.getStringArrayClaim("amr"))
+                .givenName(profileAttributes.get("given_name").toString())
+                .familyName(profileAttributes.get("family_name").toString())
+                .birthdate(profileAttributes.get("date_of_birth").toString())
+                .phoneNumber(claims.getStringClaim("phone_number"))
+                .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
+                .build();
+    }
+
+    public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
+        return UserAttributes.builder()
+                .subject(claims.getSubject())
+                .sessionStartTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
+                .acr(claims.getStringClaim("acr"))
+                .amr(claims.getStringArrayClaim("amr"))
+                .givenName(claims.getStringClaim("given_name"))
+                .familyName(claims.getStringClaim("family_name"))
+                .birthdate(claims.getStringClaim("birthdate"))
+                .phoneNumber(claims.getStringClaim("phone_number"))
+                .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
+                .build();
+    }
+
+    private static Instant toInstant(Date date) {
+        return date == null ? null : date.toInstant();
+    }
+}

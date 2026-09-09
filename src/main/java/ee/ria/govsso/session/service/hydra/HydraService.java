@@ -11,6 +11,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
+import ee.ria.govsso.session.token.UserAttributesFactory;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,7 @@ public class HydraService {
     @Qualifier("hydraRequestLogger")
     private final ClientRequestLogger requestLogger;
     private final AccessTokenClaimsFactory accessTokenClaimsFactory;
+    private final UserAttributesFactory userAttributesFactory;
     private final HydraConfigurationProperties hydraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
 
@@ -434,11 +436,11 @@ public class HydraService {
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> {
                 claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
-                yield UserAttributes.fromAuthHandoverToken(claims);
+                yield userAttributesFactory.fromAuthHandoverToken(claims);
             }
             case WEB_SESSION, SECURED_APP_SESSION -> {
                 claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
-                yield UserAttributes.fromTaraIdToken(claims);
+                yield userAttributesFactory.fromTaraIdToken(claims);
             }
         };
     }
