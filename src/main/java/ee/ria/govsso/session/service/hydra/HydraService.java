@@ -12,6 +12,7 @@ import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.token.UserAttributesFactory;
+import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -565,8 +566,8 @@ public class HydraService {
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> {
                 UserAttributes userAttributes = extractUserAttributes(context);
-                Instant sessionStartTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-                Instant sessionExpiry = requireAuthHandoverClaim(userAttributes.sessionExpiry(), SESSION_EXPIRY_CLAIM);
+                Instant sessionStartTime = AuthHandoverTokenUtil.requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+                Instant sessionExpiry = AuthHandoverTokenUtil.requireAuthHandoverClaim(userAttributes.sessionExpiry(), SESSION_EXPIRY_CLAIM);
                 Instant maxDurationExpiration = sessionStartTime.plus(ssoConfigurationProperties.getSessionMaxDuration());
                 yield sessionExpiry.isBefore(maxDurationExpiration) ? sessionExpiry : maxDurationExpiration;
             }
@@ -577,13 +578,5 @@ public class HydraService {
             case SECURED_APP_SESSION -> throw new IllegalStateException(
                     "Session max age expiration is not applicable to %s, its max lifetime is enforced by Hydra".formatted(sessionType));
         };
-    }
-
-    private static Instant requireAuthHandoverClaim(Instant value, String claimName) {
-        if (value == null) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
-                    "Auth handover token does not contain %s claim".formatted(claimName));
-        }
-        return value;
     }
 }
