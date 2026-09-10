@@ -32,7 +32,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -563,30 +562,28 @@ public class HydraService {
 
     private Instant getSessionMaxAgeExpiration(Context context) throws ParseException {
         SessionType sessionType = context.getSessionTypeOrFallback();
-        JWTClaimsSet claims;
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> {
-                claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
-                Date sessionExpiry = claims.getDateClaim(SESSION_EXPIRY_CLAIM);
-                if (sessionExpiry == null) {
-                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
-                            "Auth handover token does not contain %s claim".formatted(SESSION_EXPIRY_CLAIM));
-                }
-                Date authTime = claims.getDateClaim(AUTH_TIME_CLAIM);
-                if (authTime == null) {
-                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
-                            "Auth handover token does not contain %s claim".formatted(AUTH_TIME_CLAIM));
-                }
-                Instant maxDurationExpiration = authTime.toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
-                Instant handoverExpiration = sessionExpiry.toInstant();
-                yield handoverExpiration.isBefore(maxDurationExpiration) ? handoverExpiration : maxDurationExpiration;
+                UserAttributes userAttributes = extractUserAttributes(context);
+                Instant sessionStartTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+                Instant sessionExpiry = requireAuthHandoverClaim(userAttributes.sessionExpiry(), SESSION_EXPIRY_CLAIM);
+                Instant maxDurationExpiration = sessionStartTime.plus(ssoConfigurationProperties.getSessionMaxDuration());
+                yield sessionExpiry.isBefore(maxDurationExpiration) ? sessionExpiry : maxDurationExpiration;
             }
             case WEB_SESSION -> {
-                claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
+                JWTClaimsSet claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
                 yield claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
             }
             case SECURED_APP_SESSION -> throw new IllegalStateException(
                     "Session max age expiration is not applicable to %s, its max lifetime is enforced by Hydra".formatted(sessionType));
         };
+    }
+
+    private static Instant requireAuthHandoverClaim(Instant value, String claimName) {
+        if (value == null) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
+                    "Auth handover token does not contain %s claim".formatted(claimName));
+        }
+        return value;
     }
 }
