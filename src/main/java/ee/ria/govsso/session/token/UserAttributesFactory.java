@@ -21,9 +21,9 @@ public class UserAttributesFactory {
                 .sessionStartTime(toInstant(claims.getIssueTime()))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
-                .givenName(profileAttributes.get("given_name").toString())
-                .familyName(profileAttributes.get("family_name").toString())
-                .birthdate(profileAttributes.get("date_of_birth").toString())
+                .givenName(toStringOrNull(profileAttributes.get("given_name")))
+                .familyName(toStringOrNull(profileAttributes.get("family_name")))
+                .birthdate(toStringOrNull(profileAttributes.get("date_of_birth")))
                 .phoneNumber(claims.getStringClaim("phone_number"))
                 .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
                 .build();
@@ -46,5 +46,9 @@ public class UserAttributesFactory {
 
     private static Instant toInstant(Date date) {
         return date == null ? null : date.toInstant();
+    }
+
+    private static String toStringOrNull(Object value) {
+        return value == null ? null : value.toString();
     }
 }

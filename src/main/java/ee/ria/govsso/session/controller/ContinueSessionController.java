@@ -1,6 +1,5 @@
 package ee.ria.govsso.session.controller;
 
-import com.nimbusds.jwt.JWT;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
 import ee.ria.govsso.session.error.ErrorCode;
@@ -14,6 +13,7 @@ import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.text.ParseException;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
@@ -72,8 +71,8 @@ public class ContinueSessionController {
             throw new SsoException(USER_INPUT, "SECURED_APP client type is not allowed to continue an existing session.");
         }
         List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
-        JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
-        if (idToken == null) {
+        UserAttributes userAttributes = hydraService.getUserAttributesFromConsentContext(consents);
+        if (userAttributes == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
         if (SecureAppUtil.isSecuredAppSession(consents)) {
@@ -81,8 +80,8 @@ public class ContinueSessionController {
         }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-        validateIdToken(loginRequestInfo, idToken);
-        return acceptLogin(loginRequestInfo, idToken, metadata);
+        validateAcr(loginRequestInfo, userAttributes);
+        return acceptLogin(loginRequestInfo, consents, userAttributes, metadata);
     }
 
     private void validateLoginRequestInfo(LoginRequestInfo loginRequestInfo) {
@@ -107,22 +106,19 @@ public class ContinueSessionController {
         }
     }
 
-    private void validateIdToken(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        try {
-            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
-            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
-            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
-            if (tokenAcr.getAcrLevel() < requiredAcr.getAcrLevel()) {
-                throw new SsoException(TECHNICAL_GENERAL, "ID Token acr value must be equal to or higher than hydra login request acr");
-            }
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
+    private void validateAcr(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {
+        LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+        LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+        LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
+        if (sessionAcr.getAcrLevel() < requiredAcr.getAcrLevel()) {
+            throw new SsoException(TECHNICAL_GENERAL, "Session acr value must be equal to or higher than hydra login request acr");
         }
     }
 
-    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
+    private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, List<Consent> consents,
+                                     UserAttributes userAttributes, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptContinuedSessionLogin(consents, loginRequestInfo, metadata);
+        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, userAttributes, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
     }
 }
