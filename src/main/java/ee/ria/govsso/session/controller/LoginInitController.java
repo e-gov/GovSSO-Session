@@ -47,10 +47,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.HtmlUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Clock;
@@ -117,7 +114,6 @@ public class LoginInitController {
                 SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 if (clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
-                    request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
                     return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
                 }
             }
@@ -322,16 +318,5 @@ public class LoginInitController {
         LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
         LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
         return sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
-    }
-
-    private String extractQueryParam(URL url, String paramName) {
-        try {
-            return UriComponentsBuilder.fromUri(url.toURI())
-                    .build()
-                    .getQueryParams()
-                    .getFirst(paramName);
-        } catch (URISyntaxException e) {
-            throw new SsoException(USER_INPUT, "Failed to parse auth handover token from the query parameters");
-        }
     }
 }
