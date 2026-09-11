@@ -213,21 +213,6 @@ public class HydraService {
         }
     }
 
-    public JWT getTaraIdTokenFromConsentContext(List<Consent> consents) {
-        if (consents.isEmpty()) {
-            return null;
-        }
-        try {
-            JWT idToken = SignedJWT.parse(consents.get(0).getConsentRequest().getContext().getTaraIdToken());
-            // TODO: Verifying that session max lifetime has not elapsed should not be done when extracting TARA
-            //  ID token.
-            validateSessionMaxAgeNotReached(consents);
-            return idToken;
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Unable to parse ID token", ex);
-        }
-    }
-
     @SneakyThrows
     public UserAttributes getUserAttributesFromConsentContext(List<Consent> consents) {
         if (consents.isEmpty()) {
@@ -266,6 +251,24 @@ public class HydraService {
 
         String loginChallenge = loginRequestInfo.getChallenge();
         return getLoginAcceptResponse(request, loginChallenge);
+    }
+
+    @SneakyThrows
+    public LoginAcceptResponse acceptContinuedSessionLogin(List<Consent> consents,
+                                                           LoginRequestInfo loginRequestInfo,
+                                                           ClientRequestMetadata metadata) {
+        Context context = consents.get(0).getConsentRequest().getContext();
+        SessionType sessionType = context.getSessionTypeOrFallback();
+        return switch (sessionType) {
+            case SECURED_APP_WEB_SESSION -> acceptSecuredAppWebSessionLogin(
+                    parseRequiredContextJwt(context.getAuthHandoverToken(), "an auth handover token"),
+                    loginRequestInfo, metadata);
+            case WEB_SESSION -> acceptLogin(
+                    parseRequiredContextJwt(context.getTaraIdToken(), "a TARA ID token"),
+                    loginRequestInfo, metadata);
+            case SECURED_APP_SESSION -> throw new IllegalStateException(
+                    "%s cannot be continued".formatted(sessionType));
+        };
     }
 
     private Context createContext(ClientRequestMetadata metadata, SessionType sessionType) {
@@ -446,8 +449,12 @@ public class HydraService {
     }
 
     private JWTClaimsSet parseRequiredContextToken(String token, String tokenDescription) throws ParseException {
+        return parseRequiredContextJwt(token, tokenDescription).getJWTClaimsSet();
+    }
+
+    private SignedJWT parseRequiredContextJwt(String token, String tokenDescription) throws ParseException {
         Objects.requireNonNull(token, "Session context does not contain %s".formatted(tokenDescription));
-        return SignedJWT.parse(token).getJWTClaimsSet();
+        return SignedJWT.parse(token);
     }
 
     public void deleteConsentBySubject(String subject) {

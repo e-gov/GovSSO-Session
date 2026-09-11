@@ -1,13 +1,11 @@
 package ee.ria.govsso.session.controller;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
-import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
@@ -38,7 +36,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +58,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
 import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
@@ -133,8 +129,8 @@ public class LoginInitController {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
-            JWT idToken = hydraService.getTaraIdTokenFromConsentContext(consents);
-            if (idToken == null) {
+            UserAttributes userAttributes = hydraService.getUserAttributesFromConsentContext(consents);
+            if (userAttributes == null) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (SecureAppUtil.isSecuredAppSession(consents)) {
@@ -147,17 +143,17 @@ public class LoginInitController {
             if (govssoAuthHandoverToken != null) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
-            if (!isIdTokenAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, idToken)) {
+            if (!isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
                 return openAcrView(loginRequestInfo);
             }
             if (shouldSkipContinuationView(loginRequestInfo.getClient().getMetadata(), consents)) {
                 ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-                return acceptLogin(loginRequestInfo, idToken, metadata);
+                return acceptLogin(loginRequestInfo, consents, userAttributes, metadata);
             }
             if (!CookieUtil.isValidHydraSessionCookie(request, loginRequestInfo.getSessionId())) {
                 throw new SsoException(USER_INPUT, "Unable to continue session! Oidc session cookie not found.");
             }
-            return openSessionContinuationView(loginRequestInfo, idToken);
+            return openSessionContinuationView(loginRequestInfo, userAttributes);
         }
     }
 
@@ -241,38 +237,34 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + authenticationRequest.toURI().toString());
     }
 
-    @SneakyThrows
-    private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, JWT idToken) {
+    private ModelAndView openSessionContinuationView(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {
         ModelAndView model = new ModelAndView("authView");
-        JWTClaimsSet claimsSet = idToken.getJWTClaimsSet();
         String[] requestedScopes = loginRequestInfo.getRequestedScope();
+        String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
 
-        if (claimsSet.getClaims().get("profile_attributes") instanceof Map profileAttributes) {
-            String clientName = LocaleUtil.getTranslatedClientName(loginRequestInfo.getClient());
-
-            model.addObject("givenName", profileAttributes.get("given_name"));
-            model.addObject("familyName", profileAttributes.get("family_name"));
-            if (profileAttributes.get("date_of_birth") != null)
-                model.addObject("dateOfBirth", LocalDate.parse((String) profileAttributes.get("date_of_birth")));
-            if (List.of(requestedScopes).contains(SCOPE_PHONE))
-                model.addObject("phoneNumber", claimsSet.getClaims().get("phone_number"));
-            model.addObject("subject", loginRequestInfo.getSubject());
-            model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
-            model.addObject("loginChallenge", loginRequestInfo.getChallenge());
-            model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
-            if (alertsService != null) {
-                model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
-                model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
-            }
-            model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
-            ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
+        model.addObject("givenName", userAttributes.givenName());
+        model.addObject("familyName", userAttributes.familyName());
+        if (userAttributes.birthdate() != null)
+            model.addObject("dateOfBirth", LocalDate.parse(userAttributes.birthdate()));
+        if (List.of(requestedScopes).contains(SCOPE_PHONE))
+            model.addObject("phoneNumber", userAttributes.phoneNumber());
+        model.addObject("subject", loginRequestInfo.getSubject());
+        model.addObject("clientNameEscaped", HtmlUtils.htmlEscape(clientName, StandardCharsets.UTF_8.name()));
+        model.addObject("loginChallenge", loginRequestInfo.getChallenge());
+        model.addObject("logo", loginRequestInfo.getClient().getMetadata().getOidcClient().getLogo());
+        if (alertsService != null) {
+            model.addObject("alerts", alertsService.getStaticAndActiveAlerts());
+            model.addObject("hasStaticAlert", alertsService.hasStaticAlert());
         }
+        model.addObject("activeSessionCount", hydraService.getUserSessionCount(loginRequestInfo.getSubject()));
+        ModelUtil.addSelfServiceUrlToModel(model, ssoConfigurationProperties.getSelfServiceUrl());
         return model;
     }
 
-    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, JWT idToken, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptLogin(idToken, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION, idToken, loginRequestInfo);
+    private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, List<Consent> consents,
+                                     UserAttributes userAttributes, ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptContinuedSessionLogin(consents, loginRequestInfo, metadata);
+        statisticsLogger.logAccept(CONTINUE_SESSION, userAttributes, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
@@ -324,15 +316,12 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
     }
 
-    private boolean isIdTokenAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo, JWT idToken) {
-        try {
-            LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
-            LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
-            LevelOfAssurance tokenAcr = LevelOfAssurance.findByAcrName(idToken.getJWTClaimsSet().getStringClaim("acr"));
-            return tokenAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
-        } catch (ParseException ex) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to parse claim set from Id token");
-        }
+    private boolean isSessionAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo,
+                                                               UserAttributes userAttributes) {
+        LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+        LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+        LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
+        return sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
     }
 
     private String extractQueryParam(URL url, String paramName) {
