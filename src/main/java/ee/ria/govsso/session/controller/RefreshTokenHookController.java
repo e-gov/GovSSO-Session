@@ -19,6 +19,7 @@ import ee.ria.govsso.session.service.paasuke.RepresentationService;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
+import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class RefreshTokenHookController {
     private final RepresentationService representationService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final StatisticsLogger statisticsLogger;
+    private final Clock clock;
 
     @PostMapping(TOKEN_REFRESH_REQUEST_MAPPING)
     public ResponseEntity<RefreshTokenHookResponse> tokenRefresh(@RequestBody RefreshTokenHookRequest hookRequest, HttpServletRequest request) {
@@ -79,6 +82,11 @@ public class RefreshTokenHookController {
         }
 
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
+
+        if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)
+                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes, clock)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Client does not accept an auth handover, therefore the session is not allowed to be refreshed");
+        }
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
