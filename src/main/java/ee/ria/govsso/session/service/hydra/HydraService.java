@@ -1,7 +1,6 @@
 package ee.ria.govsso.session.service.hydra;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.configuration.properties.HydraConfigurationProperties;
@@ -227,7 +226,8 @@ public class HydraService {
         Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION);
         context.setAuthHandoverToken(authHandoverToken.getParsedString());
         Duration rememberFor = ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        LoginAcceptRequest request = createLoginAcceptRequest(authHandoverToken, context, rememberFor);
+        UserAttributes userAttributes = userAttributesFactory.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+        LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
 
         String loginChallenge = loginRequestInfo.getChallenge();
         return getLoginAcceptResponse(request, loginChallenge);
@@ -247,7 +247,8 @@ public class HydraService {
         Duration rememberFor = isLongLivingSession ?
                 client.getLongLivedSessionLifetime() :
                 ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        LoginAcceptRequest request = createLoginAcceptRequest(taraIdToken, context, rememberFor);
+        UserAttributes userAttributes = userAttributesFactory.fromTaraIdToken(taraIdToken.getJWTClaimsSet());
+        LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
 
         String loginChallenge = loginRequestInfo.getChallenge();
         return getLoginAcceptResponse(request, loginChallenge);
@@ -281,15 +282,14 @@ public class HydraService {
         return context;
     }
 
-    private LoginAcceptRequest createLoginAcceptRequest(JWT token, Context context, Duration rememberFor) throws ParseException {
-        JWTClaimsSet jwtClaimsSet = token.getJWTClaimsSet();
+    private LoginAcceptRequest createLoginAcceptRequest(UserAttributes userAttributes, Context context, Duration rememberFor) {
         LoginAcceptRequest request = new LoginAcceptRequest();
         request.setRemember(true);
-        request.setAcr(jwtClaimsSet.getStringClaim("acr"));
-        request.setSubject(jwtClaimsSet.getSubject());
+        request.setAcr(userAttributes.acr());
+        request.setSubject(userAttributes.subject());
         request.setContext(context);
         request.setRememberFor(Math.toIntExact(rememberFor.toSeconds()));
-        request.setAmr(jwtClaimsSet.getStringArrayClaim("amr"));
+        request.setAmr(userAttributes.amr());
         request.setExtendSessionLifespan(true);
         return request;
     }
@@ -435,21 +435,12 @@ public class HydraService {
 
     private UserAttributes extractUserAttributes(Context context) throws ParseException {
         SessionType sessionType = context.getSessionTypeOrFallback();
-        JWTClaimsSet claims;
         return switch (sessionType) {
-            case SECURED_APP_WEB_SESSION -> {
-                claims = parseRequiredContextToken(context.getAuthHandoverToken(), "an auth handover token");
-                yield userAttributesFactory.fromAuthHandoverToken(claims);
-            }
-            case WEB_SESSION, SECURED_APP_SESSION -> {
-                claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
-                yield userAttributesFactory.fromTaraIdToken(claims);
-            }
+            case SECURED_APP_WEB_SESSION -> userAttributesFactory.fromAuthHandoverToken(
+                    parseRequiredContextJwt(context.getAuthHandoverToken(), "an auth handover token").getJWTClaimsSet());
+            case WEB_SESSION, SECURED_APP_SESSION -> userAttributesFactory.fromTaraIdToken(
+                    parseRequiredContextJwt(context.getTaraIdToken(), "a TARA ID token").getJWTClaimsSet());
         };
-    }
-
-    private JWTClaimsSet parseRequiredContextToken(String token, String tokenDescription) throws ParseException {
-        return parseRequiredContextJwt(token, tokenDescription).getJWTClaimsSet();
     }
 
     private SignedJWT parseRequiredContextJwt(String token, String tokenDescription) throws ParseException {
@@ -578,10 +569,8 @@ public class HydraService {
                 Instant maxDurationExpiration = sessionStartTime.plus(ssoConfigurationProperties.getSessionMaxDuration());
                 yield sessionExpiry.isBefore(maxDurationExpiration) ? sessionExpiry : maxDurationExpiration;
             }
-            case WEB_SESSION -> {
-                JWTClaimsSet claims = parseRequiredContextToken(context.getTaraIdToken(), "a TARA ID token");
-                yield claims.getNotBeforeTime().toInstant().plus(ssoConfigurationProperties.getSessionMaxDuration());
-            }
+            case WEB_SESSION -> extractUserAttributes(context).sessionStartTime()
+                    .plus(ssoConfigurationProperties.getSessionMaxDuration());
             case SECURED_APP_SESSION -> throw new IllegalStateException(
                     "Session max age expiration is not applicable to %s, its max lifetime is enforced by Hydra".formatted(sessionType));
         };

@@ -16,6 +16,9 @@ public class UserAttributesFactory {
 
     public UserAttributes fromTaraIdToken(JWTClaimsSet claims) throws ParseException {
         Map<String, Object> profileAttributes = claims.getJSONObjectClaim("profile_attributes");
+        if (profileAttributes == null) {
+            profileAttributes = Map.of();
+        }
         return UserAttributes.builder()
                 .subject(claims.getSubject())
                 .sessionStartTime(toInstant(claims.getIssueTime()))

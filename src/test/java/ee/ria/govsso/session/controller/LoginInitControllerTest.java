@@ -1766,7 +1766,7 @@ class LoginInitControllerTest extends BaseTest {
 
         private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .notBeforeTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
+                    .issueTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
                     .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
                     .claim("acr", "high")
                     .build();
