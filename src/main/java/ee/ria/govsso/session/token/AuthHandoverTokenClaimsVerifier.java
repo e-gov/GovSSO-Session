@@ -37,8 +37,8 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
 
     private final Clock clock;
 
-    AuthHandoverTokenClaimsVerifier(String expectedAudience, JWTClaimsSet exactMatchClaims, Clock clock) {
-        super(expectedAudience, exactMatchClaims, requiredClaims);
+    AuthHandoverTokenClaimsVerifier(JWTClaimsSet exactMatchClaims, Clock clock) {
+        super(exactMatchClaims, requiredClaims);
         this.clock = clock;
     }
 
