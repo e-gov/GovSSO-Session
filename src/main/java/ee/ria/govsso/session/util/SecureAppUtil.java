@@ -17,4 +17,9 @@ public class SecureAppUtil {
     public static boolean isSecuredAppSession(ConsentRequestInfo consentRequest) {
         return SessionType.SECURED_APP_SESSION == consentRequest.getContext().getSessionTypeOrFallback();
     }
+
+    public static boolean isSecuredAppWebSession(List<Consent> consents) {
+        return SessionType.SECURED_APP_WEB_SESSION ==
+                consents.get(0).getConsentRequest().getContext().getSessionTypeOrFallback();
+    }
 }
