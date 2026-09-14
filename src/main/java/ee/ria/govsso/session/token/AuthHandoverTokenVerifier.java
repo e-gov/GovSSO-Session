@@ -11,6 +11,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.util.DefaultResourceRetriever;
 import com.nimbusds.jose.util.Resource;
 import com.nimbusds.jose.util.ResourceRetriever;
+import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
 
 import static com.nimbusds.jose.jwk.source.JWKSourceBuilder.DEFAULT_HTTP_SIZE_LIMIT;
 import static ee.ria.govsso.session.logging.ClientRequestLogger.Service.HYDRA;
@@ -76,9 +78,9 @@ public class AuthHandoverTokenVerifier {
         JWTClaimsSet exactMatchClaims = new JWTClaimsSet.Builder()
                 .issuer(baseUrl.toString())
                 .claim(SCOPE_CLAIM, SCOPE_AUTH_HANDOVER)
+                .claim(JWTClaimNames.AUDIENCE, List.of(baseUrl.toString()))
                 .build();
-        AuthHandoverTokenClaimsVerifier claimsVerifier = new AuthHandoverTokenClaimsVerifier(
-                baseUrl.toString(), exactMatchClaims, clock);
+        AuthHandoverTokenClaimsVerifier claimsVerifier = new AuthHandoverTokenClaimsVerifier(exactMatchClaims, clock);
         claimsVerifier.setMaxClockSkew(Math.toIntExact(MAX_CLOCK_SKEW.toSeconds()));
         jwtProcessor = new DefaultJWTProcessor<>();
         jwtProcessor.setJWSKeySelector(new JWSVerificationKeySelector<>(EXPECTED_SIGNING_ALGORITHM, jwkSource));
