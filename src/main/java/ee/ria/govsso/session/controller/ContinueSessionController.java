@@ -14,6 +14,7 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.token.UserAttributes;
+import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.time.Clock;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
@@ -49,6 +51,7 @@ public class ContinueSessionController {
     private final HydraService hydraService;
     private final StatisticsLogger statisticsLogger;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
+    private final Clock clock;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView continueSession(
@@ -77,6 +80,10 @@ public class ContinueSessionController {
         }
         if (SecureAppUtil.isSecuredAppSession(consents)) {
             throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
+        }
+        if (SecureAppUtil.isSecuredAppWebSession(consents)
+                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
+            throw new SsoException(USER_INPUT, "Client does not accept an auth handover, therefore the session is not allowed to be continued");
         }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);

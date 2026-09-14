@@ -9,7 +9,6 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
-import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -51,8 +50,6 @@ import org.springframework.web.util.HtmlUtils;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -64,7 +61,6 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
-import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
 
 @Slf4j
 @Validated
@@ -113,7 +109,7 @@ public class LoginInitController {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
                 SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
-                if (clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
+                if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
                     return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
                 }
             }
@@ -137,6 +133,10 @@ public class LoginInitController {
                 return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
             }
             if (govssoAuthHandoverToken != null) {
+                return reauthenticate(loginRequestInfo, request, response);
+            }
+            if (SecureAppUtil.isSecuredAppWebSession(consents)
+                    && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (!isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
@@ -174,23 +174,6 @@ public class LoginInitController {
         if (prompt != Prompt.CONSENT) {
             throw new SsoException(USER_INPUT, "Request URL must contain prompt=consent");
         }
-    }
-
-    private boolean clientAcceptsAuthHandover(Client client, UserAttributes userAttributes) {
-        Metadata metadata = client.getMetadata();
-        if (!metadata.isAllowSecuredAppWebSession()) {
-            return false;
-        }
-        Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
-        if (securedAppSessionMaxDuration != null) {
-            Instant authTime = AuthHandoverTokenUtil.requireAuthHandoverClaim(
-                    userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-            Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
-            if (securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private SignedJWT parseAuthHandoverToken(String govssoAuthHandoverToken) {
