@@ -36,6 +36,14 @@ public class Context {
         return this.isLongLivingSession() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
     }
 
+    @JsonIgnore
+    public ClientType getInitiator() {
+        return switch (this.getSessionTypeOrFallback()) {
+            case SECURED_APP_SESSION, SECURED_APP_WEB_SESSION -> ClientType.SECURED_APP;
+            case WEB_SESSION -> null;
+        };
+    }
+
     // TODO Temporary solution. Remove after all sessions created before user attributes were added to context have
     //  expired, and instead throw when user attributes are missing.
     public UserAttributes getUserAttributesOrFallback(UserAttributesFactory userAttributesFactory)

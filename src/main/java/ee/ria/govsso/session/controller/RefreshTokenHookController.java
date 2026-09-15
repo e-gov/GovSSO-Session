@@ -5,7 +5,6 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
-import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -115,7 +114,7 @@ public class RefreshTokenHookController {
                 .givenName(userAttributes.givenName())
                 .familyName(userAttributes.familyName())
                 .birthdate(userAttributes.birthdate())
-                .initiator(isLongLivingSession ? ClientType.SECURED_APP : null);
+                .initiator(consentRequestInfo.getContext().getInitiator());
         if (hookRequest.getGrantedScopes().contains(SCOPE_PHONE) && userAttributes.phoneNumber() != null) {
             idTokenBuilder
                     .phoneNumber(userAttributes.phoneNumber())
@@ -133,7 +132,7 @@ public class RefreshTokenHookController {
 
         if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
             AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(
-                    userAttributes, hookRequest.getGrantedScopes(), isLongLivingSession, consentRequestInfo.getAuthenticatedAt().toInstant());
+                    userAttributes, hookRequest.getGrantedScopes(), consentRequestInfo.getContext(), consentRequestInfo.getAuthenticatedAt().toInstant());
             if (idToken.getRepresentee() != null) {
                 accessTokenClaims.setRepresentee(idToken.getRepresentee());
             }

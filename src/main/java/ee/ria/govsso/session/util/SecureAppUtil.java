@@ -2,6 +2,7 @@ package ee.ria.govsso.session.util;
 
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
+import ee.ria.govsso.session.service.hydra.Context;
 import ee.ria.govsso.session.service.hydra.SessionType;
 import lombok.experimental.UtilityClass;
 
@@ -15,7 +16,11 @@ public class SecureAppUtil {
     }
 
     public static boolean isSecuredAppSession(ConsentRequestInfo consentRequest) {
-        return SessionType.SECURED_APP_SESSION == consentRequest.getContext().getSessionTypeOrFallback();
+        return isSecuredAppSession(consentRequest.getContext());
+    }
+
+    public static boolean isSecuredAppSession(Context context) {
+        return SessionType.SECURED_APP_SESSION == context.getSessionTypeOrFallback();
     }
 
     public static boolean isSecuredAppWebSession(List<Consent> consents) {
@@ -23,6 +28,10 @@ public class SecureAppUtil {
     }
 
     public static boolean isSecuredAppWebSession(ConsentRequestInfo consentRequest) {
-        return SessionType.SECURED_APP_WEB_SESSION == consentRequest.getContext().getSessionTypeOrFallback();
+        return isSecuredAppWebSession(consentRequest.getContext());
+    }
+
+    public static boolean isSecuredAppWebSession(Context context) {
+        return SessionType.SECURED_APP_WEB_SESSION == context.getSessionTypeOrFallback();
     }
 }
