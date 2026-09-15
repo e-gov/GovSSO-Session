@@ -27,6 +27,7 @@ public class Context {
 
     // TODO Temporary solution. Remove after all sessions created before session type was added to context have
     //  expired, and instead throw when session type is missing.
+    @JsonIgnore
     public SessionType getSessionTypeOrFallback() {
         SessionType sessionType = this.getSessionType();
         if (sessionType != null) {
