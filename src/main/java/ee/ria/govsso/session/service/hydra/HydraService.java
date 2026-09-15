@@ -216,15 +216,15 @@ public class HydraService {
             return null;
         }
         validateSessionMaxAgeNotReached(consents);
-        return extractUserAttributes(consents.get(0).getConsentRequest().getContext());
+        return consents.get(0).getConsentRequest().getContext().getUserAttributesOrFallback(userAttributesFactory);
     }
 
     @SneakyThrows
     public LoginAcceptResponse acceptSecuredAppWebSessionLogin(JWT authHandoverToken, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
-        Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION);
+        UserAttributes userAttributes = userAttributesFactory.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+        Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION, userAttributes);
         context.setAuthHandoverToken(authHandoverToken.getParsedString());
         Duration rememberFor = ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        UserAttributes userAttributes = userAttributesFactory.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
         LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
 
         String loginChallenge = loginRequestInfo.getChallenge();
@@ -240,12 +240,12 @@ public class HydraService {
                 SessionType.SECURED_APP_SESSION :
                 SessionType.WEB_SESSION;
 
-        Context context = createContext(metadata, sessionType);
+        UserAttributes userAttributes = userAttributesFactory.fromTaraIdToken(taraIdToken.getJWTClaimsSet());
+        Context context = createContext(metadata, sessionType, userAttributes);
         context.setTaraIdToken(taraIdToken.getParsedString());
         Duration rememberFor = isLongLivingSession ?
                 client.getLongLivedSessionLifetime() :
                 ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        UserAttributes userAttributes = userAttributesFactory.fromTaraIdToken(taraIdToken.getJWTClaimsSet());
         LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
 
         String loginChallenge = loginRequestInfo.getChallenge();
@@ -260,23 +260,22 @@ public class HydraService {
         SessionType sessionType = context.getSessionTypeOrFallback();
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> acceptSecuredAppWebSessionLogin(
-                    parseRequiredContextJwt(context.getAuthHandoverToken(), "an auth handover token"),
-                    loginRequestInfo, metadata);
+                    context.getAuthHandoverTokenJwt(), loginRequestInfo, metadata);
             case WEB_SESSION -> acceptLogin(
-                    parseRequiredContextJwt(context.getTaraIdToken(), "a TARA ID token"),
-                    loginRequestInfo, metadata);
+                    context.getTaraIdTokenJwt(), loginRequestInfo, metadata);
             case SECURED_APP_SESSION -> throw new IllegalStateException(
                     "%s cannot be continued".formatted(sessionType));
         };
     }
 
-    private Context createContext(ClientRequestMetadata metadata, SessionType sessionType) {
+    private Context createContext(ClientRequestMetadata metadata, SessionType sessionType, UserAttributes userAttributes) {
         Context context = new Context();
         context.setIpAddress(metadata.ipAddress());
         context.setUserAgent(metadata.userAgent());
         context.setIpCountry(metadata.ipCountry());
         context.setLongLivingSession(sessionType == SessionType.SECURED_APP_SESSION);
         context.setSessionType(sessionType);
+        context.setUserAttributes(userAttributes);
         return context;
     }
 
@@ -386,7 +385,7 @@ public class HydraService {
                         consentFlowDuration.getSeconds());
         request.setRememberFor(rememberFor);
 
-        UserAttributes userAttributes = extractUserAttributes(consentRequestInfo.getContext());
+        UserAttributes userAttributes = consentRequestInfo.getContext().getUserAttributesOrFallback(userAttributesFactory);
 
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
