@@ -385,14 +385,14 @@ public class HydraService {
                         consentFlowDuration.getSeconds());
         request.setRememberFor(rememberFor);
 
-        UserAttributes userAttributes = consentRequestInfo.getContext().getUserAttributesOrFallback(userAttributesFactory);
-
+        Context context = consentRequestInfo.getContext();
+        UserAttributes userAttributes = context.getUserAttributesOrFallback(userAttributesFactory);
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
         idToken.setGivenName(userAttributes.givenName());
         idToken.setFamilyName(userAttributes.familyName());
         idToken.setBirthdate(userAttributes.birthdate());
-        idToken.setInitiator(isLongLivingSession ? ClientType.SECURED_APP : null);
+        idToken.setInitiator(context.getInitiator());
         if (List.of(requestedScopes).contains(SCOPE_PHONE) && userAttributes.phoneNumber() != null) {
             idToken.setPhoneNumber(userAttributes.phoneNumber());
             idToken.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
@@ -403,7 +403,7 @@ public class HydraService {
         session.setIdToken(idToken);
 
         if (AccessTokenStrategy.JWT.equals(consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            session.setAccessToken(accessTokenClaimsFactory.from(userAttributes, List.of(requestedScopes), isLongLivingSession, consentRequestInfo.getAuthenticatedAt().toInstant()));
+            session.setAccessToken(accessTokenClaimsFactory.from(userAttributes, List.of(requestedScopes), context, consentRequestInfo.getAuthenticatedAt().toInstant()));
             if (consentRequestInfo.getRequestedAccessTokenAudience() != null) {
                 List<String> audiences = Arrays.asList(consentRequestInfo.getRequestedAccessTokenAudience());
                 if (audiences.isEmpty()) {
