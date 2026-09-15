@@ -134,6 +134,8 @@ public class LoginInitController {
                 return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
             }
             if (govssoAuthHandoverToken != null) {
+                SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
+                authHandoverTokenVerifier.verify(authHandoverToken);
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (SecureAppUtil.isSecuredAppWebSession(consents)
