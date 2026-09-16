@@ -32,7 +32,7 @@ openssl ecparam \
 MSYS_NO_PATHCONV=1 \
   openssl req \
   -new \
-  -sha512 \
+  -sha256 \
   -nodes \
   -key "$applicationName/$host.key" \
   -subj "/CN=$host" \
@@ -44,7 +44,7 @@ export SAN="DNS:$host"
 # Generate CA signed certificate
 openssl x509 \
   -req \
-  -sha512 \
+  -sha256 \
   -in "$applicationName/$host.csr" \
   -CA "$ca/$ca.localhost.crt" \
   -CAkey "$ca/$ca.localhost.key" \

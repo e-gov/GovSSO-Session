@@ -25,7 +25,7 @@ MSYS_NO_PATHCONV=1 \
   openssl req \
   -x509 \
   -new \
-  -sha512 \
+  -sha256 \
   -nodes \
   -key "$caFullName/$caFullName.localhost.key" \
   -days 3650 \
