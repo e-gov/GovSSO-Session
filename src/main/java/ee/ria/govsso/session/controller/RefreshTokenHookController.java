@@ -69,7 +69,12 @@ public class RefreshTokenHookController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session was not found");
         }
 
-        validateRequestedScopes(hookRequest);
+        boolean isAuthHandoverTokenRequest = isAuthHandoverTokenRequest(hookRequest);
+        if (isAuthHandoverTokenRequest) {
+            validateAuthHandoverTokenRequest(hookRequest);
+        } else {
+            validateRequestedScopes(hookRequest);
+        }
 
         List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
         UserAttributes userAttributes = hydraService.getUserAttributesFromConsentContext(consents);
@@ -89,13 +94,10 @@ public class RefreshTokenHookController {
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
-        if (isAuthHandoverTokenRequest(hookRequest)) {
-            if (!consentRequestInfo.getClient().getScope().contains(SCOPE_AUTH_HANDOVER)) {
-                throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                        ("Refresh token hook request must not contain auth handover scope, because %s scope is " +
-                                "not included in the list of scopes for the client.").formatted(SCOPE_AUTH_HANDOVER));
-            }
-            validateGrantedAudience(hookRequest);
+        if (isAuthHandoverTokenRequest && !consentRequestInfo.getClient().getScope().contains(SCOPE_AUTH_HANDOVER)) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    ("Refresh token hook request must not be an auth handover token request, because %s scope is " +
+                            "not included in the list of scopes for the client.").formatted(SCOPE_AUTH_HANDOVER));
         }
         if (isLongLivingSession) {
             responseBuilder
@@ -136,7 +138,7 @@ public class RefreshTokenHookController {
             if (idToken.getRepresentee() != null) {
                 accessTokenClaims.setRepresentee(idToken.getRepresentee());
             }
-            if (isAuthHandoverTokenRequest(hookRequest)) {
+            if (isAuthHandoverTokenRequest) {
                 accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
             }
             responseBuilder.accessToken(accessTokenClaims);
@@ -151,27 +153,38 @@ public class RefreshTokenHookController {
         return ResponseEntity.ok(response);
     }
 
-    private void validateGrantedAudience(RefreshTokenHookRequest hookRequest) {
+    private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
+        return containsAuthHandoverScope(hookRequest.getRequestedScopes())
+                || containsBaseUrl(hookRequest.getGrantedAudience());
+    }
+
+    private void validateAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
+        if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Refresh token hook request must not be an auth handover token request because issuing auth handover tokens is disabled.");
+        }
+        List<String> requestedScopes = hookRequest.getRequestedScopes();
+        if (!containsAuthHandoverScope(requestedScopes) || requestedScopes.size() != 1) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token request requested scopes can contain only %s scope".formatted(SCOPE_AUTH_HANDOVER));
+        }
         List<String> audience = hookRequest.getGrantedAudience();
-        if (audience.size() != 1 || !ssoConfigurationProperties.getBaseUrl().toString().equals(audience.get(0))) {
+        if (!containsBaseUrl(audience) || audience.size() != 1) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured base URL");
         }
     }
 
-    private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
-        List<String> requestedScopes = hookRequest.getRequestedScopes();
+    private boolean containsAuthHandoverScope(List<String> requestedScopes) {
         return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
+    }
+
+    private boolean containsBaseUrl(List<String> grantedAudience) {
+        return grantedAudience != null && grantedAudience.contains(ssoConfigurationProperties.getBaseUrl().toString());
     }
 
     private void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {
         List<String> requestedScopes = hookRequest.getRequestedScopes();
         if (requestedScopes == null) {
-            return;
-        }
-        if (requestedScopes.contains(SCOPE_AUTH_HANDOVER)) {
-            if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
-                throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain auth handover scope because issuing auth handover tokens is disabled.");
-            }
             return;
         }
         boolean containsRepresenteeWithSubject = false;
