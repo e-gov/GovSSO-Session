@@ -109,7 +109,8 @@ public class LoginInitController {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
                 SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
-                if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
+                if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
+                        ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
                     return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
                 }
             }
@@ -136,7 +137,8 @@ public class LoginInitController {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (SecureAppUtil.isSecuredAppWebSession(consents)
-                    && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
+                    && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
+                    ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (!isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {

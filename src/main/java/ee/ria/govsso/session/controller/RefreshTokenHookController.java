@@ -84,7 +84,8 @@ public class RefreshTokenHookController {
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
 
         if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)
-                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes, clock)) {
+                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes,
+                ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Client does not accept an auth handover, therefore the session is not allowed to be refreshed");
         }
 

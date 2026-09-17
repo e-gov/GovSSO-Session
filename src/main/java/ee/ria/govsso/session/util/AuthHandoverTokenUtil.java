@@ -16,18 +16,21 @@ import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
 @UtilityClass
 public class AuthHandoverTokenUtil {
 
-    public static boolean clientAcceptsAuthHandover(Client client, UserAttributes userAttributes, Clock clock) {
+    public static boolean clientAcceptsAuthHandover(Client client, UserAttributes userAttributes,
+                                                    Duration sessionMaxDuration, Clock clock) {
         Metadata metadata = client.getMetadata();
         if (!metadata.isAllowSecuredAppWebSession()) {
             return false;
         }
+        Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+        Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
+        if (securedAppSessionAge.compareTo(sessionMaxDuration) > 0) {
+            return false;
+        }
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
-        if (securedAppSessionMaxDuration != null) {
-            Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-            Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
-            if (securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
-                return false;
-            }
+        if (securedAppSessionMaxDuration != null
+                && securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
+            return false;
         }
         return true;
     }
