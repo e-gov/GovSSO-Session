@@ -2,6 +2,7 @@ package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
+import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
@@ -50,6 +51,7 @@ public class ContinueSessionController {
     private final HydraService hydraService;
     private final StatisticsLogger statisticsLogger;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
+    private final SsoConfigurationProperties ssoConfigurationProperties;
     private final Clock clock;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
@@ -81,7 +83,8 @@ public class ContinueSessionController {
             throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
         }
         if (SecureAppUtil.isSecuredAppWebSession(consents)
-                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
+                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
+                ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
             return reauthenticate(loginRequestInfo, request, response);
         }
 

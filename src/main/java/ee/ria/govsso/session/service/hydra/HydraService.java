@@ -11,7 +11,6 @@ import ee.ria.govsso.session.logging.ClientRequestLogger;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.token.UserAttributesFactory;
-import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -547,32 +546,17 @@ public class HydraService {
     }
 
     private void validateSessionMaxAgeNotReached(List<Consent> consents) throws ParseException {
-        // Max lifetime for long-living sessions is enforced by Hydra and is longer than max lifetime for regular
-        // sessions, so we can skip that check for long-living sessions. Max lifetime for long-living sessions is
-        // longer than max lifetime of regular sessions anyway.
-        if (SecureAppUtil.isSecuredAppSession(consents)) {
+        // Max lifetime of SECURED_APP_SESSION is enforced by Hydra and is longer than max lifetime of regular
+        // sessions, so we can skip that check for long-living sessions. Max age of SECURED_APP_WEB_SESSION is
+        // determined by client metadata and is validated by AuthHandoverTokenUtil.clientAcceptsAuthHandover.
+        Context context = consents.get(0).getConsentRequest().getContext();
+        if (context.getSessionTypeOrFallback() != SessionType.WEB_SESSION) {
             return;
         }
-        Context context = consents.get(0).getConsentRequest().getContext();
-        if (Instant.now().isAfter(getSessionMaxAgeExpiration(context))) {
+        Instant sessionMaxAgeExpiration = extractUserAttributes(context).sessionStartTime()
+                .plus(ssoConfigurationProperties.getSessionMaxDuration());
+        if (Instant.now().isAfter(sessionMaxAgeExpiration)) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
         }
-    }
-
-    private Instant getSessionMaxAgeExpiration(Context context) throws ParseException {
-        SessionType sessionType = context.getSessionTypeOrFallback();
-        return switch (sessionType) {
-            case SECURED_APP_WEB_SESSION -> {
-                UserAttributes userAttributes = extractUserAttributes(context);
-                Instant sessionStartTime = AuthHandoverTokenUtil.requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-                Instant sessionExpiry = AuthHandoverTokenUtil.requireAuthHandoverClaim(userAttributes.sessionExpiry(), SESSION_EXPIRY_CLAIM);
-                Instant maxDurationExpiration = sessionStartTime.plus(ssoConfigurationProperties.getSessionMaxDuration());
-                yield sessionExpiry.isBefore(maxDurationExpiration) ? sessionExpiry : maxDurationExpiration;
-            }
-            case WEB_SESSION -> extractUserAttributes(context).sessionStartTime()
-                    .plus(ssoConfigurationProperties.getSessionMaxDuration());
-            case SECURED_APP_SESSION -> throw new IllegalStateException(
-                    "Session max age expiration is not applicable to %s, its max lifetime is enforced by Hydra".formatted(sessionType));
-        };
     }
 }
