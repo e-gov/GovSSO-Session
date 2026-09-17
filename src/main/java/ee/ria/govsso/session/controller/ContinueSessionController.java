@@ -20,16 +20,15 @@ import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.Clock;
@@ -57,8 +56,8 @@ public class ContinueSessionController {
     public RedirectView continueSession(
             @ModelAttribute("loginChallenge")
             @Pattern(regexp = "^[a-f0-9]{32}$", message = "Incorrect login_challenge format") String loginChallenge,
-            @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
         RequestUtil.setFlowTraceId(loginChallenge);
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
@@ -83,7 +82,7 @@ public class ContinueSessionController {
         }
         if (SecureAppUtil.isSecuredAppWebSession(consents)
                 && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes, clock)) {
-            throw new SsoException(USER_INPUT, "Client does not accept an auth handover, therefore the session is not allowed to be continued");
+            return reauthenticate(loginRequestInfo, request, response);
         }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
@@ -127,5 +126,15 @@ public class ContinueSessionController {
         LoginAcceptResponse response = hydraService.acceptContinuedSessionLogin(consents, loginRequestInfo, metadata);
         statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, userAttributes, loginRequestInfo);
         return new RedirectView(response.getRedirectTo().toString());
+    }
+
+    private RedirectView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest
+            request, HttpServletResponse response) {
+        hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
+        hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
+        CookieUtil.deleteHydraSessionCookie(request, response);
+
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
+        return new RedirectView(loginRequestInfo.getRequestUrl().toString());
     }
 }
