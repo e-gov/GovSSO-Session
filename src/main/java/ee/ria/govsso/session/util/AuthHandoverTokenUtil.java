@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.util;
 
+import com.nimbusds.jwt.JWTClaimNames;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.Client;
@@ -22,11 +23,13 @@ public class AuthHandoverTokenUtil {
         if (!metadata.isAllowSecuredAppWebSession()) {
             return false;
         }
-        Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-        Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
-        if (securedAppSessionAge.compareTo(sessionMaxDuration) > 0) {
+        Instant now = Instant.now(clock);
+        Instant issuedAt = requireAuthHandoverClaim(userAttributes.tokenIssuedAt(), JWTClaimNames.ISSUED_AT);
+        if (Duration.between(issuedAt, now).compareTo(sessionMaxDuration) > 0) {
             return false;
         }
+        Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+        Duration securedAppSessionAge = Duration.between(authTime, now);
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
         if (securedAppSessionMaxDuration != null
                 && securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {

@@ -21,6 +21,7 @@ public class UserAttributesFactory {
         }
         return UserAttributes.builder()
                 .subject(claims.getSubject())
+                .tokenIssuedAt(toInstant(claims.getIssueTime()))
                 .sessionStartTime(toInstant(claims.getIssueTime()))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
@@ -35,6 +36,7 @@ public class UserAttributesFactory {
     public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
         return UserAttributes.builder()
                 .subject(claims.getSubject())
+                .tokenIssuedAt(toInstant(claims.getIssueTime()))
                 .sessionStartTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
                 .sessionExpiry(toInstant(claims.getDateClaim(SESSION_EXPIRY_CLAIM)))
                 .acr(claims.getStringClaim("acr"))

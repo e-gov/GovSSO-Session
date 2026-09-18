@@ -7,6 +7,7 @@ import java.time.Instant;
 @Builder
 public record UserAttributes(
         String subject,
+        Instant tokenIssuedAt,
         Instant sessionStartTime,
         Instant sessionExpiry,
         String acr,
