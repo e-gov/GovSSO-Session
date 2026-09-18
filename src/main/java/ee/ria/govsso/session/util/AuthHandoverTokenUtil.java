@@ -28,12 +28,13 @@ public class AuthHandoverTokenUtil {
         if (Duration.between(issuedAt, now).compareTo(sessionMaxDuration) > 0) {
             return false;
         }
-        Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
-        Duration securedAppSessionAge = Duration.between(authTime, now);
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
-        if (securedAppSessionMaxDuration != null
-                && securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
-            return false;
+        if (securedAppSessionMaxDuration != null) {
+            Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+            Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
+            if (securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
+                return false;
+            }
         }
         return true;
     }
