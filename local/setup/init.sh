@@ -33,3 +33,9 @@ echo 'Adding client Mock ACR High'
 
 echo 'Adding client Mock SECURED APP'
 ./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS $OIDC_SERVICE_URL '70000003' './institution-mock.json' 'client-mock-secured-app' './client-mock-secured-app.json' 'secret'
+
+echo 'Adding client Mock Min Handover Window'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS $OIDC_SERVICE_URL '70000003' './institution-mock.json' 'client-mock-min-handover-window' './client-mock-min-handover-window.json' 'secret'
+
+echo 'Adding client Mock Handover Disabled'
+./add-client.sh $ADMIN_SERVICE_URL $ADMIN_USER $ADMIN_PASS $OIDC_SERVICE_URL '70000003' './institution-mock.json' 'client-mock-handover-disabled' './client-mock-handover-disabled.json' 'secret'
