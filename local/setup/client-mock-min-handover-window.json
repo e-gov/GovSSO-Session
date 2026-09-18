@@ -1,0 +1,55 @@
+{
+  "client_id": "client-mock-min-handover-window",
+  "client_name": {
+    "et": "Teenusenimi Mock MHW",
+    "en": "Service name Mock MHW",
+    "ru": "Название службы Mock MHW"
+  },
+  "client_short_name": {
+    "et": "Teenus MHW",
+    "en": "Service MHW",
+    "ru": "Название MHW"
+  },
+  "institution_metainfo": {
+    "registry_code": "70000003",
+    "type": {
+      "type": "public"
+    },
+    "name": "Institution Mock"
+  },
+  "redirect_uris": [
+    "https://client.mock.min.handover.window.localhost:11443/login/oauth2/code/govsso"
+  ],
+  "token_request_allowed_ip_addresses": [
+    "0.0.0.0/0",
+    "::/0"
+  ],
+  "token_endpoint_auth_method": "client_secret_basic",
+  "post_logout_redirect_uris": [
+    "https://client.mock.min.handover.window.localhost:11443/?show-post-logout-message"
+  ],
+  "backchannel_logout_uri": "https://client.mock.min.handover.window.localhost:11443/oauth2/back-channel-logout/govsso",
+  "scope": [
+    "openid",
+    "phone"
+  ],
+  "_systemTest_secret": "secret",
+  "description": "This is a sample client. Intended for use in development environment only. Client with secured_app_session_max_duration set to 1h (minimum).",
+  "info_notification_emails": [
+    "notifications.client-mock-min-handover-window@example.org"
+  ],
+  "client_contacts": [
+    {
+      "name": "Contact 1",
+      "email": "contact1.client-mock-min-handover-window@example.org",
+      "phone": "+37270000001",
+      "department": "Department 1"
+    }
+  ],
+  "sla_notification_emails": [
+    "slanotifications.client-mock-min-handover-window@example.org"
+  ],
+  "is_user_consent_required": true,
+  "allow_secured_app_web_session": true,
+  "secured_app_session_max_duration": "1h"
+}
