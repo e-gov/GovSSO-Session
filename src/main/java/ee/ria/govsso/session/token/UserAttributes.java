@@ -9,7 +9,6 @@ public record UserAttributes(
         String subject,
         Instant tokenIssuedAt,
         Instant sessionStartTime,
-        Instant sessionExpiry,
         String acr,
         String[] amr,
         String givenName,

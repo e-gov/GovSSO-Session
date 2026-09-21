@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.Map;
 
 import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
-import static ee.ria.govsso.session.service.hydra.HydraService.SESSION_EXPIRY_CLAIM;
 
 @Component
 public class UserAttributesFactory {
@@ -38,7 +37,6 @@ public class UserAttributesFactory {
                 .subject(claims.getSubject())
                 .tokenIssuedAt(toInstant(claims.getIssueTime()))
                 .sessionStartTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
-                .sessionExpiry(toInstant(claims.getDateClaim(SESSION_EXPIRY_CLAIM)))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
                 .givenName(claims.getStringClaim("given_name"))

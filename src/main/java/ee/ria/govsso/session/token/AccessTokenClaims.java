@@ -32,9 +32,6 @@ public class AccessTokenClaims {
     @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
     @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
     private Instant authTime;
-    @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
-    @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
-    private Instant sessionExpiry;
     private List<String> scope;
 
 }

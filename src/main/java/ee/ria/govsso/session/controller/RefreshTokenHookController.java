@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -139,7 +138,6 @@ public class RefreshTokenHookController {
                 accessTokenClaims.setRepresentee(idToken.getRepresentee());
             }
             if (isAuthHandoverTokenRequest(hookRequest)) {
-                accessTokenClaims.setSessionExpiry(getSessionExpiry(consentRequestInfo));
                 accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
             }
             responseBuilder.accessToken(accessTokenClaims);
@@ -164,11 +162,6 @@ public class RefreshTokenHookController {
     private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
         List<String> requestedScopes = hookRequest.getRequestedScopes();
         return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
-    }
-
-    private Instant getSessionExpiry(ConsentRequestInfo consentRequestInfo) {
-        return consentRequestInfo.getAuthenticatedAt().toInstant()
-                .plus(consentRequestInfo.getClient().getLongLivedSessionLifetime());
     }
 
     private void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {

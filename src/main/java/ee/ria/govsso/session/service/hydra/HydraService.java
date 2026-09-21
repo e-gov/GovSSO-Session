@@ -41,7 +41,6 @@ import static java.util.stream.Collectors.toSet;
 @RequiredArgsConstructor
 public class HydraService {
 
-    public static final String SESSION_EXPIRY_CLAIM = "session_expiry";
     public static final String AUTH_TIME_CLAIM = "auth_time";
 
     @Qualifier("hydraWebClient")

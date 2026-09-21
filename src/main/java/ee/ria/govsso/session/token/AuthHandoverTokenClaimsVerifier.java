@@ -21,7 +21,6 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
     private static final String FAMILY_NAME_CLAIM = "family_name";
     private static final String GIVEN_NAME_CLAIM = "given_name";
     private static final String INITIATOR_CLAIM = "initiator";
-    private static final String SESSION_EXPIRY_CLAIM = "session_expiry";
 
     private static final Set<String> requiredClaims = Set.of(
             JWTClaimNames.SUBJECT,
@@ -31,8 +30,7 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
             CLIENT_ID_CLAIM, ACR_CLAIM,
             AMR_CLAIM, AUTH_TIME_CLAIM,
             BIRTHDATE_CLAIM, FAMILY_NAME_CLAIM,
-            GIVEN_NAME_CLAIM, INITIATOR_CLAIM,
-            SESSION_EXPIRY_CLAIM
+            GIVEN_NAME_CLAIM, INITIATOR_CLAIM
     );
 
     private final Clock clock;
