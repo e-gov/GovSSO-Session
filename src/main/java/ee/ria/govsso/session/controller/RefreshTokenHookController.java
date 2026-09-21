@@ -140,6 +140,10 @@ public class RefreshTokenHookController {
             }
             if (isAuthHandoverTokenRequest) {
                 accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
+                if (userAttributes.phoneNumber() != null) {
+                    accessTokenClaims.setPhoneNumber(userAttributes.phoneNumber());
+                    accessTokenClaims.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
+                }
             }
             responseBuilder.accessToken(accessTokenClaims);
         }
