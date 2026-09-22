@@ -51,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
@@ -177,6 +178,15 @@ public class LoginInitController {
         }
         if (prompt != Prompt.CONSENT) {
             throw new SsoException(USER_INPUT, "Request URL must contain prompt=consent");
+        }
+        validateRequestedAccessTokenAudience(loginRequestInfo);
+    }
+
+    private void validateRequestedAccessTokenAudience(LoginRequestInfo loginRequestInfo) {
+        String[] requestedAudience = loginRequestInfo.getRequestedAccessTokenAudience();
+        if (requestedAudience != null
+                && Arrays.asList(requestedAudience).contains(ssoConfigurationProperties.getBaseUrl().toString())) {
+            throw new SsoException(USER_INPUT, "Requested access token audience must not contain the configured base URL");
         }
     }
 

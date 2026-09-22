@@ -34,6 +34,7 @@ public class LoginRequestInfo {
     private String sessionId;
     private URL requestUrl;
     private String[] requestedScope;
+    private String[] requestedAccessTokenAudience;
     private OidcContext oidcContext;
     private boolean skip;
     private OffsetDateTime requestedAt;
