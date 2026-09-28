@@ -7,6 +7,7 @@ import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.token.UserAttributes;
 import lombok.Builder;
 import lombok.Data;
@@ -200,5 +201,11 @@ public class StatisticsLogger {
 
         @JsonProperty("authentication.error_code")
         private ErrorCode errorCode;
+
+        @JsonProperty("session.type")
+        private SessionType sessionType;
+
+        @JsonProperty("authentication.handover_from_client_id")
+        private String handoverFromClientId;
     }
 }
