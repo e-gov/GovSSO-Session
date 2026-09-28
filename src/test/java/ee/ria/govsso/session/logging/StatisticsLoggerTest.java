@@ -32,7 +32,7 @@ class StatisticsLoggerTest extends BaseTestLoggingAssertion {
                 .withLoggerClass(StatisticsLogger.class)
                 .withMessage(StatisticsLogger.LOG_MESSAGE)
                 .withLevel(INFO)
-                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_CANCELED, requestedAcr=null, grantedAcr=null, errorCode=null)")
+                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_CANCELED, requestedAcr=null, grantedAcr=null, errorCode=null, sessionType=null, handoverFromClientId=null)")
                 .isLoggedOnce();
     }
 
@@ -50,7 +50,7 @@ class StatisticsLoggerTest extends BaseTestLoggingAssertion {
                 .withLoggerClass(StatisticsLogger.class)
                 .withMessage(StatisticsLogger.LOG_MESSAGE)
                 .withLevel(Level.ERROR)
-                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_FAILED, requestedAcr=null, grantedAcr=null, errorCode=TECHNICAL_GENERAL)")
+                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_FAILED, requestedAcr=null, grantedAcr=null, errorCode=TECHNICAL_GENERAL, sessionType=null, handoverFromClientId=null)")
                 .isLoggedOnce();
     }
 
