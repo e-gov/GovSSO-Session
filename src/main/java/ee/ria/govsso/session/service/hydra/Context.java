@@ -3,7 +3,6 @@ package ee.ria.govsso.session.service.hydra;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.token.UserAttributes;
-import ee.ria.govsso.session.token.UserAttributesFactory;
 import lombok.Data;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
@@ -43,23 +42,6 @@ public class Context {
         return switch (this.getSessionTypeOrFallback()) {
             case SECURED_APP_SESSION, SECURED_APP_WEB_SESSION -> ClientType.SECURED_APP;
             case WEB_SESSION -> ClientType.DEFAULT;
-        };
-    }
-
-    // TODO Temporary solution. Remove after all sessions created before user attributes were added to context have
-    //  expired, and instead throw when user attributes are missing.
-    @Deprecated
-    public UserAttributes getUserAttributesOrFallback(UserAttributesFactory userAttributesFactory)
-            throws ParseException {
-        UserAttributes userAttributes = this.getUserAttributes();
-        if (userAttributes != null) {
-            return userAttributes;
-        }
-        return switch (this.getSessionTypeOrFallback()) {
-            case SECURED_APP_WEB_SESSION ->
-                    userAttributesFactory.fromAuthHandoverToken(getAuthHandoverTokenJwt().getJWTClaimsSet());
-            case WEB_SESSION, SECURED_APP_SESSION ->
-                    userAttributesFactory.fromTaraIdToken(getTaraIdTokenJwt().getJWTClaimsSet());
         };
     }
 

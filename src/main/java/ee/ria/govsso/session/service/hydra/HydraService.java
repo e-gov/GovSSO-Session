@@ -216,7 +216,7 @@ public class HydraService {
             return null;
         }
         validateSessionMaxAgeNotReached(consents);
-        return consents.get(0).getConsentRequest().getContext().getUserAttributesOrFallback(userAttributesFactory);
+        return consents.get(0).getConsentRequest().getContext().getUserAttributes();
     }
 
     @SneakyThrows
@@ -386,7 +386,7 @@ public class HydraService {
         request.setRememberFor(rememberFor);
 
         Context context = consentRequestInfo.getContext();
-        UserAttributes userAttributes = context.getUserAttributesOrFallback(userAttributesFactory);
+        UserAttributes userAttributes = context.getUserAttributes();
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
         idToken.setGivenName(userAttributes.givenName());
