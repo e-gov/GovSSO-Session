@@ -18,9 +18,6 @@ public class Context {
     private String ipAddress;
     private String userAgent;
     private String ipCountry;
-    // TODO Remove after fully migrating to SessionType
-    @Deprecated
-    private boolean isLongLivingSession;
     private SessionType sessionType;
     private String authHandoverToken;
     private UserAttributes userAttributes;

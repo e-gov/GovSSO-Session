@@ -273,7 +273,6 @@ public class HydraService {
         context.setIpAddress(metadata.ipAddress());
         context.setUserAgent(metadata.userAgent());
         context.setIpCountry(metadata.ipCountry());
-        context.setLongLivingSession(sessionType == SessionType.SECURED_APP_SESSION);
         context.setSessionType(sessionType);
         context.setUserAttributes(userAttributes);
         return context;
