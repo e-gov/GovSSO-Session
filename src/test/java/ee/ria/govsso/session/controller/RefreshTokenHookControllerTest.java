@@ -448,6 +448,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
+                        //TODO Test data needs to be updated to match the removal of context fields
                         .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
 
         given()
