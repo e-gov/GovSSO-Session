@@ -179,7 +179,7 @@ public class LoginInitController {
         String[] requestedAudience = loginRequestInfo.getRequestedAccessTokenAudience();
         if (requestedAudience != null
                 && Arrays.asList(requestedAudience).contains(ssoConfigurationProperties.getBaseUrl().toString())) {
-            throw new SsoException(USER_INPUT, "Requested access token audience must not contain the configured base URL");
+            throw new SsoException(USER_INPUT, "Requested access token audience must not contain the configured GovSSO base URL");
         }
     }
 
