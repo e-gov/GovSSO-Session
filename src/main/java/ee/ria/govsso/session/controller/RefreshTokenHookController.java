@@ -159,7 +159,7 @@ public class RefreshTokenHookController {
 
     private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
         return containsAuthHandoverScope(hookRequest.getRequestedScopes())
-                || containsBaseUrl(hookRequest.getGrantedAudience());
+                || hasGovSsoAsAudience(hookRequest.getGrantedAudience());
     }
 
     private void validateAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
@@ -173,7 +173,7 @@ public class RefreshTokenHookController {
                     "Auth handover token request requested scopes can contain only %s scope".formatted(SCOPE_AUTH_HANDOVER));
         }
         List<String> audience = hookRequest.getGrantedAudience();
-        if (!containsBaseUrl(audience) || audience.size() != 1) {
+        if (!hasGovSsoAsAudience(audience) || audience.size() != 1) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured base URL");
         }
     }
@@ -182,7 +182,7 @@ public class RefreshTokenHookController {
         return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
     }
 
-    private boolean containsBaseUrl(List<String> grantedAudience) {
+    private boolean hasGovSsoAsAudience(List<String> grantedAudience) {
         return grantedAudience != null && grantedAudience.contains(ssoConfigurationProperties.getBaseUrl().toString());
     }
 

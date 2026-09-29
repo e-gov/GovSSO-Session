@@ -100,15 +100,10 @@ public class LoginInitController {
 
         validateLoginRequestInfo(loginRequestInfo);
 
-        String govssoAuthHandoverToken = loginRequestInfo.getAuthHandoverToken();
-        if (govssoAuthHandoverToken != null && !ssoConfigurationProperties.isAuthHandoverEnabled()) {
-            throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
-        }
-
+        SignedJWT authHandoverToken = getAuthHandoverToken(loginRequestInfo);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
-            if (govssoAuthHandoverToken != null) {
+            if (authHandoverToken != null) {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
-                SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
                         ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
@@ -134,9 +129,7 @@ public class LoginInitController {
                 CookieUtil.deleteHydraSessionCookie(request, response);
                 return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
             }
-            if (govssoAuthHandoverToken != null) {
-                SignedJWT authHandoverToken = parseAuthHandoverToken(govssoAuthHandoverToken);
-                authHandoverTokenVerifier.verify(authHandoverToken);
+            if (authHandoverToken != null) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (SecureAppUtil.isSecuredAppWebSession(consents)
@@ -190,6 +183,19 @@ public class LoginInitController {
         }
     }
 
+    private SignedJWT getAuthHandoverToken(LoginRequestInfo loginRequestInfo) {
+        String authHandoverTokenString = loginRequestInfo.getAuthHandoverToken();
+        if (authHandoverTokenString == null) {
+            return null;
+        }
+        if (!ssoConfigurationProperties.isAuthHandoverEnabled()) {
+            throw new SsoException(USER_INPUT, "Authentication using an auth handover token is not enabled");
+        }
+        SignedJWT authHandoverToken = parseAuthHandoverToken(authHandoverTokenString);
+        authHandoverTokenVerifier.verify(authHandoverToken);
+        return authHandoverToken;
+    }
+
     private SignedJWT parseAuthHandoverToken(String govssoAuthHandoverToken) {
         try {
             return SignedJWT.parse(govssoAuthHandoverToken);
@@ -208,7 +214,6 @@ public class LoginInitController {
 
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo, HttpServletRequest request,
                                                        SignedJWT authHandoverToken, UserAttributes userAttributes) {
-        authHandoverTokenVerifier.verify(authHandoverToken);
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }
