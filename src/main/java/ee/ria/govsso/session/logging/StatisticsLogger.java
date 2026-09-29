@@ -49,7 +49,7 @@ public class StatisticsLogger {
         logAccept(
                 requestType, claims.getSubject(), claims.getIssueTime().toInstant(), claims.getStringClaim("acr"),
                 claims.getStringListClaim("amr"), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
-                loginRequestInfo.getAcr());
+                loginRequestInfo.getAcr(), null);
     }
 
     public void logAccept(
@@ -58,21 +58,21 @@ public class StatisticsLogger {
         logAccept(
                 requestType, userAttributes.subject(), userAttributes.taraAuthTime(), userAttributes.acr(),
                 userAttributes.amr(), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
-                loginRequestInfo.getAcr());
+                loginRequestInfo.getAcr(), null);
     }
 
     public void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
-            @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
+            @NonNull ConsentRequestInfo consentRequestInfo, String sessionId, SessionType sessionType) {
         logAccept(
                 requestType, userAttributes.subject(), userAttributes.taraAuthTime(), userAttributes.acr(),
-                userAttributes.amr(), consentRequestInfo.getClient(), sessionId, null);
+                userAttributes.amr(), consentRequestInfo.getClient(), sessionId, null, sessionType);
     }
 
     private void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull String subject, @NonNull Instant sessionStartTime,
             @NonNull String acr, @NonNull List<String> amrClaim, @NonNull Client client, @NonNull String sessionId,
-            LevelOfAssurance requestAcr) {
+            LevelOfAssurance requestAcr, SessionType sessionType) {
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
         var country = subject.substring(0, 2);
@@ -98,6 +98,7 @@ public class StatisticsLogger {
                 .authenticationRequestType(requestType)
                 .authenticationState(AUTHENTICATION_SUCCESS)
                 .grantedAcr(grantedAcr)
+                .sessionType(sessionType)
                 .build();
         amr.ifPresent(sessionStatistics::setAuthenticationType);
         if (requestAcr != null) {
