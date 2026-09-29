@@ -15,6 +15,7 @@ import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.IdToken.IdTo
 import ee.ria.govsso.session.service.hydra.RefreshTokenHookResponse.RefreshTokenHookResponseBuilder;
 import ee.ria.govsso.session.service.hydra.Representee;
 import ee.ria.govsso.session.service.hydra.RepresenteeList;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.service.paasuke.RepresentationService;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
@@ -36,6 +37,7 @@ import java.time.Clock;
 import java.util.List;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.ISSUE_AUTH_HANDOVER_TOKEN;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDOVER;
@@ -62,7 +64,6 @@ public class RefreshTokenHookController {
 
         String generatedTraceId = RandomStringUtils.secure().next(32, "0123456789abcdef");
         RequestUtil.setFlowTraceId(generatedTraceId);
-        request.setAttribute(AUTHENTICATION_REQUEST_TYPE, UPDATE_SESSION);
 
         String sessionId = hookRequest.getSessionId();
         if (StringUtils.isEmpty(sessionId)) {
@@ -71,11 +72,15 @@ public class RefreshTokenHookController {
         }
 
         boolean isAuthHandoverTokenRequest = containsAuthHandoverScope(hookRequest.getRequestedScopes());
+        StatisticsLogger.AuthenticationRequestType requestType;
         if (isAuthHandoverTokenRequest) {
             validateAuthHandoverTokenRequest(hookRequest);
+            requestType = ISSUE_AUTH_HANDOVER_TOKEN;
         } else {
             validateRequestedScopes(hookRequest);
+            requestType = UPDATE_SESSION;
         }
+        request.setAttribute(AUTHENTICATION_REQUEST_TYPE, requestType);
 
         List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
         UserAttributes userAttributes = hydraService.getUserAttributesFromConsentContext(consents);
@@ -154,7 +159,8 @@ public class RefreshTokenHookController {
             responseBuilder.accessToken(accessTokenClaims);
         }
 
-        statisticsLogger.logAccept(UPDATE_SESSION, userAttributes, consentRequestInfo, sessionId);
+        SessionType sessionType = consentRequestInfo.getContext().getSessionTypeOrFallback();
+        statisticsLogger.logAccept(requestType, userAttributes, consentRequestInfo, sessionId, sessionType);
 
         RefreshTokenHookResponse response = responseBuilder
                 .idToken(idToken)
