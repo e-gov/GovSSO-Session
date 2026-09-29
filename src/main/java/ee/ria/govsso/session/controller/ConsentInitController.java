@@ -51,7 +51,7 @@ public class ConsentInitController {
         ConsentAcceptResponse response = hydraService.acceptConsent(consentChallenge, consentRequestInfo, representeeList);
         /* Sessions of type `SECURED_APP_SESSION` cannot be continued, so let's remove the session cookie after
          * the session is created. */
-        if (consentRequestInfo.getContext().getSessionTypeOrFallback() == SessionType.SECURED_APP_SESSION) {
+        if (consentRequestInfo.getContext().getSessionType() == SessionType.SECURED_APP_SESSION) {
             CookieUtil.deleteHydraSessionCookie(httpRequest, httpResponse);
         }
         return new RedirectView(response.getRedirectTo().toString());

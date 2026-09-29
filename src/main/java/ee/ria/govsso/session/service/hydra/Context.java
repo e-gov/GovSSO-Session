@@ -25,18 +25,6 @@ public class Context {
     private String authHandoverToken;
     private UserAttributes userAttributes;
 
-    // TODO Temporary solution. Remove after all sessions created before session type was added to context have
-    //  expired, and instead throw when session type is missing.
-    @Deprecated
-    @JsonIgnore
-    public SessionType getSessionTypeOrFallback() {
-        SessionType sessionType = this.getSessionType();
-        if (sessionType != null) {
-            return sessionType;
-        }
-        return this.isLongLivingSession() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
-    }
-
     @JsonIgnore
     public ClientType getInitiator() {
         return switch (this.getSessionType()) {

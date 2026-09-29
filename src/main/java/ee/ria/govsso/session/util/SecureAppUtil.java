@@ -21,7 +21,7 @@ public class SecureAppUtil {
     }
 
     public static boolean isSecuredAppSession(Context context) {
-        return SessionType.SECURED_APP_SESSION == context.getSessionTypeOrFallback();
+        return SessionType.SECURED_APP_SESSION == context.getSessionType();
     }
 
     public static boolean isSecuredAppWebSession(List<Consent> consents) {
@@ -33,7 +33,7 @@ public class SecureAppUtil {
     }
 
     public static boolean isSecuredAppWebSession(Context context) {
-        return SessionType.SECURED_APP_WEB_SESSION == context.getSessionTypeOrFallback();
+        return SessionType.SECURED_APP_WEB_SESSION == context.getSessionType();
     }
     
     public static boolean hasSecuredAppAsInitiator(Context context) {
