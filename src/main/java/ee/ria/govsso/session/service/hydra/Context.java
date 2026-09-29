@@ -39,7 +39,7 @@ public class Context {
 
     @JsonIgnore
     public ClientType getInitiator() {
-        return switch (this.getSessionTypeOrFallback()) {
+        return switch (this.getSessionType()) {
             case SECURED_APP_SESSION, SECURED_APP_WEB_SESSION -> ClientType.SECURED_APP;
             case WEB_SESSION -> ClientType.DEFAULT;
         };
