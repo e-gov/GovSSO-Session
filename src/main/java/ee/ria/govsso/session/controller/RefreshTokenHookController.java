@@ -69,7 +69,7 @@ public class RefreshTokenHookController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session was not found");
         }
 
-        boolean isAuthHandoverTokenRequest = isAuthHandoverTokenRequest(hookRequest);
+        boolean isAuthHandoverTokenRequest = containsAuthHandoverScope(hookRequest.getRequestedScopes());
         if (isAuthHandoverTokenRequest) {
             validateAuthHandoverTokenRequest(hookRequest);
         } else {
@@ -155,11 +155,6 @@ public class RefreshTokenHookController {
                 .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
-    }
-
-    private boolean isAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
-        return containsAuthHandoverScope(hookRequest.getRequestedScopes())
-                || hasGovSsoAsAudience(hookRequest.getGrantedAudience());
     }
 
     private void validateAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {
