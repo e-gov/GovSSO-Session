@@ -226,7 +226,7 @@ public class HydraService {
             return null;
         }
         validateSessionMaxAgeNotReached(consents);
-        return consents.get(0).getConsentRequest().getContext().getUserAttributesOrFallback(userAttributesFactory);
+        return consents.get(0).getConsentRequest().getContext().getUserAttributes();
     }
 
     @SneakyThrows
@@ -268,7 +268,7 @@ public class HydraService {
         SessionType sessionType = context.getSessionTypeOrFallback();
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> acceptSecuredAppWebSessionLogin(
-                    context.getUserAttributesOrFallback(userAttributesFactory), loginRequestInfo, metadata);
+                    context.getUserAttributes(), loginRequestInfo, metadata);
             case WEB_SESSION -> acceptLogin(
                     context.getTaraIdTokenJwt(), loginRequestInfo, metadata);
             case SECURED_APP_SESSION -> throw new IllegalStateException(
@@ -394,7 +394,7 @@ public class HydraService {
         request.setRememberFor(rememberFor);
 
         Context context = consentRequestInfo.getContext();
-        UserAttributes userAttributes = context.getUserAttributesOrFallback(userAttributesFactory);
+        UserAttributes userAttributes = context.getUserAttributes();
         String[] requestedScopes = consentRequestInfo.getRequestedScope();
 
         idToken.setGivenName(userAttributes.givenName());
@@ -620,7 +620,7 @@ public class HydraService {
         if (context.getSessionTypeOrFallback() != SessionType.WEB_SESSION) {
             return;
         }
-        Instant sessionMaxAgeExpiration = context.getUserAttributesOrFallback(userAttributesFactory).taraAuthTime()
+        Instant sessionMaxAgeExpiration = context.getUserAttributes().taraAuthTime()
                 .plus(ssoConfigurationProperties.getSessionMaxDuration());
         if (Instant.now().isAfter(sessionMaxAgeExpiration)) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
