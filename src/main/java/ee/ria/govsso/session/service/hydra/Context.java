@@ -20,6 +20,7 @@ public class Context {
     private String userAgent;
     private String ipCountry;
     // TODO Remove after fully migrating to SessionType
+    @Deprecated
     private boolean isLongLivingSession;
     private SessionType sessionType;
     private String authHandoverToken;
@@ -27,6 +28,7 @@ public class Context {
 
     // TODO Temporary solution. Remove after all sessions created before session type was added to context have
     //  expired, and instead throw when session type is missing.
+    @Deprecated
     @JsonIgnore
     public SessionType getSessionTypeOrFallback() {
         SessionType sessionType = this.getSessionType();
@@ -46,6 +48,7 @@ public class Context {
 
     // TODO Temporary solution. Remove after all sessions created before user attributes were added to context have
     //  expired, and instead throw when user attributes are missing.
+    @Deprecated
     public UserAttributes getUserAttributesOrFallback(UserAttributesFactory userAttributesFactory)
             throws ParseException {
         UserAttributes userAttributes = this.getUserAttributes();
