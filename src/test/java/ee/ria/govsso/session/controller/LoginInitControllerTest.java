@@ -1203,7 +1203,7 @@ class LoginInitControllerTest extends BaseTest {
                 .statusCode(400)
                 .cookies(emptyMap());
 
-        assertErrorIsLogged("SsoException: Requested access token audience must not contain the configured base URL");
+        assertErrorIsLogged("SsoException: Requested access token audience must not contain the configured GovSSO base URL");
     }
 
     @Test
