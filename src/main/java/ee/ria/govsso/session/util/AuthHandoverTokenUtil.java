@@ -30,7 +30,7 @@ public class AuthHandoverTokenUtil {
         }
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();
         if (securedAppSessionMaxDuration != null) {
-            Instant authTime = requireAuthHandoverClaim(userAttributes.sessionStartTime(), AUTH_TIME_CLAIM);
+            Instant authTime = requireAuthHandoverClaim(userAttributes.taraAuthTime(), AUTH_TIME_CLAIM);
             Duration securedAppSessionAge = Duration.between(authTime, Instant.now(clock));
             if (securedAppSessionAge.compareTo(securedAppSessionMaxDuration) > 0) {
                 return false;

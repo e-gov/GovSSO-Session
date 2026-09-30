@@ -555,7 +555,7 @@ public class HydraService {
         if (context.getSessionTypeOrFallback() != SessionType.WEB_SESSION) {
             return;
         }
-        Instant sessionMaxAgeExpiration = extractUserAttributes(context).sessionStartTime()
+        Instant sessionMaxAgeExpiration = extractUserAttributes(context).taraAuthTime()
                 .plus(ssoConfigurationProperties.getSessionMaxDuration());
         if (Instant.now().isAfter(sessionMaxAgeExpiration)) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");

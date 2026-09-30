@@ -20,7 +20,7 @@ public record UserAttributes(
         Instant tokenIssuedAt,
         @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
         @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
-        Instant sessionStartTime,
+        Instant taraAuthTime,
         String acr,
         String[] amr,
         String givenName,
