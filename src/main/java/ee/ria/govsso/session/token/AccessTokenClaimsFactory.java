@@ -25,7 +25,7 @@ public class AccessTokenClaimsFactory {
                 .familyName(userAttributes.familyName())
                 .birthdate(userAttributes.birthdate())
                 .initiator(initiator)
-                .authTime(SecureAppUtil.isSecuredAppSession(context) ? authenticatedAt : null);
+                .authTime(SecureAppUtil.hasSecuredAppAsInitiator(context) ? authenticatedAt : null);
         if (scopes.contains(SCOPE_PHONE)) {
             builder
                     .phoneNumber(userAttributes.phoneNumber())
