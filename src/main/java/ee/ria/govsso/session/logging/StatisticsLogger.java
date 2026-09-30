@@ -55,7 +55,7 @@ public class StatisticsLogger {
             @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
             @NonNull LoginRequestInfo loginRequestInfo) {
         logAccept(
-                requestType, userAttributes.subject(), userAttributes.sessionStartTime(), userAttributes.acr(),
+                requestType, userAttributes.subject(), userAttributes.taraAuthTime(), userAttributes.acr(),
                 userAttributes.amr(), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
                 loginRequestInfo.getAcr());
     }
@@ -64,7 +64,7 @@ public class StatisticsLogger {
             @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
             @NonNull ConsentRequestInfo consentRequestInfo, String sessionId) {
         logAccept(
-                requestType, userAttributes.subject(), userAttributes.sessionStartTime(), userAttributes.acr(),
+                requestType, userAttributes.subject(), userAttributes.taraAuthTime(), userAttributes.acr(),
                 userAttributes.amr(), consentRequestInfo.getClient(), sessionId, null);
     }
 
