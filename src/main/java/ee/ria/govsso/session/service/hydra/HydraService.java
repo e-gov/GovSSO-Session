@@ -392,7 +392,11 @@ public class HydraService {
         idToken.setGivenName(userAttributes.givenName());
         idToken.setFamilyName(userAttributes.familyName());
         idToken.setBirthdate(userAttributes.birthdate());
-        idToken.setInitiator(context.getInitiator());
+        ClientType initiator = switch (consentRequestInfo.getContext().getInitiator()) {
+            case SECURED_APP -> ClientType.SECURED_APP;
+            case DEFAULT -> null;
+        };
+        idToken.setInitiator(initiator);
         if (List.of(requestedScopes).contains(SCOPE_PHONE) && userAttributes.phoneNumber() != null) {
             idToken.setPhoneNumber(userAttributes.phoneNumber());
             idToken.setPhoneNumberVerified(userAttributes.phoneNumberVerified());

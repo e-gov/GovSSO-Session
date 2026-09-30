@@ -5,6 +5,7 @@ import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
+import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -111,12 +112,16 @@ public class RefreshTokenHookController {
                     .refreshConsentRememberFor(true)
                     .consentRememberFor(rememberFor);
         }
+        ClientType initiator = switch (consentRequestInfo.getContext().getInitiator()) {
+            case SECURED_APP -> ClientType.SECURED_APP;
+            case DEFAULT -> null;
+        };
         IdTokenBuilder idTokenBuilder = RefreshTokenHookResponse.IdToken.builder()
                 .sid(sessionId)
                 .givenName(userAttributes.givenName())
                 .familyName(userAttributes.familyName())
                 .birthdate(userAttributes.birthdate())
-                .initiator(consentRequestInfo.getContext().getInitiator());
+                .initiator(initiator);
         if (hookRequest.getGrantedScopes().contains(SCOPE_PHONE) && userAttributes.phoneNumber() != null) {
             idTokenBuilder
                     .phoneNumber(userAttributes.phoneNumber())
@@ -140,10 +145,8 @@ public class RefreshTokenHookController {
             }
             if (isAuthHandoverTokenRequest) {
                 accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
-                if (userAttributes.phoneNumber() != null) {
-                    accessTokenClaims.setPhoneNumber(userAttributes.phoneNumber());
-                    accessTokenClaims.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
-                }
+                accessTokenClaims.setPhoneNumber(userAttributes.phoneNumber());
+                accessTokenClaims.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
             }
             responseBuilder.accessToken(accessTokenClaims);
         }

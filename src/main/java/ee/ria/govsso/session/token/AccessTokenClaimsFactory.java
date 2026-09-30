@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.token;
 
+import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Context;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import org.springframework.stereotype.Component;
@@ -13,13 +14,17 @@ import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 public class AccessTokenClaimsFactory {
 
     public AccessTokenClaims from(UserAttributes userAttributes, List<String> scopes, Context context, Instant authenticatedAt) {
+        ClientType initiator = switch (context.getInitiator()) {
+            case SECURED_APP -> ClientType.SECURED_APP;
+            case DEFAULT -> null;
+        };
         AccessTokenClaims.AccessTokenClaimsBuilder builder = AccessTokenClaims.builder()
                 .acr(userAttributes.acr())
                 .amr(userAttributes.amr())
                 .givenName(userAttributes.givenName())
                 .familyName(userAttributes.familyName())
                 .birthdate(userAttributes.birthdate())
-                .initiator(context.getInitiator())
+                .initiator(initiator)
                 .authTime(SecureAppUtil.isSecuredAppSession(context) ? authenticatedAt : null);
         if (scopes.contains(SCOPE_PHONE)) {
             builder

@@ -42,7 +42,7 @@ public class Context {
     public ClientType getInitiator() {
         return switch (this.getSessionTypeOrFallback()) {
             case SECURED_APP_SESSION, SECURED_APP_WEB_SESSION -> ClientType.SECURED_APP;
-            case WEB_SESSION -> null;
+            case WEB_SESSION -> ClientType.DEFAULT;
         };
     }
 
