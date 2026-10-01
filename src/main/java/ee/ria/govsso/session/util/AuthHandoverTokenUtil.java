@@ -24,8 +24,8 @@ public class AuthHandoverTokenUtil {
             return false;
         }
         Instant now = Instant.now(clock);
-        Instant issuedAt = requireAuthHandoverClaim(userAttributes.tokenIssuedAt(), JWTClaimNames.ISSUED_AT);
-        if (Duration.between(issuedAt, now).compareTo(sessionMaxDuration) > 0) {
+        Instant authHandoverTime = requireAuthHandoverClaim(userAttributes.authHandoverTime(), JWTClaimNames.ISSUED_AT);
+        if (Duration.between(authHandoverTime, now).compareTo(sessionMaxDuration) > 0) {
             return false;
         }
         Duration securedAppSessionMaxDuration = metadata.getSecuredAppSessionMaxAge();

@@ -17,7 +17,7 @@ public record UserAttributes(
         String subject,
         @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
         @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
-        Instant tokenIssuedAt,
+        Instant authHandoverTime,
         @JsonSerialize(using = InstantAsEpochSeconds.Serializer.class)
         @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
         Instant taraAuthTime,
