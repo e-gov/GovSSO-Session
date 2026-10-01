@@ -178,7 +178,7 @@ public class LoginInitController {
     private void validateRequestedAccessTokenAudience(LoginRequestInfo loginRequestInfo) {
         String[] requestedAudience = loginRequestInfo.getRequestedAccessTokenAudience();
         if (requestedAudience != null
-                && Arrays.asList(requestedAudience).contains(ssoConfigurationProperties.getBaseUrl().toString())) {
+                && hydraService.hasGovSsoAsAudience(Arrays.asList(requestedAudience))) {
             throw new SsoException(USER_INPUT, "Requested access token audience must not contain the configured GovSSO base URL");
         }
     }
