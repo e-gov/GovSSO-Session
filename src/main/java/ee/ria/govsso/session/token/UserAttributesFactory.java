@@ -20,7 +20,6 @@ public class UserAttributesFactory {
         }
         return UserAttributes.builder()
                 .subject(claims.getSubject())
-                .tokenIssuedAt(toInstant(claims.getIssueTime()))
                 .taraAuthTime(toInstant(claims.getIssueTime()))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
@@ -35,7 +34,7 @@ public class UserAttributesFactory {
     public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
         return UserAttributes.builder()
                 .subject(claims.getSubject())
-                .tokenIssuedAt(toInstant(claims.getIssueTime()))
+                .authHandoverTime(toInstant(claims.getIssueTime()))
                 .taraAuthTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
                 .acr(claims.getStringClaim("acr"))
                 .amr(claims.getStringArrayClaim("amr"))
