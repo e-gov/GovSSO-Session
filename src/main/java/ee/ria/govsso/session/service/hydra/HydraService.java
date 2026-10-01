@@ -561,4 +561,12 @@ public class HydraService {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra session has expired");
         }
     }
+
+    public boolean hasGovSsoAsAudience(List<String> grantedAudience) {
+        if (grantedAudience == null || grantedAudience.isEmpty()) {
+            return false;
+        }
+        String govSsoBaseUrl = ssoConfigurationProperties.getBaseUrl().toString();
+        return grantedAudience.stream().anyMatch(audience -> audience.startsWith(govSsoBaseUrl));
+    }
 }
