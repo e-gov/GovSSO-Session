@@ -6,7 +6,10 @@ import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -31,6 +34,11 @@ public class Client {
             throw new IllegalStateException("Client must be marked as \"%s\"".formatted(ClientType.SECURED_APP));
         }
         return HydraDurationFormat.parse(authorizationCodeGrantRefreshTokenLifespan);
+    }
+
+    @JsonIgnore
+    public Set<String> getAllowedScopes() {
+        return Arrays.stream(scope.split(" ")).collect(Collectors.toSet());
     }
 
 }
