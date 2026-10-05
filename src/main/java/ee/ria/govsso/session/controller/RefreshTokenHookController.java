@@ -159,7 +159,7 @@ public class RefreshTokenHookController {
             responseBuilder.accessToken(accessTokenClaims);
         }
 
-        SessionType sessionType = consentRequestInfo.getContext().getSessionTypeOrFallback();
+        SessionType sessionType = consentRequestInfo.getContext().getSessionType();
         statisticsLogger.logAccept(requestType, userAttributes, consentRequestInfo, sessionId, sessionType);
 
         RefreshTokenHookResponse response = responseBuilder

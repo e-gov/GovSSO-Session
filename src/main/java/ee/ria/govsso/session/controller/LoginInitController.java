@@ -19,6 +19,7 @@ import ee.ria.govsso.session.service.hydra.LoginSessionInfo;
 import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
@@ -72,6 +73,7 @@ public class LoginInitController {
 
     public static final String LOGIN_INIT_REQUEST_MAPPING = "/login/init";
     private static final String SID_CLAIM = "sid";
+    private static final String CLIENT_ID_CLAIM = "client_id";
 
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
@@ -110,7 +112,8 @@ public class LoginInitController {
                 if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
                         ssoConfigurationProperties.getSessionMaxDuration(), clock)
                         && isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
-                    return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
+                    String handoverFromClientId = parseClientId(authHandoverToken);
+                    return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes, handoverFromClientId);
                 }
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
@@ -217,14 +220,23 @@ public class LoginInitController {
         }
     }
 
+    private String parseClientId(SignedJWT authHandoverToken) {
+        try {
+            return authHandoverToken.getJWTClaimsSet().getStringClaim(CLIENT_ID_CLAIM);
+        } catch (ParseException ex) {
+            throw new SsoException(USER_INPUT, "Unable to parse client ID from auth handover token", ex);
+        }
+    }
+
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo, HttpServletRequest request,
-                                                       SignedJWT authHandoverToken, UserAttributes userAttributes) {
+                                                       SignedJWT authHandoverToken, UserAttributes userAttributes,
+                                                       String handoverFromClientId) {
         hydraService.consumeAuthHandoverToken(authHandoverToken.getParsedString());
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-        return acceptAuthHandoverLogin(loginRequestInfo, userAttributes, metadata);
+        return acceptAuthHandoverLogin(loginRequestInfo, userAttributes, metadata, handoverFromClientId);
     }
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
@@ -273,9 +285,9 @@ public class LoginInitController {
     }
 
     private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes,
-                                                 ClientRequestMetadata metadata) {
+                                                 ClientRequestMetadata metadata, String handoverFromClientId) {
         LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(userAttributes, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
+        statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo, SessionType.SECURED_APP_WEB_SESSION, handoverFromClientId);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
