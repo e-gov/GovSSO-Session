@@ -95,7 +95,7 @@ public class RefreshTokenHookController {
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
         boolean isLongLivingSession = SecureAppUtil.isSecuredAppSession(consentRequestInfo);
-        if (isAuthHandoverTokenRequest && !consentRequestInfo.getClient().getScope().contains(SCOPE_AUTH_HANDOVER)) {
+        if (isAuthHandoverTokenRequest && !consentRequestInfo.getClient().getAllowedScopes().contains(SCOPE_AUTH_HANDOVER)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     ("Refresh token hook request must not be an auth handover token request, because %s scope is " +
                             "not included in the list of scopes for the client.").formatted(SCOPE_AUTH_HANDOVER));
@@ -172,7 +172,7 @@ public class RefreshTokenHookController {
         }
         List<String> audience = hookRequest.getGrantedAudience();
         if (!hydraService.hasGovSsoAsAudience(audience) || audience.size() != 1) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured base URL");
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured GovSSO base URL");
         }
     }
 
