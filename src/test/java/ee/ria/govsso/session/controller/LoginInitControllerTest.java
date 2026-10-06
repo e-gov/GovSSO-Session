@@ -1,9 +1,7 @@
 package ee.ria.govsso.session.controller;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -47,7 +45,6 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -59,7 +56,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.LoginInitController.LOGIN_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoCookie.COOKIE_NAME_GOVSSO;
@@ -1772,8 +1768,7 @@ class LoginInitControllerTest extends BaseTest {
         @SneakyThrows
         void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsTechnicalGeneralError() {
 
-            SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
-            String responseBody = createConsentsResponseBodyWithIdToken(jwt);
+            String responseBody = createConsentsResponseBodyWithTaraAuthAge(3610);
 
             HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                     .willReturn(aResponse()
@@ -1803,8 +1798,7 @@ class LoginInitControllerTest extends BaseTest {
         @SneakyThrows
         void loginInit_WhenConsentIdTokenLasts10MoreSeconds_Returns200() {
 
-            SignedJWT jwt = createIdTokenWithAgeInSeconds(3590);
-            String responseBody = createConsentsResponseBodyWithIdToken(jwt);
+            String responseBody = createConsentsResponseBodyWithTaraAuthAge(3590);
 
             HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
                     .willReturn(aResponse()
@@ -1834,13 +1828,17 @@ class LoginInitControllerTest extends BaseTest {
                     .statusCode(200);
         }
 
-        private String createConsentsResponseBodyWithIdToken(SignedJWT jwt) {
+        private String createConsentsResponseBodyWithTaraAuthAge(int ageInSeconds) {
             String consentsResponseBody = """
                     [
                       {
                         "consent_request": {
                           "context": {
-                            "tara_id_token": "%s"
+                            "session_type": "WEB_SESSION",
+                            "user_attributes": {
+                              "tara_auth_time": %d,
+                              "acr": "high"
+                            }
                           },
                           "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
                           "requested_at": "2023-01-01T01:00:00Z"
@@ -1850,19 +1848,7 @@ class LoginInitControllerTest extends BaseTest {
                     ]
                     """;
 
-            return String.format(consentsResponseBody, jwt.serialize());
-        }
-
-        private SignedJWT createIdTokenWithAgeInSeconds(int ageInSeconds) throws JOSEException {
-            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .issueTime(Date.from(Instant.now().minusSeconds(ageInSeconds)))
-                    .claim("profile_attributes", Map.of("given_name", "test1", "family_name", "test2"))
-                    .claim("acr", "high")
-                    .build();
-            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(TARA_JWK.getKeyID()).build(), claimsSet);
-            JWSSigner signer = new RSASSASigner(TARA_JWK);
-            jwt.sign(signer);
-            return jwt;
+            return String.format(consentsResponseBody, Instant.now().minusSeconds(ageInSeconds).getEpochSecond());
         }
     }
 
