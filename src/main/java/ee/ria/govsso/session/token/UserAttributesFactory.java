@@ -1,14 +1,13 @@
 package ee.ria.govsso.session.token;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import ee.ria.govsso.session.service.hydra.LoginSessionInfo;
 import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
-
-import static ee.ria.govsso.session.service.hydra.HydraService.AUTH_TIME_CLAIM;
 
 @Component
 public class UserAttributesFactory {
@@ -31,18 +30,18 @@ public class UserAttributesFactory {
                 .build();
     }
 
-    public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims) throws ParseException {
+    public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims, LoginSessionInfo loginSessionInfo) throws ParseException {
         return UserAttributes.builder()
-                .subject(claims.getSubject())
+                .subject(loginSessionInfo.getSubject())
                 .authHandoverTime(toInstant(claims.getIssueTime()))
-                .taraAuthTime(toInstant(claims.getDateClaim(AUTH_TIME_CLAIM)))
-                .acr(claims.getStringClaim("acr"))
-                .amr(claims.getStringListClaim("amr"))
-                .givenName(claims.getStringClaim("given_name"))
-                .familyName(claims.getStringClaim("family_name"))
-                .birthdate(claims.getStringClaim("birthdate"))
-                .phoneNumber(claims.getStringClaim("phone_number"))
-                .phoneNumberVerified(claims.getBooleanClaim("phone_number_verified"))
+                .taraAuthTime(loginSessionInfo.getAuthTime())
+                .acr(loginSessionInfo.getAcr())
+                .amr(loginSessionInfo.getAmr())
+                .givenName(loginSessionInfo.getGivenName())
+                .familyName(loginSessionInfo.getFamilyName())
+                .birthdate(loginSessionInfo.getBirthdate())
+                .phoneNumber(loginSessionInfo.getPhoneNumber())
+                .phoneNumberVerified(loginSessionInfo.getPhoneNumberVerified())
                 .build();
     }
 
