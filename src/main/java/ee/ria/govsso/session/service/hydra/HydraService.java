@@ -487,6 +487,33 @@ public class HydraService {
         }
     }
 
+    public LoginSessionInfo fetchLoginSessionInfo(String loginSessionId) {
+        String uri = UriComponentsBuilder
+                .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/login")
+                .queryParam("sid", loginSessionId)
+                .toUriString();
+
+        try {
+            requestLogger.logRequest(uri, HttpMethod.GET.name());
+            LoginSessionInfo loginSessionInfo = webclient.get()
+                    .uri(uri)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(LoginSessionInfo.class)
+                    .blockOptional().orElseThrow();
+
+            requestLogger.logResponse(HttpStatus.OK.value(), loginSessionInfo);
+            return loginSessionInfo;
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+                throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra login session info", ex);
+            else
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
+        } catch (Exception ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
+        }
+    }
+
     public void deleteLoginSessionAndRelatedLoginRequests(String loginSessionId) {
         String uri = UriComponentsBuilder
                 .fromUriString(hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/sessions/login")
