@@ -9,6 +9,7 @@ import ee.ria.govsso.session.service.paasuke.PaasukeHeaders;
 import ee.ria.govsso.session.xroad.XRoadHeaders;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -16,6 +17,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.NestedTestConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +29,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static ee.ria.govsso.session.controller.RefreshTokenHookController.TOKEN_REFRESH_REQUEST_MAPPING;
+import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDOVER;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_OPENID;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE;
@@ -36,6 +40,7 @@ import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -141,7 +146,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .body("session.access_token.family_name", equalTo("Perekonnanimi3"))
                 .body("session.access_token.birthdate", equalTo("1961-07-12"))
                 .body("session.access_token.phone_number", nullValue())
-                .body("session.access_token.phone_number_verified", nullValue());
+                .body("session.access_token.phone_number_verified", nullValue())
+                .body("session.access_token.sid", nullValue());
     }
 
     @Test
@@ -754,6 +760,38 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .body("session.access_token.representee_list", nullValue());
 
         assertErrorIsLogged("Pääsuke fetchRepresentees request failed with HTTP error");
+    }
+
+    @Nested
+    @NestedTestConfiguration(OVERRIDE)
+    @TestPropertySource(properties = {"govsso.auth-handover-enabled=true"})
+    class AuthHandoverEnabledTests extends BaseTest {
+
+        @Test
+        void tokenRefresh_whenAuthHandoverTokenIsRequested_sidIsAddedToAccessToken() {
+            RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_AUTH_HANDOVER));
+            hookRequest.setSubject("testSubject");
+            hookRequest.setRequestedScopes(List.of(SCOPE_AUTH_HANDOVER));
+            hookRequest.setGrantedAudience(List.of("https://inproxy.localhost:8000"));
+
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=testSubject&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBodyFile("mock_responses/mock_sso_oidc_consents_auth_handover.json")));
+
+            given()
+                    .request().body(hookRequest)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .when()
+                    .post(TOKEN_REFRESH_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(200)
+                    .body("session.id_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                    .body("session.access_token.scope", equalTo(List.of(SCOPE_AUTH_HANDOVER)))
+                    .body("session.access_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"));
+        }
     }
 
     private RefreshTokenHookRequest createRefreshTokenHookRequest(String sid, String clientId, List<String> scopes) {
