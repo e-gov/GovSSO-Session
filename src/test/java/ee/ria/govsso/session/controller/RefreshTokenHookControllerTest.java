@@ -798,7 +798,8 @@ class RefreshTokenHookControllerTest extends BaseTest {
                     .body("session.access_token.family_name", nullValue())
                     .body("session.access_token.birthdate", nullValue())
                     .body("session.access_token.phone_number", nullValue())
-                    .body("session.access_token.phone_number_verified", nullValue());
+                    .body("session.access_token.phone_number_verified", nullValue())
+                    .body("session.access_token.initiator", nullValue());
         }
     }
 

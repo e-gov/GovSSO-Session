@@ -143,7 +143,6 @@ public class RefreshTokenHookController {
                 accessTokenClaims = AccessTokenClaims.builder()
                         .scope(List.of(SCOPE_AUTH_HANDOVER))
                         .sid(sessionId)
-                        .initiator(initiator)
                         .build();
             } else {
                 accessTokenClaims = accessTokenClaimsFactory.from(

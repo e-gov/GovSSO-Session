@@ -14,7 +14,6 @@ import java.util.Set;
 public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<SecurityContext> {
 
     private static final String CLIENT_ID_CLAIM = "client_id";
-    private static final String INITIATOR_CLAIM = "initiator";
     private static final String SID_CLAIM = "sid";
 
     private static final Set<String> requiredClaims = Set.of(
@@ -22,8 +21,7 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
             JWTClaimNames.ISSUED_AT,
             JWTClaimNames.EXPIRATION_TIME,
             JWTClaimNames.JWT_ID,
-            CLIENT_ID_CLAIM, INITIATOR_CLAIM,
-            SID_CLAIM
+            CLIENT_ID_CLAIM, SID_CLAIM
     );
 
     private final Clock clock;
