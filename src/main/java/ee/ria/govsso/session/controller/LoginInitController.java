@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
@@ -14,6 +15,7 @@ import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.LoginSessionInfo;
 import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
@@ -69,6 +71,7 @@ import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 public class LoginInitController {
 
     public static final String LOGIN_INIT_REQUEST_MAPPING = "/login/init";
+    private static final String SID_CLAIM = "sid";
 
     private final SsoCookieSigner ssoCookieSigner;
     private final HydraService hydraService;
@@ -205,7 +208,9 @@ public class LoginInitController {
 
     private UserAttributes parseUserAttributes(SignedJWT authHandoverToken) {
         try {
-            return userAttributesFactory.fromAuthHandoverToken(authHandoverToken.getJWTClaimsSet());
+            JWTClaimsSet claims = authHandoverToken.getJWTClaimsSet();
+            LoginSessionInfo loginSessionInfo = hydraService.fetchLoginSessionInfo(claims.getStringClaim(SID_CLAIM));
+            return userAttributesFactory.fromAuthHandoverToken(claims, loginSessionInfo);
         } catch (ParseException ex) {
             throw new SsoException(USER_INPUT, "Unable to parse user attributes from auth handover token", ex);
         }
