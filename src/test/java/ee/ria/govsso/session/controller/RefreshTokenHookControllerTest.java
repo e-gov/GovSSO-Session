@@ -790,7 +790,15 @@ class RefreshTokenHookControllerTest extends BaseTest {
                     .statusCode(200)
                     .body("session.id_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                     .body("session.access_token.scope", equalTo(List.of(SCOPE_AUTH_HANDOVER)))
-                    .body("session.access_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"));
+                    .body("session.access_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                    .body("session.access_token.acr", nullValue())
+                    .body("session.access_token.amr", nullValue())
+                    .body("session.access_token.auth_time", nullValue())
+                    .body("session.access_token.given_name", nullValue())
+                    .body("session.access_token.family_name", nullValue())
+                    .body("session.access_token.birthdate", nullValue())
+                    .body("session.access_token.phone_number", nullValue())
+                    .body("session.access_token.phone_number_verified", nullValue());
         }
     }
 

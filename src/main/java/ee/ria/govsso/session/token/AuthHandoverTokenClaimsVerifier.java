@@ -14,12 +14,6 @@ import java.util.Set;
 public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<SecurityContext> {
 
     private static final String CLIENT_ID_CLAIM = "client_id";
-    private static final String ACR_CLAIM = "acr";
-    private static final String AMR_CLAIM = "amr";
-    private static final String AUTH_TIME_CLAIM = "auth_time";
-    private static final String BIRTHDATE_CLAIM = "birthdate";
-    private static final String FAMILY_NAME_CLAIM = "family_name";
-    private static final String GIVEN_NAME_CLAIM = "given_name";
     private static final String INITIATOR_CLAIM = "initiator";
     private static final String SID_CLAIM = "sid";
 
@@ -28,10 +22,7 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
             JWTClaimNames.ISSUED_AT,
             JWTClaimNames.EXPIRATION_TIME,
             JWTClaimNames.JWT_ID,
-            CLIENT_ID_CLAIM, ACR_CLAIM,
-            AMR_CLAIM, AUTH_TIME_CLAIM,
-            BIRTHDATE_CLAIM, FAMILY_NAME_CLAIM,
-            GIVEN_NAME_CLAIM, INITIATOR_CLAIM,
+            CLIENT_ID_CLAIM, INITIATOR_CLAIM,
             SID_CLAIM
     );
 

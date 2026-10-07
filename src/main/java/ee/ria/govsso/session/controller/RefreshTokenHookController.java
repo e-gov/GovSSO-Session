@@ -138,16 +138,19 @@ public class RefreshTokenHookController {
         RefreshTokenHookResponse.IdToken idToken = idTokenBuilder.build();
 
         if (StringUtils.equals(AccessTokenStrategy.JWT, consentRequestInfo.getClient().getAccessTokenStrategy())) {
-            AccessTokenClaims accessTokenClaims = accessTokenClaimsFactory.from(
-                    userAttributes, hookRequest.getGrantedScopes(), consentRequestInfo.getContext(), consentRequestInfo.getAuthenticatedAt().toInstant());
-            if (idToken.getRepresentee() != null) {
-                accessTokenClaims.setRepresentee(idToken.getRepresentee());
-            }
+            AccessTokenClaims accessTokenClaims;
             if (isAuthHandoverTokenRequest) {
-                accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
-                accessTokenClaims.setSid(sessionId);
-                accessTokenClaims.setPhoneNumber(userAttributes.phoneNumber());
-                accessTokenClaims.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
+                accessTokenClaims = AccessTokenClaims.builder()
+                        .scope(List.of(SCOPE_AUTH_HANDOVER))
+                        .sid(sessionId)
+                        .initiator(initiator)
+                        .build();
+            } else {
+                accessTokenClaims = accessTokenClaimsFactory.from(
+                        userAttributes, hookRequest.getGrantedScopes(), consentRequestInfo.getContext(), consentRequestInfo.getAuthenticatedAt().toInstant());
+                if (idToken.getRepresentee() != null) {
+                    accessTokenClaims.setRepresentee(idToken.getRepresentee());
+                }
             }
             responseBuilder.accessToken(accessTokenClaims);
         }
