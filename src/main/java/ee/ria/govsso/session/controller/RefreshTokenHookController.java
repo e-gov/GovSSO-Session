@@ -145,6 +145,7 @@ public class RefreshTokenHookController {
             }
             if (isAuthHandoverTokenRequest) {
                 accessTokenClaims.setScope(List.of(SCOPE_AUTH_HANDOVER));
+                accessTokenClaims.setSid(sessionId);
                 accessTokenClaims.setPhoneNumber(userAttributes.phoneNumber());
                 accessTokenClaims.setPhoneNumberVerified(userAttributes.phoneNumberVerified());
             }

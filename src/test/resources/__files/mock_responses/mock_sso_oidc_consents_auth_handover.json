@@ -1,0 +1,76 @@
+[
+  {
+    "remember_for": 900,
+    "consent_request": {
+      "authenticated_at": "2023-01-01T00:50:00Z",
+      "requested_at": "2023-01-01T01:00:00Z",
+      "context": {
+        "session_type": "WEB_SESSION",
+        "user_attributes": {
+          "subject": "EEisikukood3",
+          "tara_auth_time": 1639551085,
+          "acr": "high",
+          "amr": [
+            "mID"
+          ],
+          "given_name": "Eesnimi3",
+          "family_name": "Perekonnanimi3",
+          "birthdate": "1961-07-12",
+          "phone_number": "12345",
+          "phone_number_verified": true
+        }
+      },
+      "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
+      "client": {
+        "client_id": "client-a",
+        "metadata": {
+          "paasuke_parameters": "ns=AGENCY-Q",
+          "oidc_client": {
+            "institution": {
+              "registry_code": "12345678"
+            }
+          }
+        },
+        "access_token_strategy": "jwt",
+        "scope": "openid auth_handover"
+      }
+    }
+  },
+  {
+    "remember_for": 900,
+    "consent_request": {
+      "authenticated_at": "2023-01-01T00:50:00Z",
+      "requested_at": "2023-01-01T01:00:00Z",
+      "context": {
+        "session_type": "WEB_SESSION",
+        "user_attributes": {
+          "subject": "EEisikukood3",
+          "tara_auth_time": 1639551085,
+          "acr": "high",
+          "amr": [
+            "mID"
+          ],
+          "given_name": "Eesnimi3",
+          "family_name": "Perekonnanimi3",
+          "birthdate": "1961-07-12",
+          "phone_number": "12345",
+          "phone_number_verified": true
+        }
+      },
+      "login_session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95",
+      "client": {
+        "client_id": "client-b",
+        "metadata": {
+          "paasuke_parameters": "ns=AGENCY-Q",
+          "oidc_client": {
+            "institution": {
+              "registry_code": "87654321"
+            }
+          }
+        },
+        "access_token_strategy": "jwt",
+        "scope": "openid auth_handover"
+      }
+    }
+  }
+]

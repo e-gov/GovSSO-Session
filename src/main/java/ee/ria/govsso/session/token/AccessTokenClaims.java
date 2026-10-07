@@ -33,5 +33,6 @@ public class AccessTokenClaims {
     @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
     private Instant authTime;
     private List<String> scope;
+    private String sid;
 
 }
