@@ -108,7 +108,8 @@ public class LoginInitController {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
-                        ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
+                        ssoConfigurationProperties.getSessionMaxDuration(), clock)
+                        && isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
                     return authenticateWithHandoverToken(loginRequestInfo, request, userAttributes);
                 }
             }
@@ -323,6 +324,6 @@ public class LoginInitController {
         LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
         LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
         LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
-        return sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
+        return sessionAcr != null && sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
     }
 }
