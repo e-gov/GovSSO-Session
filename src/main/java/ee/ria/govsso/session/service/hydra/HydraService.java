@@ -12,6 +12,8 @@ import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.token.UserAttributesFactory;
 import ee.ria.govsso.session.util.SecureAppUtil;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,8 +35,10 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 @Service
@@ -51,6 +55,7 @@ public class HydraService {
     private final UserAttributesFactory userAttributesFactory;
     private final HydraConfigurationProperties hydraConfigurationProperties;
     private final SsoConfigurationProperties ssoConfigurationProperties;
+    private final Validator validator;
 
     public LoginRequestInfo fetchLoginRequestInfo(String loginChallenge) {
         String uri = UriComponentsBuilder
@@ -493,9 +498,10 @@ public class HydraService {
                 .queryParam("sid", loginSessionId)
                 .toUriString();
 
+        LoginSessionInfo loginSessionInfo;
         try {
             requestLogger.logRequest(uri, HttpMethod.GET.name());
-            LoginSessionInfo loginSessionInfo = webclient.get()
+            loginSessionInfo = webclient.get()
                     .uri(uri)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
@@ -503,7 +509,6 @@ public class HydraService {
                     .blockOptional().orElseThrow();
 
             requestLogger.logResponse(HttpStatus.OK.value(), loginSessionInfo);
-            return loginSessionInfo;
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra login session info", ex);
@@ -511,6 +516,19 @@ public class HydraService {
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
         } catch (Exception ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
+        }
+        validateLoginSessionInfo(loginSessionInfo);
+        return loginSessionInfo;
+    }
+
+    private void validateLoginSessionInfo(LoginSessionInfo loginSessionInfo) {
+        Set<ConstraintViolation<LoginSessionInfo>> violations = validator.validate(loginSessionInfo);
+        if (!violations.isEmpty()) {
+            String invalidFields = violations.stream()
+                    .map(violation -> violation.getPropertyPath().toString())
+                    .sorted()
+                    .collect(joining(", "));
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Hydra login session info has missing or invalid fields: " + invalidFields);
         }
     }
 

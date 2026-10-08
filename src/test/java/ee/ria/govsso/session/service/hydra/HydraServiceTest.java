@@ -81,16 +81,44 @@ class HydraServiceTest extends BaseTest {
     }
 
     @Test
-    void fetchLoginSessionInfo_emptyBody_allFieldsNull() {
+    void fetchLoginSessionInfo_emptyBody_throwsTechnicalGeneral() {
         HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=" + TEST_LOGIN_SESSION_ID))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json; charset=UTF-8")
                         .withBody("{}")));
 
-        LoginSessionInfo loginSessionInfo = hydraService.fetchLoginSessionInfo(TEST_LOGIN_SESSION_ID);
+        SsoException ex = assertThrows(SsoException.class,
+                () -> hydraService.fetchLoginSessionInfo(TEST_LOGIN_SESSION_ID));
 
-        assertThat(loginSessionInfo, equalTo(new LoginSessionInfo()));
+        assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
+        assertThat(ex.getMessage(), equalTo("Hydra login session info has missing or invalid fields: " +
+                "acr, amr, authTime, birthdate, familyName, givenName, subject"));
+    }
+
+    @Test
+    void fetchLoginSessionInfo_blankAndEmptyFields_throwsTechnicalGeneral() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=" + TEST_LOGIN_SESSION_ID))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody("""
+                                {
+                                  "acr": "high",
+                                  "amr": [],
+                                  "auth_time": 1530267052,
+                                  "birthdate": "2000-01-01",
+                                  "family_name": "",
+                                  "given_name": " ",
+                                  "subject": "EE60001019906"
+                                }""")));
+
+        SsoException ex = assertThrows(SsoException.class,
+                () -> hydraService.fetchLoginSessionInfo(TEST_LOGIN_SESSION_ID));
+
+        assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
+        assertThat(ex.getMessage(), equalTo("Hydra login session info has missing or invalid fields: " +
+                "amr, familyName, givenName"));
     }
 
     @Test
