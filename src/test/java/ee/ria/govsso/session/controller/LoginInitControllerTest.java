@@ -5,12 +5,15 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.service.tara.TaraMetadataService;
+import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieSigner;
 import io.restassured.RestAssured;
@@ -28,6 +31,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +46,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -1773,6 +1779,147 @@ class LoginInitControllerTest extends BaseTest {
             SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(TARA_JWK.getKeyID()).build(), claimsSet);
             JWSSigner signer = new RSASSASigner(TARA_JWK);
             jwt.sign(signer);
+            return jwt;
+        }
+    }
+
+    @Nested
+    @NestedTestConfiguration(OVERRIDE)
+    @TestPropertySource(properties = {"govsso.auth-handover-enabled=true"})
+    class AuthHandoverTests extends BaseTest {
+
+        private static final RSAKey HYDRA_ACCESS_TOKEN_JWK = TaraTestSetup.generateJWK();
+        private static final String LOGIN_ACCEPT_URL =
+                "/admin/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE;
+
+        @Autowired
+        private TaraMetadataService taraMetadataService;
+
+        @BeforeEach
+        void setupExpectedResponseSpec() {
+            RestAssured.responseSpecification = new ResponseSpecBuilder()
+                    .expectHeaders(EXPECTED_RESPONSE_HEADERS_WITH_CORS).build();
+            taraMetadataService.updateMetadata();
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/keys/hydra.jwt.access-token"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBody(new JWKSet(HYDRA_ACCESS_TOKEN_JWK).toPublicJWKSet().toString())));
+            HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo(LOGIN_ACCEPT_URL))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+        }
+
+        @ParameterizedTest
+        @CsvSource(nullValues = "null", value = {
+                "low, substantial, substantial",
+                "substantial, null, high",
+                "substantial, high, high",
+                "unknown, null, high"
+        })
+        void loginInit_WhenAuthHandoverTokenAcrLowerThanRequiredAcr_RedirectsToTaraWithRequiredAcr(
+                String tokenAcr, String clientMinimumAcr, String expectedTaraAcr) {
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(tokenAcr), clientMinimumAcr);
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(302)
+                    .header("Location", Matchers.allOf(
+                            Matchers.startsWith(TARA_MOCK_URL + "/oidc/authorize?"),
+                            containsString("acr_values=" + expectedTaraAcr + "&")));
+
+            HYDRA_MOCK_SERVER.verify(0, putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL)));
+        }
+
+        @ParameterizedTest
+        @CsvSource(nullValues = "null", value = {
+                "high, null",
+                "high, high",
+                "high, substantial",
+                "substantial, substantial",
+                "substantial, low"
+        })
+        void loginInit_WhenAuthHandoverTokenAcrHigherOrEqualToRequiredAcr_AcceptsLoginWithTokenAcr(
+                String tokenAcr, String clientMinimumAcr) {
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(tokenAcr), clientMinimumAcr);
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(302)
+                    .header("Location", Matchers.matchesRegex("https://clienta.localhost:11443/auth/login/test"));
+
+            HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL))
+                    .withRequestBody(matchingJsonPath("$.acr", WireMock.equalTo(tokenAcr)))
+                    .withRequestBody(matchingJsonPath("$.context.session_type", WireMock.equalTo("SECURED_APP_WEB_SESSION"))));
+        }
+
+        private void stubLoginRequestWithAuthHandoverToken(SignedJWT authHandoverToken, String clientMinimumAcr) {
+            String loginRequestBody = """
+                    {
+                      "challenge": "%s",
+                      "requested_scope": ["openid"],
+                      "skip": false,
+                      "subject": "",
+                      "oidc_context": {"ui_locales": ["et"]},
+                      "client": {
+                        "client_id": "openIdDemo",
+                        "scope": "openid",
+                        "metadata": {
+                          "oidc_client": {
+                            "institution": {"registry_code": "70000001", "sector": "public"}
+                          },
+                          "client_type": "DEFAULT",
+                          "allow_secured_app_web_session": true,
+                          "minimum_acr_value": %s
+                        }
+                      },
+                      "request_url": "https://hydra.localhost:9000/oauth2/auth?scope=openid&prompt=consent&response_type=code&client_id=openIdDemo&redirect_uri=https://hydra.localhost:9000/oauth/response&state=049d71ea-30cd-4a74-8dcd-47156055d364&nonce=5210b42a-2362-420b-bb81-54796da8c814&ui_locales=et&govsso_auth_handover_token=%s",
+                      "session_id": "e56cbaf9-81e9-4473-a733-261e8dd38e95"
+                    }
+                    """.formatted(
+                    TEST_LOGIN_CHALLENGE,
+                    clientMinimumAcr == null ? "null" : "\"" + clientMinimumAcr + "\"",
+                    authHandoverToken.serialize());
+
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBody(loginRequestBody)));
+        }
+
+        @SneakyThrows
+        private SignedJWT createAuthHandoverToken(String acr) {
+            Instant now = Instant.now();
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .issuer(INPROXY_MOCK_URL)
+                    .audience(List.of(INPROXY_MOCK_URL))
+                    .subject("test1234")
+                    .issueTime(Date.from(now))
+                    .expirationTime(Date.from(now.plusSeconds(600)))
+                    .jwtID(UUID.randomUUID().toString())
+                    .claim("scope", "auth_handover")
+                    .claim("client_id", "secured-app")
+                    .claim("acr", acr)
+                    .claim("amr", List.of("mID"))
+                    .claim("auth_time", now.minusSeconds(60).getEpochSecond())
+                    .claim("birthdate", "1980-01-08")
+                    .claim("family_name", "TEST")
+                    .claim("given_name", "TEST")
+                    .claim("initiator", "SECURED_APP")
+                    .build();
+            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(HYDRA_ACCESS_TOKEN_JWK.getKeyID()).build(), claimsSet);
+            jwt.sign(new RSASSASigner(HYDRA_ACCESS_TOKEN_JWK));
             return jwt;
         }
     }
