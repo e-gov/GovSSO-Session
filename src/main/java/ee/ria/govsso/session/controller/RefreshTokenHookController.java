@@ -161,6 +161,9 @@ public class RefreshTokenHookController {
 
         SessionType sessionType = consentRequestInfo.getContext().getSessionType();
         statisticsLogger.logAccept(requestType, userAttributes, consentRequestInfo, sessionId, sessionType);
+        if (isAuthHandoverTokenRequest) {
+            log.info("Issuing auth handover token for session: {}", sessionId);
+        }
 
         RefreshTokenHookResponse response = responseBuilder
                 .idToken(idToken)

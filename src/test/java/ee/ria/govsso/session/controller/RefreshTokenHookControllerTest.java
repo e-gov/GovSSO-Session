@@ -800,6 +800,9 @@ class RefreshTokenHookControllerTest extends BaseTest {
                     .body("session.access_token.phone_number", nullValue())
                     .body("session.access_token.phone_number_verified", nullValue())
                     .body("session.access_token.initiator", nullValue());
+
+            assertInfoIsLogged(RefreshTokenHookController.class,
+                    "Issuing auth handover token for session: " + SESSION_ID);
         }
     }
 
