@@ -171,9 +171,17 @@ public class RefreshTokenHookController {
                     "Auth handover token request requested scopes can contain only %s scope".formatted(SCOPE_AUTH_HANDOVER));
         }
         List<String> audience = hookRequest.getGrantedAudience();
-        if (!hydraService.hasGovSsoAsAudience(audience) || audience.size() != 1) {
+        if (!audienceMatchesExactlyBaseUrl(audience) || audience.size() != 1) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured GovSSO base URL");
         }
+    }
+
+    private boolean audienceMatchesExactlyBaseUrl(List<String> grantedAudience) {
+        if (grantedAudience == null || grantedAudience.isEmpty()) {
+            return false;
+        }
+        String govSsoBaseUrl = ssoConfigurationProperties.getBaseUrl().toString();
+        return grantedAudience.stream().anyMatch(govSsoBaseUrl::equals);
     }
 
     private boolean containsAuthHandoverScope(List<String> requestedScopes) {
