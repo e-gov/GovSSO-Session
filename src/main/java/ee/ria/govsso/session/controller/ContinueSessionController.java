@@ -2,11 +2,11 @@ package ee.ria.govsso.session.controller;
 
 import ee.ria.govsso.session.common.ClientRequestMetadata;
 import ee.ria.govsso.session.common.ClientRequestMetadataFactory;
-import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType;
+import ee.ria.govsso.session.service.authhandover.AuthHandoverAcceptancePolicy;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
 import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
@@ -15,7 +15,6 @@ import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
 import ee.ria.govsso.session.token.UserAttributes;
-import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
 import ee.ria.govsso.session.util.RequestUtil;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.time.Clock;
 import java.util.List;
 
 import static ee.ria.govsso.session.error.ErrorCode.TECHNICAL_GENERAL;
@@ -51,8 +49,7 @@ public class ContinueSessionController {
     private final HydraService hydraService;
     private final StatisticsLogger statisticsLogger;
     private final ClientRequestMetadataFactory clientRequestMetadataFactory;
-    private final SsoConfigurationProperties ssoConfigurationProperties;
-    private final Clock clock;
+    private final AuthHandoverAcceptancePolicy authHandoverAcceptancePolicy;
 
     @PostMapping(value = AUTH_VIEW_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public RedirectView continueSession(
@@ -83,8 +80,7 @@ public class ContinueSessionController {
             throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
         }
         if (SecureAppUtil.isSecuredAppWebSession(consents)
-                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
-                ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
+                && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
             return reauthenticate(loginRequestInfo, request, response);
         }
 
