@@ -142,7 +142,6 @@ public class RefreshTokenHookController {
             if (isAuthHandoverTokenRequest) {
                 accessTokenClaims = AccessTokenClaims.builder()
                         .scope(List.of(SCOPE_AUTH_HANDOVER))
-                        .sid(sessionId)
                         .build();
             } else {
                 accessTokenClaims = accessTokenClaimsFactory.from(

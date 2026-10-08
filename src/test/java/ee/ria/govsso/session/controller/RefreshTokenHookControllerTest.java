@@ -768,7 +768,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     class AuthHandoverEnabledTests extends BaseTest {
 
         @Test
-        void tokenRefresh_whenAuthHandoverTokenIsRequested_sidIsAddedToAccessToken() {
+        void tokenRefresh_whenAuthHandoverTokenIsRequested_onlyScopeIsAddedToAccessToken() {
             RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_AUTH_HANDOVER));
             hookRequest.setSubject("testSubject");
             hookRequest.setRequestedScopes(List.of(SCOPE_AUTH_HANDOVER));
@@ -790,7 +790,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                     .statusCode(200)
                     .body("session.id_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
                     .body("session.access_token.scope", equalTo(List.of(SCOPE_AUTH_HANDOVER)))
-                    .body("session.access_token.sid", equalTo("e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                    .body("session.access_token.sid", nullValue())
                     .body("session.access_token.acr", nullValue())
                     .body("session.access_token.amr", nullValue())
                     .body("session.access_token.auth_time", nullValue())
