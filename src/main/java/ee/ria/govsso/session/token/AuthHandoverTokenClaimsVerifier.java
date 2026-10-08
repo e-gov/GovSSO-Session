@@ -17,7 +17,6 @@ public class AuthHandoverTokenClaimsVerifier extends DefaultJWTClaimsVerifier<Se
     private static final String SID_CLAIM = "sid";
 
     private static final Set<String> requiredClaims = Set.of(
-            JWTClaimNames.SUBJECT,
             JWTClaimNames.ISSUED_AT,
             JWTClaimNames.EXPIRATION_TIME,
             JWTClaimNames.JWT_ID,
