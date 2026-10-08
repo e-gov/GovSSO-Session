@@ -586,7 +586,7 @@ public class HydraService {
     private void validateSessionMaxAgeNotReached(List<Consent> consents) {
         // Max lifetime of SECURED_APP_SESSION is enforced by Hydra and is longer than max lifetime of regular
         // sessions, so we can skip that check for long-living sessions. Max age of SECURED_APP_WEB_SESSION is
-        // determined by client metadata and is validated by AuthHandoverTokenUtil.clientAcceptsAuthHandover.
+        // determined by client metadata and is validated by AuthHandoverAcceptancePolicy.clientAcceptsAuthHandover.
         Context context = consents.get(0).getConsentRequest().getContext();
         if (context.getSessionType() != SessionType.WEB_SESSION) {
             return;

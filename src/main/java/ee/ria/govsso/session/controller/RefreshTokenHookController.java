@@ -4,6 +4,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
+import ee.ria.govsso.session.service.authhandover.AuthHandoverAcceptancePolicy;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
@@ -20,7 +21,6 @@ import ee.ria.govsso.session.service.paasuke.RepresentationService;
 import ee.ria.govsso.session.token.AccessTokenClaims;
 import ee.ria.govsso.session.token.AccessTokenClaimsFactory;
 import ee.ria.govsso.session.token.UserAttributes;
-import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.RequestUtil;
 import ee.ria.govsso.session.util.SecureAppUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Clock;
 import java.util.List;
 
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
@@ -56,7 +55,7 @@ public class RefreshTokenHookController {
     private final RepresentationService representationService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final StatisticsLogger statisticsLogger;
-    private final Clock clock;
+    private final AuthHandoverAcceptancePolicy authHandoverAcceptancePolicy;
 
     @PostMapping(TOKEN_REFRESH_REQUEST_MAPPING)
     public ResponseEntity<RefreshTokenHookResponse> tokenRefresh(@RequestBody RefreshTokenHookRequest hookRequest, HttpServletRequest request) {
@@ -93,8 +92,7 @@ public class RefreshTokenHookController {
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
 
         if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)
-                && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes,
-                ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
+                && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes)) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Client does not accept an auth handover, therefore the session is not allowed to be refreshed");
         }
 

@@ -9,6 +9,7 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.alerts.AlertsService;
+import ee.ria.govsso.session.service.authhandover.AuthHandoverAcceptancePolicy;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.HydraService;
@@ -26,7 +27,6 @@ import ee.ria.govsso.session.session.SsoCookieSigner;
 import ee.ria.govsso.session.token.AuthHandoverTokenVerifier;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.token.UserAttributesFactory;
-import ee.ria.govsso.session.util.AuthHandoverTokenUtil;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LocaleUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
@@ -51,7 +51,6 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -85,7 +84,7 @@ public class LoginInitController {
     private final UserAttributesFactory userAttributesFactory;
     @Autowired(required = false)
     private AlertsService alertsService;
-    private final Clock clock;
+    private final AuthHandoverAcceptancePolicy authHandoverAcceptancePolicy;
 
     @GetMapping(value = LOGIN_INIT_REQUEST_MAPPING, produces = MediaType.TEXT_HTML_VALUE)
     public ModelAndView loginInit(
@@ -109,8 +108,7 @@ public class LoginInitController {
             if (authHandoverToken != null) {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
-                if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
-                        ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
+                if (authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
                     String handoverFromClientId = parseClientId(authHandoverToken);
                     return authenticateWithHandoverToken(loginRequestInfo, request, userAttributes, handoverFromClientId);
                 }
@@ -138,8 +136,7 @@ public class LoginInitController {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (SecureAppUtil.isSecuredAppWebSession(consents)
-                    && !AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
-                    ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
+                    && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
                 return reauthenticate(loginRequestInfo, request, response);
             }
             if (!isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
