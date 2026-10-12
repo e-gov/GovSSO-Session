@@ -514,6 +514,32 @@ public class HydraService {
         }
     }
 
+    public void consumeAuthHandoverToken(String authHandoverToken) {
+        String uri = hydraConfigurationProperties.adminUrl() + "/admin/oauth2/auth/handover/consume";
+
+        try {
+            requestLogger.logRequest(uri, HttpMethod.POST.name());
+            ResponseEntity<Void> responseEntity = webclient.post()
+                    .uri(uri)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromFormData("token", authHandoverToken))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .blockOptional().orElseThrow();
+
+            requestLogger.logResponse(HttpStatus.NO_CONTENT.value(), responseEntity);
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                throw new SsoException(ErrorCode.USER_INPUT, "Auth handover token has already been consumed, revoked or expired");
+            } else {
+                throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to consume Hydra auth handover token", ex);
+            }
+        } catch (Exception ex) {
+            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to consume Hydra auth handover token", ex);
+        }
+    }
+
     // TODO GSSO-244 Call this on unsuccessful outcome of login flows so that Hydra resource cleanup would be immediate.
     public LoginRejectResponse rejectLogin(String loginChallenge) {
         String uri = UriComponentsBuilder

@@ -198,6 +198,7 @@ public class LoginInitController {
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo, HttpServletRequest request,
                                                        SignedJWT authHandoverToken, UserAttributes userAttributes) {
         authHandoverTokenVerifier.verify(authHandoverToken);
+        hydraService.consumeAuthHandoverToken(authHandoverToken.getParsedString());
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }

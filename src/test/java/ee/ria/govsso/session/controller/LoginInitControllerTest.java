@@ -55,6 +55,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -1810,6 +1811,9 @@ class LoginInitControllerTest extends BaseTest {
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json; charset=UTF-8")
                             .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+            HYDRA_MOCK_SERVER.stubFor(post(urlEqualTo("/admin/oauth2/auth/handover/consume"))
+                    .willReturn(aResponse()
+                            .withStatus(204)));
         }
 
         @ParameterizedTest
