@@ -110,7 +110,7 @@ public class LoginInitController {
                 if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
                         ssoConfigurationProperties.getSessionMaxDuration(), clock)
                         && isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
-                    return authenticateWithHandoverToken(loginRequestInfo, request, userAttributes);
+                    return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
                 }
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
@@ -218,7 +218,8 @@ public class LoginInitController {
     }
 
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo, HttpServletRequest request,
-                                                       UserAttributes userAttributes) {
+                                                       SignedJWT authHandoverToken, UserAttributes userAttributes) {
+        hydraService.consumeAuthHandoverToken(authHandoverToken.getParsedString());
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }

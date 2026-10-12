@@ -16,10 +16,14 @@ import java.time.Instant;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
@@ -27,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class HydraServiceTest extends BaseTest {
 
     private static final String TEST_LOGIN_SESSION_ID = "e56cbaf9-81e9-4473-a733-261e8dd38e95";
+    private static final String TEST_AUTH_HANDOVER_TOKEN = "test-auth-handover-token";
 
     private final HydraService hydraService;
 
@@ -192,5 +197,61 @@ class HydraServiceTest extends BaseTest {
                 () -> hydraService.fetchLoginSessionInfo(TEST_LOGIN_SESSION_ID));
 
         assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
+    }
+
+    @Test
+    void consumeAuthHandoverToken_noContent_ok() {
+        HYDRA_MOCK_SERVER.stubFor(post(urlEqualTo("/admin/oauth2/auth/handover/consume"))
+                .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
+                .withFormParam("token", com.github.tomakehurst.wiremock.client.WireMock.equalTo(TEST_AUTH_HANDOVER_TOKEN))
+                .willReturn(aResponse()
+                        .withStatus(204)));
+
+        hydraService.consumeAuthHandoverToken(TEST_AUTH_HANDOVER_TOKEN);
+
+        HYDRA_MOCK_SERVER.verify(1, postRequestedFor(urlEqualTo("/admin/oauth2/auth/handover/consume")));
+    }
+
+    @Test
+    void consumeAuthHandoverToken_conflict_throwsUserInput() {
+        HYDRA_MOCK_SERVER.stubFor(post(urlEqualTo("/admin/oauth2/auth/handover/consume"))
+                .willReturn(aResponse()
+                        .withStatus(409)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBody("{\"error\":\"invalid_request\"}")));
+
+        SsoException ex = assertThrows(SsoException.class,
+                () -> hydraService.consumeAuthHandoverToken(TEST_AUTH_HANDOVER_TOKEN));
+
+        assertThat(ex.getErrorCode(), equalTo(ErrorCode.USER_INPUT));
+        assertThat(ex.getMessage(), equalTo("Auth handover token has already been consumed, revoked or expired"));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    void consumeAuthHandoverToken_serverError_throwsTechnicalGeneral() {
+        HYDRA_MOCK_SERVER.stubFor(post(urlEqualTo("/admin/oauth2/auth/handover/consume"))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        SsoException ex = assertThrows(SsoException.class,
+                () -> hydraService.consumeAuthHandoverToken(TEST_AUTH_HANDOVER_TOKEN));
+
+        assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
+    }
+
+    @Test
+    void consumeAuthHandoverToken_connectionFault_throwsTechnicalGeneral() {
+        HYDRA_MOCK_SERVER.stubFor(post(urlEqualTo("/admin/oauth2/auth/handover/consume"))
+                .willReturn(aResponse()
+                        .withFault(com.github.tomakehurst.wiremock.http.Fault.CONNECTION_RESET_BY_PEER)));
+
+        SsoException ex = assertThrows(SsoException.class,
+                () -> hydraService.consumeAuthHandoverToken(TEST_AUTH_HANDOVER_TOKEN));
+
+        assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
+        assertThat(ex.getMessage(), equalTo("Failed to consume Hydra auth handover token"));
+        // Reactor Netty prefixes this message with the connection id, so match by content instead of prefix.
+        assertMessageIsLogged(e -> e.getLevel() == Level.WARN && e.getFormattedMessage().contains("The connection observed an error"), "[");
     }
 }
