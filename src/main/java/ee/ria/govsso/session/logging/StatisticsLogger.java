@@ -116,12 +116,18 @@ public class StatisticsLogger {
         log.info(appendFields(sessionStatistics), LOG_MESSAGE);
     }
 
-    public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType) {
-        logReject(loginRequestInfo, requestType, null);
-    }
-
     public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
                           SessionType sessionType) {
+        logReject(loginRequestInfo, requestType, sessionType, null);
+    }
+
+    public void logReject(@NonNull LoginRequestInfo loginRequestInfo, String handoverFromClientId) {
+        logReject(loginRequestInfo, AuthenticationRequestType.AUTH_HANDOVER, SessionType.SECURED_APP_WEB_SESSION,
+                handoverFromClientId);
+    }
+
+    private void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
+                           SessionType sessionType, String handoverFromClientId) {
         var client = loginRequestInfo.getClient();
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
@@ -137,6 +143,7 @@ public class StatisticsLogger {
                 .authenticationRequestType(requestType)
                 .authenticationState(AUTHENTICATION_CANCELED)
                 .sessionType(sessionType)
+                .handoverFromClientId(handoverFromClientId)
                 .build();
 
         log.info(appendFields(sessionStatistics), LOG_MESSAGE);

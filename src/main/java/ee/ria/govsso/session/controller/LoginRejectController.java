@@ -47,7 +47,7 @@ public class LoginRejectController {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Invalid hydra server response. Redirect URL missing from response.");
         }
 
-        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION, null);
         return new RedirectView(response.getRedirectTo().toString());
     }
 }

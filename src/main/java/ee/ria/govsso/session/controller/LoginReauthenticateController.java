@@ -52,7 +52,7 @@ public class LoginReauthenticateController {
         hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
 
-        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION, null);
         CookieUtil.deleteHydraSessionCookie(request, response);
         return new RedirectView(loginRequestInfo.getRequestUrl().toString());
     }
