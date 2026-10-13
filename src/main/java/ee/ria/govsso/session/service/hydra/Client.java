@@ -38,6 +38,9 @@ public class Client {
 
     @JsonIgnore
     public Set<String> getAllowedScopes() {
+        if (scope == null) {
+            return Set.of();
+        }
         return Arrays.stream(scope.split(" ")).collect(Collectors.toSet());
     }
 
