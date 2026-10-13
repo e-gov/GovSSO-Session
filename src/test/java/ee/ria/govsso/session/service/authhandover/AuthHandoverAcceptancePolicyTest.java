@@ -137,9 +137,9 @@ class AuthHandoverAcceptancePolicyTest {
     private void assertResultLogged(AuthHandoverAcceptancePolicy.Result result) {
         assertThat(logAppender.list.stream().map(ILoggingEvent::getLevel).toList(), contains(Level.INFO));
         ILoggingEvent event = logAppender.list.get(0);
-        assertThat(event.getFormattedMessage(), equalTo("Client auth handover acceptance evaluated: " + result));
+        assertThat(event.getFormattedMessage(), equalTo("Client does not accept auth handover: " + result));
         String marker = event.getMarkerList().get(0).toString();
-        assertThat(marker, containsString("auth_handover.client_id=" + CLIENT_ID));
+        assertThat(marker, containsString("auth_handover.target_client_id=" + CLIENT_ID));
         assertThat(marker, containsString("auth_handover.result=" + result));
     }
 
