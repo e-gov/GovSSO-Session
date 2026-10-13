@@ -5,7 +5,12 @@ import ee.ria.govsso.session.BaseTest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -49,5 +54,39 @@ class HydraServiceTest extends BaseTest {
                                     "}," +
                                     "\"logo\":\"[9] chars\","
         );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://inproxy.localhost:8000",
+            "https://inproxy.localhost:8000/",
+            "https://inproxy.localhost:8000/some/path",
+            "https://inproxy.localhost",
+            "https://inproxy.localhost:443/",
+            "HTTPS://INPROXY.LOCALHOST:8000/",
+            "http://inproxy.localhost:8000/"
+    })
+    void hasGovSsoAsAudience_WhenAudienceHostIsGovSsoHost_ReturnsTrue(String audience) {
+        assertThat(hydraService.hasGovSsoAsAudience(List.of("https://test1", audience)), equalTo(true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://test1",
+            "https://inproxy.localhost.example.com:8000/",
+            "https://example.com/inproxy.localhost:8000",
+            "https://example.com/?redirect=https://inproxy.localhost:8000",
+            "urn:example:api",
+            "my-api",
+            "not a valid uri"
+    })
+    void hasGovSsoAsAudience_WhenAudienceHostIsNotGovSsoHost_ReturnsFalse(String audience) {
+        assertThat(hydraService.hasGovSsoAsAudience(List.of(audience)), equalTo(false));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void hasGovSsoAsAudience_WhenAudienceIsNullOrEmpty_ReturnsFalse(List<String> audience) {
+        assertThat(hydraService.hasGovSsoAsAudience(audience), equalTo(false));
     }
 }

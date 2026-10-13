@@ -26,6 +26,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
@@ -566,7 +568,14 @@ public class HydraService {
         if (grantedAudience == null || grantedAudience.isEmpty()) {
             return false;
         }
-        String govSsoBaseUrl = ssoConfigurationProperties.getBaseUrl().toString();
-        return grantedAudience.stream().anyMatch(audience -> audience.startsWith(govSsoBaseUrl));
+        String govSsoHost = ssoConfigurationProperties.getBaseUrl().getHost();
+        return grantedAudience.stream().anyMatch(audience -> {
+            try {
+                String host = new URI(audience).getHost();
+                return host != null && host.equalsIgnoreCase(govSsoHost);
+            } catch (URISyntaxException e) {
+                return false;
+            }
+        });
     }
 }
