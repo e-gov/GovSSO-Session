@@ -145,7 +145,8 @@ public class RefreshTokenHookController {
                         .build();
             } else {
                 accessTokenClaims = accessTokenClaimsFactory.from(
-                        userAttributes, hookRequest.getGrantedScopes(), consentRequestInfo.getContext(), consentRequestInfo.getAuthenticatedAt().toInstant());
+                        userAttributes, hookRequest.getGrantedScopes(),
+                        consentRequestInfo.getContext(), consentRequestInfo.getAuthenticatedAt().toInstant());
                 if (idToken.getRepresentee() != null) {
                     accessTokenClaims.setRepresentee(idToken.getRepresentee());
                 }

@@ -510,10 +510,11 @@ public class HydraService {
 
             requestLogger.logResponse(HttpStatus.OK.value(), loginSessionInfo);
         } catch (WebClientResponseException ex) {
-            if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new SsoException(ErrorCode.USER_INPUT, "Failed to fetch Hydra login session info", ex);
-            else
+            } else {
                 throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
+            }
         } catch (Exception ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Failed to fetch Hydra login session info", ex);
         }
