@@ -39,6 +39,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQU
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.ISSUE_AUTH_HANDOVER_TOKEN;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.CONSENT_REQUEST_INFO;
+import static ee.ria.govsso.session.logging.StatisticsLogger.SESSION_TYPE;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_AUTH_HANDOVER;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_REPRESENTEE;
@@ -90,6 +91,8 @@ public class RefreshTokenHookController {
         }
 
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
+        SessionType sessionType = consentRequestInfo.getContext().getSessionType();
+        request.setAttribute(SESSION_TYPE, sessionType);
 
         if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)
                 && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes)) {
@@ -157,7 +160,6 @@ public class RefreshTokenHookController {
             responseBuilder.accessToken(accessTokenClaims);
         }
 
-        SessionType sessionType = consentRequestInfo.getContext().getSessionType();
         statisticsLogger.logAccept(requestType, userAttributes, consentRequestInfo, sessionId, sessionType);
         if (isAuthHandoverTokenRequest) {
             log.info("Issuing auth handover token for session: {}", sessionId);

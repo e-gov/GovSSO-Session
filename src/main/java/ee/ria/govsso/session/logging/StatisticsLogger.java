@@ -34,6 +34,7 @@ public class StatisticsLogger {
     public static final String LOGIN_REQUEST_INFO = "LOGIN_REQUEST_INFO";
     public static final String CONSENT_REQUEST_INFO = "CONSENT_REQUEST_INFO";
     public static final String AUTHENTICATION_REQUEST_TYPE = "AUTHENTICATION_REQUEST_TYPE";
+    public static final String SESSION_TYPE = "SESSION_TYPE";
     public static final String LOG_MESSAGE = "Statistics";
     private final Map<String, String> authenticationTypes = Map.of(
             "smartid", "SMART_ID",
@@ -44,21 +45,18 @@ public class StatisticsLogger {
     @SneakyThrows
     public void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull JWT taraIdToken,
-            @NonNull LoginRequestInfo loginRequestInfo) {
+            @NonNull LoginRequestInfo loginRequestInfo, SessionType sessionType) {
         var claims = taraIdToken.getJWTClaimsSet();
         logAccept(
                 requestType, claims.getSubject(), claims.getIssueTime().toInstant(), claims.getStringClaim("acr"),
                 claims.getStringListClaim("amr"), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
-                loginRequestInfo.getAcr(), null, null);
+                loginRequestInfo.getAcr(), sessionType, null);
     }
 
     public void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull UserAttributes userAttributes,
-            @NonNull LoginRequestInfo loginRequestInfo) {
-        logAccept(
-                requestType, userAttributes.subject(), userAttributes.taraAuthTime(), userAttributes.acr(),
-                userAttributes.amr(), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
-                loginRequestInfo.getAcr(), null, null);
+            @NonNull LoginRequestInfo loginRequestInfo, SessionType sessionType) {
+        logAccept(requestType, userAttributes, loginRequestInfo, sessionType, null);
     }
 
     public void logAccept(
@@ -119,6 +117,11 @@ public class StatisticsLogger {
     }
 
     public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType) {
+        logReject(loginRequestInfo, requestType, null);
+    }
+
+    public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
+                          SessionType sessionType) {
         var client = loginRequestInfo.getClient();
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
@@ -133,13 +136,14 @@ public class StatisticsLogger {
                 .sessionId(sid)
                 .authenticationRequestType(requestType)
                 .authenticationState(AUTHENTICATION_CANCELED)
+                .sessionType(sessionType)
                 .build();
 
         log.info(appendFields(sessionStatistics), LOG_MESSAGE);
     }
 
     public void logError(@NonNull Exception ex, @NonNull ErrorCode errorCode, @NonNull Client
-            client, @NonNull String sid, AuthenticationRequestType requestType) {
+            client, @NonNull String sid, AuthenticationRequestType requestType, SessionType sessionType) {
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
 
@@ -153,6 +157,7 @@ public class StatisticsLogger {
                 .authenticationRequestType(requestType)
                 .authenticationState(AUTHENTICATION_FAILED)
                 .errorCode(errorCode)
+                .sessionType(sessionType)
                 .build();
 
         log.error(appendFields(sessionStatistics), LOG_MESSAGE, ex);
