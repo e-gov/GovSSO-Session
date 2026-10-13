@@ -14,6 +14,7 @@ import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.service.hydra.Prompt;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.util.CookieUtil;
 import ee.ria.govsso.session.util.LoginRequestInfoUtil;
@@ -38,6 +39,7 @@ import static ee.ria.govsso.session.error.ErrorCode.USER_INPUT;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
+import static ee.ria.govsso.session.logging.StatisticsLogger.SESSION_TYPE;
 
 @Slf4j
 @Validated
@@ -76,12 +78,14 @@ public class ContinueSessionController {
         if (userAttributes == null) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "No valid consent requests found");
         }
+        SessionType sessionType = SecureAppUtil.getSessionType(consents);
+        request.setAttribute(SESSION_TYPE, sessionType);
         if (SecureAppUtil.isSecuredAppSession(consents)) {
             throw new SsoException(USER_INPUT, "Secured app sessions are not allowed to be continued");
         }
         if (SecureAppUtil.isSecuredAppWebSession(consents)
                 && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
-            return reauthenticate(loginRequestInfo, request, response);
+            return reauthenticate(loginRequestInfo, sessionType, request, response);
         }
 
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
@@ -123,17 +127,18 @@ public class ContinueSessionController {
     private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, List<Consent> consents,
                                      UserAttributes userAttributes, ClientRequestMetadata metadata) {
         LoginAcceptResponse response = hydraService.acceptContinuedSessionLogin(consents, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, userAttributes, loginRequestInfo);
+        statisticsLogger.logAccept(AuthenticationRequestType.CONTINUE_SESSION, userAttributes, loginRequestInfo,
+                SecureAppUtil.getSessionType(consents));
         return new RedirectView(response.getRedirectTo().toString());
     }
 
-    private RedirectView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest
-            request, HttpServletResponse response) {
+    private RedirectView reauthenticate(LoginRequestInfo loginRequestInfo, SessionType sessionType,
+                                        HttpServletRequest request, HttpServletResponse response) {
         hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
         CookieUtil.deleteHydraSessionCookie(request, response);
 
-        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION, sessionType);
         return new RedirectView(loginRequestInfo.getRequestUrl().toString());
     }
 }

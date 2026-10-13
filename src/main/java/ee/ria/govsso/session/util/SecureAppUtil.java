@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.util;
 
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
@@ -11,6 +12,14 @@ import java.util.List;
 
 @UtilityClass
 public class SecureAppUtil {
+
+    public static SessionType getNewSessionType(Client client) {
+        return client.isSecuredApp() ? SessionType.SECURED_APP_SESSION : SessionType.WEB_SESSION;
+    }
+
+    public static SessionType getSessionType(List<Consent> consents) {
+        return consents.get(0).getConsentRequest().getContext().getSessionType();
+    }
 
     public static boolean isSecuredAppSession(List<Consent> consents) {
         return isSecuredAppSession(consents.get(0).getConsentRequest());
