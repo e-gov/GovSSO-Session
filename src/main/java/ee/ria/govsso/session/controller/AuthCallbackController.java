@@ -12,10 +12,12 @@ import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
 import ee.ria.govsso.session.service.hydra.LoginAcceptResponse;
 import ee.ria.govsso.session.service.hydra.LoginRejectResponse;
 import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
+import ee.ria.govsso.session.service.hydra.SessionType;
 import ee.ria.govsso.session.service.tara.TaraService;
 import ee.ria.govsso.session.session.SsoCookie;
 import ee.ria.govsso.session.session.SsoCookieValue;
 import ee.ria.govsso.session.util.RequestUtil;
+import ee.ria.govsso.session.util.SecureAppUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ import java.text.ParseException;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
+import static ee.ria.govsso.session.logging.StatisticsLogger.SESSION_TYPE;
 
 @Slf4j
 @Validated
@@ -71,9 +74,11 @@ public class AuthCallbackController {
         if (error != null) {
             LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
             request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+            SessionType sessionType = SecureAppUtil.getNewSessionType(loginRequestInfo.getClient());
+            request.setAttribute(SESSION_TYPE, sessionType);
 
             LoginRejectResponse response = hydraService.rejectLogin(loginChallenge);
-            statisticsLogger.logReject(loginRequestInfo, START_SESSION);
+            statisticsLogger.logReject(loginRequestInfo, START_SESSION, sessionType);
             return new RedirectView(response.getRedirectTo().toString());
         }
         if (code == null) {
@@ -82,6 +87,7 @@ public class AuthCallbackController {
 
         LoginRequestInfo loginRequestInfo = hydraService.fetchLoginRequestInfo(loginChallenge);
         request.setAttribute(LOGIN_REQUEST_INFO, loginRequestInfo);
+        request.setAttribute(SESSION_TYPE, SecureAppUtil.getNewSessionType(loginRequestInfo.getClient()));
 
         SignedJWT taraIdToken = taraService.requestIdToken(code);
         verifyAcr(taraIdToken, loginRequestInfo);
@@ -119,7 +125,8 @@ public class AuthCallbackController {
 
     private RedirectView acceptLogin(LoginRequestInfo loginRequestInfo, SignedJWT taraIdToken, ClientRequestMetadata metadata) {
         LoginAcceptResponse response = hydraService.acceptLogin(taraIdToken, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, taraIdToken, loginRequestInfo);
+        statisticsLogger.logAccept(AuthenticationRequestType.START_SESSION, taraIdToken, loginRequestInfo,
+                SecureAppUtil.getNewSessionType(loginRequestInfo.getClient()));
         return new RedirectView(response.getRedirectTo().toString());
     }
 }

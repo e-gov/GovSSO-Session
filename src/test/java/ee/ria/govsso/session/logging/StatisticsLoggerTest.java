@@ -11,7 +11,10 @@ import ee.ria.govsso.session.service.hydra.OidcClient;
 import org.junit.jupiter.api.Test;
 
 import static ch.qos.logback.classic.Level.INFO;
+import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
+import static ee.ria.govsso.session.service.hydra.SessionType.SECURED_APP_WEB_SESSION;
+import static ee.ria.govsso.session.service.hydra.SessionType.WEB_SESSION;
 
 class StatisticsLoggerTest extends BaseTestLoggingAssertion {
 
@@ -43,14 +46,27 @@ class StatisticsLoggerTest extends BaseTestLoggingAssertion {
                 ErrorCode.TECHNICAL_GENERAL,
                 createClient(),
                 SESSION_ID,
-                START_SESSION
+                START_SESSION,
+                WEB_SESSION
         );
 
         assertMessage()
                 .withLoggerClass(StatisticsLogger.class)
                 .withMessage(StatisticsLogger.LOG_MESSAGE)
                 .withLevel(Level.ERROR)
-                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_FAILED, requestedAcr=null, grantedAcr=null, errorCode=TECHNICAL_GENERAL, sessionType=null, handoverFromClientId=null)")
+                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=START_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_FAILED, requestedAcr=null, grantedAcr=null, errorCode=TECHNICAL_GENERAL, sessionType=WEB_SESSION, handoverFromClientId=null)")
+                .isLoggedOnce();
+    }
+
+    @Test
+    void logReject_WhenSessionTypeGiven_ThenSessionTypeIsLogged() {
+        statisticsLogger.logReject(createLoginRequestInfo(), CONTINUE_SESSION, SECURED_APP_WEB_SESSION);
+
+        assertMessage()
+                .withLoggerClass(StatisticsLogger.class)
+                .withMessage(StatisticsLogger.LOG_MESSAGE)
+                .withLevel(INFO)
+                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=CONTINUE_SESSION, authenticationType=null, authenticationState=AUTHENTICATION_CANCELED, requestedAcr=null, grantedAcr=null, errorCode=null, sessionType=SECURED_APP_WEB_SESSION, handoverFromClientId=null)")
                 .isLoggedOnce();
     }
 

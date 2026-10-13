@@ -62,6 +62,7 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationReque
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.CONTINUE_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.START_SESSION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.LOGIN_REQUEST_INFO;
+import static ee.ria.govsso.session.logging.StatisticsLogger.SESSION_TYPE;
 import static ee.ria.govsso.session.service.helper.ClientScopes.SCOPE_PHONE;
 
 @Slf4j
@@ -107,6 +108,7 @@ public class LoginInitController {
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             if (authHandoverToken != null) {
                 request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
+                request.setAttribute(SESSION_TYPE, SessionType.SECURED_APP_WEB_SESSION);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 if (authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
                     String handoverFromClientId = parseClientId(authHandoverToken);
@@ -114,17 +116,20 @@ public class LoginInitController {
                 }
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
+            request.setAttribute(SESSION_TYPE, SecureAppUtil.getNewSessionType(loginRequestInfo.getClient()));
             return authenticateWithTara(loginRequestInfo, response);
         } else {
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, CONTINUE_SESSION);
             if (loginRequestInfo.getClient().isSecuredApp()) {
-                return reauthenticate(loginRequestInfo, request, response);
+                return reauthenticate(loginRequestInfo, null, request, response);
             }
             List<Consent> consents = hydraService.getValidConsentsAtRequestTime(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId(), loginRequestInfo.getRequestedAt());
             UserAttributes userAttributes = hydraService.getUserAttributesFromConsentContext(consents);
             if (userAttributes == null) {
-                return reauthenticate(loginRequestInfo, request, response);
+                return reauthenticate(loginRequestInfo, null, request, response);
             }
+            SessionType sessionType = SecureAppUtil.getSessionType(consents);
+            request.setAttribute(SESSION_TYPE, sessionType);
             if (SecureAppUtil.isSecuredAppSession(consents)) {
                 // Sessions of type `SECURED_APP_SESSION` cannot be continued, so let's remove the session cookie and
                 // redirect the user back to the initial authentication endpoint. This will effectively restart the
@@ -133,11 +138,11 @@ public class LoginInitController {
                 return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
             }
             if (authHandoverToken != null) {
-                return reauthenticate(loginRequestInfo, request, response);
+                return reauthenticate(loginRequestInfo, sessionType, request, response);
             }
             if (SecureAppUtil.isSecuredAppWebSession(consents)
                     && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)) {
-                return reauthenticate(loginRequestInfo, request, response);
+                return reauthenticate(loginRequestInfo, sessionType, request, response);
             }
             if (!isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
                 return openAcrView(loginRequestInfo);
@@ -274,7 +279,7 @@ public class LoginInitController {
     private ModelAndView acceptLogin(LoginRequestInfo loginRequestInfo, List<Consent> consents,
                                      UserAttributes userAttributes, ClientRequestMetadata metadata) {
         LoginAcceptResponse response = hydraService.acceptContinuedSessionLogin(consents, loginRequestInfo, metadata);
-        statisticsLogger.logAccept(CONTINUE_SESSION, userAttributes, loginRequestInfo);
+        statisticsLogger.logAccept(CONTINUE_SESSION, userAttributes, loginRequestInfo, SecureAppUtil.getSessionType(consents));
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
@@ -316,13 +321,13 @@ public class LoginInitController {
                 .anyMatch(skipUserConsentClientIds::contains);
     }
 
-    private ModelAndView reauthenticate(LoginRequestInfo loginRequestInfo, HttpServletRequest
-            request, HttpServletResponse response) {
+    private ModelAndView reauthenticate(LoginRequestInfo loginRequestInfo, SessionType sessionType,
+                                        HttpServletRequest request, HttpServletResponse response) {
         hydraService.deleteConsentBySubjectSession(loginRequestInfo.getSubject(), loginRequestInfo.getSessionId());
         hydraService.deleteLoginSessionAndRelatedLoginRequests(loginRequestInfo.getSessionId());
         CookieUtil.deleteHydraSessionCookie(request, response);
 
-        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION);
+        statisticsLogger.logReject(loginRequestInfo, CONTINUE_SESSION, sessionType);
         return new ModelAndView("redirect:" + loginRequestInfo.getRequestUrl());
     }
 

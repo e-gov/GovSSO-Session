@@ -244,9 +244,7 @@ public class HydraService {
                                            ClientRequestMetadata metadata) {
         Client client = loginRequestInfo.getClient();
         boolean isLongLivingSession = client.isSecuredApp();
-        SessionType sessionType = isLongLivingSession ?
-                SessionType.SECURED_APP_SESSION :
-                SessionType.WEB_SESSION;
+        SessionType sessionType = SecureAppUtil.getNewSessionType(client);
 
         Context context = createContext(metadata, sessionType, userAttributes);
         Duration rememberFor = isLongLivingSession ?
