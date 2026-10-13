@@ -38,11 +38,11 @@ public class AuthHandoverAcceptancePolicy {
         if (result == Result.ACCEPTED) {
             return true;
         }
-        log.info(append("auth_handover.client_id", client.getClientId())
+        log.info(append("auth_handover.target_client_id", client.getClientId())
                         .and(append("auth_handover.auth_handover_time", userAttributes.authHandoverTime()))
                         .and(append("auth_handover.tara_auth_time", userAttributes.taraAuthTime()))
                         .and(append("auth_handover.result", result)),
-                "Client auth handover acceptance evaluated: {}", result);
+                "Client does not accept auth handover: {}", result);
         return false;
     }
 
