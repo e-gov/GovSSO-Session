@@ -34,5 +34,5 @@ public class LoginSessionInfo {
     private String phoneNumber;
     private Boolean phoneNumberVerified;
     @NotBlank
-    private String subject;
+    private String sub;
 }
