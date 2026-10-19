@@ -114,7 +114,7 @@ class HydraServiceTest extends BaseTest {
         assertThat(loginSessionInfo.getGivenName(), equalTo("MARY ÄNN"));
         assertThat(loginSessionInfo.getPhoneNumber(), equalTo("+37200000766"));
         assertThat(loginSessionInfo.getPhoneNumberVerified(), equalTo(true));
-        assertThat(loginSessionInfo.getSubject(), equalTo("EE60001019906"));
+        assertThat(loginSessionInfo.getSub(), equalTo("EE60001019906"));
     }
 
     @Test
@@ -130,7 +130,7 @@ class HydraServiceTest extends BaseTest {
 
         assertThat(ex.getErrorCode(), equalTo(ErrorCode.TECHNICAL_GENERAL));
         assertThat(ex.getMessage(), equalTo("Hydra login session info has missing or invalid fields: " +
-                "acr, amr, authTime, birthdate, familyName, givenName, subject"));
+                "acr, amr, authTime, birthdate, familyName, givenName, sub"));
     }
 
     @Test
@@ -147,7 +147,7 @@ class HydraServiceTest extends BaseTest {
                                   "birthdate": "2000-01-01",
                                   "family_name": "",
                                   "given_name": " ",
-                                  "subject": "EE60001019906"
+                                  "sub": "EE60001019906"
                                 }""")));
 
         SsoException ex = assertThrows(SsoException.class,

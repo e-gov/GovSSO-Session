@@ -32,7 +32,7 @@ public class UserAttributesFactory {
 
     public UserAttributes fromAuthHandoverToken(JWTClaimsSet claims, LoginSessionInfo loginSessionInfo) throws ParseException {
         return UserAttributes.builder()
-                .subject(loginSessionInfo.getSubject())
+                .subject(loginSessionInfo.getSub())
                 .authHandoverTime(toInstant(claims.getIssueTime()))
                 .taraAuthTime(loginSessionInfo.getAuthTime())
                 .acr(loginSessionInfo.getAcr())

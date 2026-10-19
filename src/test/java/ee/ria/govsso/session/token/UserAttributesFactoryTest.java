@@ -34,7 +34,7 @@ class UserAttributesFactoryTest {
                 .build();
         Instant sessionAuthTime = Instant.parse("2026-10-07T08:00:00Z");
         LoginSessionInfo loginSessionInfo = new LoginSessionInfo();
-        loginSessionInfo.setSubject("EE60001019906");
+        loginSessionInfo.setSub("EE60001019906");
         loginSessionInfo.setAuthTime(sessionAuthTime);
         loginSessionInfo.setAcr("high");
         loginSessionInfo.setAmr(List.of("mID"));
