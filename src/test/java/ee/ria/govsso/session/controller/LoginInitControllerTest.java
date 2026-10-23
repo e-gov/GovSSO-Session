@@ -1874,6 +1874,7 @@ class LoginInitControllerTest extends BaseTest {
         private static final RSAKey HYDRA_ACCESS_TOKEN_JWK = TaraTestSetup.generateJWK();
         private static final String LOGIN_ACCEPT_URL =
                 "/admin/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE;
+        private static final String TEST_AUTH_HANDOVER_SID = "a1b2c3d4-0000-4000-8000-000000000001";
 
         @Autowired
         private TaraMetadataService taraMetadataService;
@@ -1907,7 +1908,8 @@ class LoginInitControllerTest extends BaseTest {
         })
         void loginInit_WhenAuthHandoverTokenAcrLowerThanRequiredAcr_RedirectsToTaraWithRequiredAcr(
                 String tokenAcr, String clientMinimumAcr, String expectedTaraAcr) {
-            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(tokenAcr), clientMinimumAcr);
+            stubLoginSessionInfo(tokenAcr);
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(), clientMinimumAcr);
 
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -1933,7 +1935,8 @@ class LoginInitControllerTest extends BaseTest {
         })
         void loginInit_WhenAuthHandoverTokenAcrHigherOrEqualToRequiredAcr_AcceptsLoginWithTokenAcr(
                 String tokenAcr, String clientMinimumAcr) {
-            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(tokenAcr), clientMinimumAcr);
+            stubLoginSessionInfo(tokenAcr);
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(), clientMinimumAcr);
 
             given()
                     .param("login_challenge", TEST_LOGIN_CHALLENGE)
@@ -1984,8 +1987,28 @@ class LoginInitControllerTest extends BaseTest {
                             .withBody(loginRequestBody)));
         }
 
+        private void stubLoginSessionInfo(String acr) {
+            String loginSessionBody = """
+                    {
+                      "acr": "%s",
+                      "amr": ["mID"],
+                      "auth_time": %d,
+                      "birthdate": "1980-01-08",
+                      "family_name": "TEST",
+                      "given_name": "TEST",
+                      "sub": "test1234"
+                    }
+                    """.formatted(acr, Instant.now().minusSeconds(60).getEpochSecond());
+
+            HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=" + TEST_AUTH_HANDOVER_SID))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json; charset=UTF-8")
+                            .withBody(loginSessionBody)));
+        }
+
         @SneakyThrows
-        private SignedJWT createAuthHandoverToken(String acr) {
+        private SignedJWT createAuthHandoverToken() {
             Instant now = Instant.now();
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                     .issuer(INPROXY_MOCK_URL)
@@ -1996,12 +2019,7 @@ class LoginInitControllerTest extends BaseTest {
                     .jwtID(UUID.randomUUID().toString())
                     .claim("scope", "auth_handover")
                     .claim("client_id", "secured-app")
-                    .claim("acr", acr)
-                    .claim("amr", List.of("mID"))
-                    .claim("auth_time", now.minusSeconds(60).getEpochSecond())
-                    .claim("birthdate", "1980-01-08")
-                    .claim("family_name", "TEST")
-                    .claim("given_name", "TEST")
+                    .claim("sid", TEST_AUTH_HANDOVER_SID)
                     .claim("initiator", "SECURED_APP")
                     .build();
             SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(HYDRA_ACCESS_TOKEN_JWK.getKeyID()).build(), claimsSet);
