@@ -9,6 +9,7 @@ import tools.jackson.databind.annotation.JsonNaming;
 import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.time.Instant;
+import java.util.List;
 
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -22,7 +23,7 @@ public record UserAttributes(
         @JsonDeserialize(using = InstantAsEpochSeconds.Deserializer.class)
         Instant taraAuthTime,
         String acr,
-        String[] amr,
+        List<String> amr,
         String givenName,
         String familyName,
         String birthdate,

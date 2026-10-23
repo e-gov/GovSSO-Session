@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -24,7 +25,6 @@ import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_FAILED;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationState.AUTHENTICATION_SUCCESS;
 import static ee.ria.govsso.session.util.LocaleUtil.DEFAULT_LANGUAGE;
-import static java.util.Arrays.stream;
 import static net.logstash.logback.marker.Markers.appendFields;
 
 @Slf4j
@@ -47,7 +47,7 @@ public class StatisticsLogger {
         var claims = taraIdToken.getJWTClaimsSet();
         logAccept(
                 requestType, claims.getSubject(), claims.getIssueTime().toInstant(), claims.getStringClaim("acr"),
-                claims.getStringArrayClaim("amr"), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
+                claims.getStringListClaim("amr"), loginRequestInfo.getClient(), loginRequestInfo.getSessionId(),
                 loginRequestInfo.getAcr());
     }
 
@@ -70,7 +70,7 @@ public class StatisticsLogger {
 
     private void logAccept(
             @NonNull AuthenticationRequestType requestType, @NonNull String subject, @NonNull Instant sessionStartTime,
-            @NonNull String acr, @NonNull String[] amrClaim, @NonNull Client client, @NonNull String sessionId,
+            @NonNull String acr, @NonNull List<String> amrClaim, @NonNull Client client, @NonNull String sessionId,
             LevelOfAssurance requestAcr) {
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
@@ -78,7 +78,7 @@ public class StatisticsLogger {
         var idCode = subject.substring(2);
         var sessionTime = Instant.now().getEpochSecond() - sessionStartTime.getEpochSecond();
         var grantedAcr = acr.toUpperCase(Locale.ROOT);
-        var amr = stream(amrClaim)
+        var amr = amrClaim.stream()
                 .filter(authenticationTypes::containsKey)
                 .map(authenticationTypes::get)
                 .findFirst();

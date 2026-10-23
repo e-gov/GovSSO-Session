@@ -2,6 +2,8 @@ package ee.ria.govsso.session.service.hydra;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jwt.SignedJWT;
+import ee.ria.govsso.session.error.ErrorCode;
+import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.token.UserAttributes;
 import ee.ria.govsso.session.token.UserAttributesFactory;
 import lombok.Data;
@@ -23,7 +25,6 @@ public class Context {
     @Deprecated
     private boolean isLongLivingSession;
     private SessionType sessionType;
-    private String authHandoverToken;
     private UserAttributes userAttributes;
 
     // TODO Temporary solution. Remove after all sessions created before session type was added to context have
@@ -57,15 +58,10 @@ public class Context {
         }
         return switch (this.getSessionTypeOrFallback()) {
             case SECURED_APP_WEB_SESSION ->
-                    userAttributesFactory.fromAuthHandoverToken(getAuthHandoverTokenJwt().getJWTClaimsSet());
+                    throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Session context does not contain user attributes");
             case WEB_SESSION, SECURED_APP_SESSION ->
                     userAttributesFactory.fromTaraIdToken(getTaraIdTokenJwt().getJWTClaimsSet());
         };
-    }
-
-    @JsonIgnore
-    public SignedJWT getAuthHandoverTokenJwt() throws ParseException {
-        return parseRequiredToken(this.getAuthHandoverToken(), "an auth handover token");
     }
 
     @JsonIgnore

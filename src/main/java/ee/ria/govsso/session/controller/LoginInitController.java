@@ -1,6 +1,5 @@
 package ee.ria.govsso.session.controller;
 
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import ee.ria.govsso.session.common.ClientRequestMetadata;
@@ -107,7 +106,7 @@ public class LoginInitController {
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 if (AuthHandoverTokenUtil.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes,
                         ssoConfigurationProperties.getSessionMaxDuration(), clock)) {
-                    return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes);
+                    return authenticateWithHandoverToken(loginRequestInfo, request, userAttributes);
                 }
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
@@ -213,12 +212,12 @@ public class LoginInitController {
     }
 
     private ModelAndView authenticateWithHandoverToken(LoginRequestInfo loginRequestInfo, HttpServletRequest request,
-                                                       SignedJWT authHandoverToken, UserAttributes userAttributes) {
+                                                       UserAttributes userAttributes) {
         if (loginRequestInfo.getClient().getMetadata().getClientType() != ClientType.DEFAULT) {
             throw new SsoException(USER_INPUT, "Only %s client type is allowed to use an auth handover token".formatted(ClientType.DEFAULT));
         }
         ClientRequestMetadata metadata = clientRequestMetadataFactory.fromRequest(request);
-        return acceptAuthHandoverLogin(loginRequestInfo, authHandoverToken, userAttributes, metadata);
+        return acceptAuthHandoverLogin(loginRequestInfo, userAttributes, metadata);
     }
 
     private ModelAndView authenticateWithTara(LoginRequestInfo loginRequestInfo, HttpServletResponse response) {
@@ -266,9 +265,9 @@ public class LoginInitController {
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
 
-    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, JWT authHandoverToken,
-                                                 UserAttributes userAttributes, ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(authHandoverToken, loginRequestInfo, metadata);
+    private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes,
+                                                 ClientRequestMetadata metadata) {
+        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(userAttributes, loginRequestInfo, metadata);
         statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }

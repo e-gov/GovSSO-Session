@@ -4,6 +4,8 @@ import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class LoginAcceptRequest {
@@ -13,7 +15,7 @@ public class LoginAcceptRequest {
     String subject;
     Context context;
     int rememberFor;
-    String[] amr;
+    List<String> amr;
     boolean extendSessionLifespan;
 
 }

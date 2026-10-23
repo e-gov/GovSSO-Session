@@ -21,7 +21,7 @@ import java.util.List;
 public class AccessTokenClaims {
 
     private String acr;
-    private String[] amr;
+    private List<String> amr;
     private String givenName;
     private String familyName;
     private String birthdate;
