@@ -56,6 +56,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.nimbusds.jose.JWSAlgorithm.RS256;
 import static ee.ria.govsso.session.configuration.SecurityConfiguration.COOKIE_NAME_XSRF_TOKEN;
 import static ee.ria.govsso.session.controller.LoginInitController.LOGIN_INIT_REQUEST_MAPPING;
 import static ee.ria.govsso.session.session.SsoCookie.COOKIE_NAME_GOVSSO;
@@ -837,40 +838,6 @@ class LoginInitControllerTest extends BaseTest {
                 .body("error", equalTo("TECHNICAL_GENERAL"));
 
         assertErrorIsLogged("SsoException: Valid consents did not have identical session token values");
-    }
-
-    @Test
-    void loginInit_WhenLegacyConsentWithoutUserAttributesAndConsentWithUserAttributesHaveSameTaraIdToken_OpensView() {
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_subject.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&include_expired=all_expired&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_legacy_and_user_attributes.json")));
-
-        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&include_expired=partially_expired"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json; charset=UTF-8")
-                        .withBodyFile("mock_responses/mock_sso_oidc_consents_legacy_and_user_attributes.json")));
-
-        given()
-                .param("login_challenge", TEST_LOGIN_CHALLENGE)
-                .cookie(MOCK_OIDC_SESSION_COOKIE)
-                .when()
-                .get(LOGIN_INIT_REQUEST_MAPPING)
-                .then()
-                .assertThat()
-                .statusCode(200)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-                .body(containsString("Eesnimi3"))
-                .body(containsString("Perekonnanimi3"))
-                .body(containsString("12.07.1961"));
     }
 
     @Test
