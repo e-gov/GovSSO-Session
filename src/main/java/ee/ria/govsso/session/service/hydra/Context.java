@@ -28,14 +28,4 @@ public class Context {
             case WEB_SESSION -> ClientType.DEFAULT;
         };
     }
-
-    @JsonIgnore
-    public SignedJWT getTaraIdTokenJwt() throws ParseException {
-        return parseRequiredToken(this.getTaraIdToken(), "a TARA ID token");
-    }
-
-    private static SignedJWT parseRequiredToken(String token, String tokenDescription) throws ParseException {
-        Objects.requireNonNull(token, "Session context does not contain %s".formatted(tokenDescription));
-        return SignedJWT.parse(token);
-    }
 }
