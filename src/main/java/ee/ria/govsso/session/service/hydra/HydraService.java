@@ -265,7 +265,7 @@ public class HydraService {
                                                            LoginRequestInfo loginRequestInfo,
                                                            ClientRequestMetadata metadata) {
         Context context = consents.get(0).getConsentRequest().getContext();
-        SessionType sessionType = context.getSessionTypeOrFallback();
+        SessionType sessionType = context.getSessionType();
         return switch (sessionType) {
             case SECURED_APP_WEB_SESSION -> acceptSecuredAppWebSessionLogin(
                     context.getUserAttributes(), loginRequestInfo, metadata);
@@ -617,7 +617,7 @@ public class HydraService {
         // sessions, so we can skip that check for long-living sessions. Max age of SECURED_APP_WEB_SESSION is
         // determined by client metadata and is validated by AuthHandoverTokenUtil.clientAcceptsAuthHandover.
         Context context = consents.get(0).getConsentRequest().getContext();
-        if (context.getSessionTypeOrFallback() != SessionType.WEB_SESSION) {
+        if (context.getSessionType() != SessionType.WEB_SESSION) {
             return;
         }
         Instant sessionMaxAgeExpiration = context.getUserAttributes().taraAuthTime()
