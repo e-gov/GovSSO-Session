@@ -74,7 +74,7 @@ public class RefreshTokenHookController {
         if (isAuthHandoverTokenRequest) {
             validateAuthHandoverTokenRequest(hookRequest);
         } else {
-            validateRequestedScopes(hookRequest);
+            validateRefreshTokenRequest(hookRequest);
         }
 
         List<Consent> consents = hydraService.getValidConsents(hookRequest.getSubject(), sessionId);
@@ -244,5 +244,13 @@ public class RefreshTokenHookController {
                 .map(Consent::getConsentRequest)
                 .filter(consentRequestInfo -> consentRequestInfo.getClient().getClientId().equals(clientId))
                 .findFirst().orElse(null);
+    }
+
+    private void validateRefreshTokenRequest(RefreshTokenHookRequest hookRequest) {
+        validateRequestedScopes(hookRequest);
+        if (hydraService.hasGovSsoAsAudience(hookRequest.getGrantedAudience())) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request's audience " +
+                    "must not contain the configured GovSSO base URL");
+        }
     }
 }
