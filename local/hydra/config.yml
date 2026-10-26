@@ -90,7 +90,7 @@ strategies:
 ttl:
   access_token: 1s
   refresh_token: 15m
-  # NB! ttl/id_token value must be the same as govsso.session-max-update-interval-minutes value in GovSSO-Session configuration.
+  # NB! ttl.id_token value must be the same as govsso.session-max-update-interval-minutes value in GovSSO-Session configuration.
   id_token: 15m
   auth_code: 30s
   login_consent_request: 1h
@@ -104,3 +104,6 @@ sqa:
 log:
   format: json
   redaction_text: redacted
+govsso:
+  # NB! govsso.auth_handover_audience value must be the same as govsso.base-url value in GovSSO-Session configuration.
+  auth_handover_audience: "https://inproxy.localhost:13443/"
