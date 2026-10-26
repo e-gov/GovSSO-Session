@@ -136,7 +136,7 @@ flow implementations.
 
 | Parameter        | Mandatory | Default value | Description, example |
 | :---------------- | :---------- | :---------- | :---------------- |
-| `govsso.base-url` | Yes | | Base URL of the SSO incoming proxy, for example: https://inproxy.localhost:13443/ |
+| `govsso.base-url` | Yes | | Base URL of the SSO incoming proxy, for example: https://inproxy.localhost:13443/. NB! Must be the same as `govsso/auth_handover_audience` value in Ory Hydra configuration. |
 | `govsso.session-max-update-interval-minutes` | Yes | | Sets how long the authentication should be remembered for in SSO OIDC service. NB! Must be the same as `ttl/id_token` value in Ory Hydra configuration. NB! Ory Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 1440 (24 hours) also requires increasing Hydra database clean-up time limit. |
 | `govsso.session-max-duration-hours` | Yes | | Sets how long the id token will be considered valid. NB! Ory Hydra database clean-up functionality will remove session data older than 24 hours, so setting this value over 24 also requires increasing Hydra database clean-up time limit. |
 

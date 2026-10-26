@@ -104,3 +104,6 @@ sqa:
 log:
   format: json
   redaction_text: redacted
+govsso:
+  # NB! govsso/auth_handover_audience value must be the same as govsso.base-url value in GovSSO-Session configuration.
+  auth_handover_audience: "https://inproxy.localhost:13443/"
