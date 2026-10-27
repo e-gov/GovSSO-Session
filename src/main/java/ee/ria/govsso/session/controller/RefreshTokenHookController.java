@@ -168,11 +168,23 @@ public class RefreshTokenHookController {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     "Refresh token hook request must not be an auth handover token request because issuing auth handover tokens is disabled.");
         }
+        validateAuthHandoverRequestedScopes(hookRequest);
+        validateAuthHandoverGrantedAudience(hookRequest);
+    }
+
+    private void validateAuthHandoverRequestedScopes(RefreshTokenHookRequest hookRequest) {
         List<String> requestedScopes = hookRequest.getRequestedScopes();
         if (!containsAuthHandoverScope(requestedScopes) || requestedScopes.size() != 1) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
                     "Auth handover token request requested scopes can contain only %s scope".formatted(SCOPE_AUTH_HANDOVER));
         }
+    }
+
+    private boolean containsAuthHandoverScope(List<String> requestedScopes) {
+        return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
+    }
+
+    private void validateAuthHandoverGrantedAudience(RefreshTokenHookRequest hookRequest) {
         List<String> audience = hookRequest.getGrantedAudience();
         if (!audienceMatchesExactlyBaseUrl(audience) || audience.size() != 1) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Auth handover granted audience can contain only the configured GovSSO base URL");
@@ -187,8 +199,9 @@ public class RefreshTokenHookController {
         return grantedAudience.stream().anyMatch(govSsoBaseUrl::equals);
     }
 
-    private boolean containsAuthHandoverScope(List<String> requestedScopes) {
-        return requestedScopes != null && requestedScopes.contains(SCOPE_AUTH_HANDOVER);
+    private void validateRefreshTokenRequest(RefreshTokenHookRequest hookRequest) {
+        validateRequestedScopes(hookRequest);
+        validateGrantedAudience(hookRequest);
     }
 
     private void validateRequestedScopes(RefreshTokenHookRequest hookRequest) {
@@ -212,6 +225,13 @@ public class RefreshTokenHookController {
             } else if (!hookRequest.getGrantedScopes().contains(requestedScope)) {
                 throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request must not contain a requested scope that is not in the list of granted scopes.");
             }
+        }
+    }
+
+    private void validateGrantedAudience(RefreshTokenHookRequest hookRequest) {
+        if (hydraService.hasGovSsoAsAudience(hookRequest.getGrantedAudience())) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request's audience " +
+                    "must not contain the configured GovSSO base URL");
         }
     }
 
@@ -244,13 +264,5 @@ public class RefreshTokenHookController {
                 .map(Consent::getConsentRequest)
                 .filter(consentRequestInfo -> consentRequestInfo.getClient().getClientId().equals(clientId))
                 .findFirst().orElse(null);
-    }
-
-    private void validateRefreshTokenRequest(RefreshTokenHookRequest hookRequest) {
-        validateRequestedScopes(hookRequest);
-        if (hydraService.hasGovSsoAsAudience(hookRequest.getGrantedAudience())) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Refresh token hook request's audience " +
-                    "must not contain the configured GovSSO base URL");
-        }
     }
 }
