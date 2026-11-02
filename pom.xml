@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.2</version>
         <relativePath/><!-- Lookup parent from repository. -->
     </parent>
 
@@ -30,13 +30,13 @@
         <imageName>${project.artifactId}:latest</imageName>
         <githubMirror>https://github.com</githubMirror>
 
-        <elastic-apm.version>1.56.0</elastic-apm.version>
-        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+        <elastic-apm.version>1.57.1</elastic-apm.version>
+        <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
         <jquery.version>3.7.1</jquery.version>
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
-        <nimbus-oauth2-oidc-sdk.version>11.38.2</nimbus-oauth2-oidc-sdk.version>
-        <rest-assured.version>6.0.0</rest-assured.version>
-        <spring-retry.version>2.0.12</spring-retry.version>
+        <nimbus-oauth2-oidc-sdk.version>11.39</nimbus-oauth2-oidc-sdk.version>
+        <rest-assured.version>6.3.0</rest-assured.version>
+        <spring-retry.version>2.0.13</spring-retry.version>
         <uap-java.version>1.6.1</uap-java.version>
         <wiremock.version>3.13.2</wiremock.version>
     </properties>
