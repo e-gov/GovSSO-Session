@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -1758,6 +1759,36 @@ class LoginInitControllerTest extends BaseTest {
                 .withRequestBody(matchingJsonPath(expectedContextJsonPath, WireMock.equalTo(expectedContextValue))));
     }
 
+    @Test
+    void loginInit_WhenSessionIsContinued_AuthenticatedAtIsNotSentToHydra() {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/login?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_request_with_skip_user_consent_client_ids.json")));
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=test1234&include_expired=all_expired&login_session_id=e56cbaf9-81e9-4473-a733-261e8dd38e95"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents.json")));
+        HYDRA_MOCK_SERVER.stubFor(put(urlEqualTo("/admin/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_login_accept.json")));
+
+        given()
+                .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                .when()
+                .get(LOGIN_INIT_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .statusCode(302);
+
+        HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo("/admin/oauth2/auth/requests/login/accept?login_challenge=" + TEST_LOGIN_CHALLENGE))
+                .withRequestBody(WireMock.notContaining("authenticated_at")));
+    }
+
     @Nested
     @NestedTestConfiguration(OVERRIDE)
     @TestPropertySource(properties = {"govsso.session-max-duration-hours=1"})
@@ -1954,6 +1985,24 @@ class LoginInitControllerTest extends BaseTest {
         }
 
         @Test
+        void loginInit_WhenAuthHandoverTokenIsAccepted_AuthTimeOfAuthHandoverInitiatorSessionIsSentToHydra() {
+            Instant initiatorSessionAuthTime = Instant.now().minusSeconds(3600).truncatedTo(ChronoUnit.SECONDS);
+            stubLoginSessionInfo("high", initiatorSessionAuthTime);
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(), null);
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(302);
+
+            HYDRA_MOCK_SERVER.verify(putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL))
+                    .withRequestBody(matchingJsonPath("$.authenticated_at", WireMock.equalTo(initiatorSessionAuthTime.toString()))));
+        }
+
+        @Test
         void loginInit_WhenAuthHandoverTokenSignedWithUnknownKeyIsUsedRepeatedly_ThrowsUserInvalidOidcRequestError() {
             SignedJWT forgedAuthHandoverToken = createAuthHandoverToken(TaraTestSetup.generateJWK());
             stubLoginRequestWithAuthHandoverToken(forgedAuthHandoverToken, null);
@@ -2012,6 +2061,10 @@ class LoginInitControllerTest extends BaseTest {
         }
 
         private void stubLoginSessionInfo(String acr) {
+            stubLoginSessionInfo(acr, Instant.now().minusSeconds(60));
+        }
+
+        private void stubLoginSessionInfo(String acr, Instant authTime) {
             String loginSessionBody = """
                     {
                       "acr": "%s",
@@ -2022,7 +2075,7 @@ class LoginInitControllerTest extends BaseTest {
                       "given_name": "TEST",
                       "sub": "test1234"
                     }
-                    """.formatted(acr, Instant.now().minusSeconds(60).getEpochSecond());
+                    """.formatted(acr, authTime.getEpochSecond());
 
             HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/login?sid=" + TEST_AUTH_HANDOVER_SID))
                     .willReturn(aResponse()

@@ -230,13 +230,21 @@ public class HydraService {
     }
 
     @SneakyThrows
-    public LoginAcceptResponse acceptSecuredAppWebSessionLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
+    public LoginAcceptResponse acceptAuthHandoverLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
+        LoginAcceptRequest request = createSecuredAppWebSessionLoginAcceptRequest(userAttributes, metadata);
+        request.setAuthenticatedAt(userAttributes.taraAuthTime());
+        return getLoginAcceptResponse(request, loginRequestInfo.getChallenge());
+    }
+
+    private LoginAcceptResponse acceptSecuredAppWebSessionLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
+        LoginAcceptRequest request = createSecuredAppWebSessionLoginAcceptRequest(userAttributes, metadata);
+        return getLoginAcceptResponse(request, loginRequestInfo.getChallenge());
+    }
+
+    private LoginAcceptRequest createSecuredAppWebSessionLoginAcceptRequest(UserAttributes userAttributes, ClientRequestMetadata metadata) {
         Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION, userAttributes);
         Duration rememberFor = ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
-
-        String loginChallenge = loginRequestInfo.getChallenge();
-        return getLoginAcceptResponse(request, loginChallenge);
+        return createLoginAcceptRequest(userAttributes, context, rememberFor);
     }
 
     @SneakyThrows
