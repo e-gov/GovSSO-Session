@@ -28,6 +28,8 @@ import static ee.ria.govsso.session.service.hydra.RepresenteeList.RepresenteeLis
 import static ee.ria.govsso.session.util.wiremock.ExtraWiremockMatchers.isUuid;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -349,6 +351,27 @@ class ConsentInitControllerTest extends BaseTest {
                 .assertThat()
                 .statusCode(400)
                 .body("error", equalTo("USER_INPUT"));
+
+        assertErrorIsLogged("SsoException: Failed to fetch Hydra consent request info --> 404 Not Found from GET");
+    }
+
+    @Test
+    void consentInit_WhenSsoExceptionHasUserErrorCode_DoesNotReturnErrorDescription() {
+
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/requests/consent?consent_challenge=" + TEST_CONSENT_CHALLENGE))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")));
+
+        given()
+                .param("consent_challenge", TEST_CONSENT_CHALLENGE)
+                .when()
+                .get("/consent/init")
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("error", equalTo("USER_INPUT"))
+                .body("$", not(hasKey("error_description")));
 
         assertErrorIsLogged("SsoException: Failed to fetch Hydra consent request info --> 404 Not Found from GET");
     }

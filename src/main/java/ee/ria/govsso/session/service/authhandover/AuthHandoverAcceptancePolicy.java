@@ -37,8 +37,13 @@ public class AuthHandoverAcceptancePolicy {
     }
 
     public boolean clientAcceptsAuthHandover(Client client, UserAttributes userAttributes) {
+        return evaluateClientAcceptsAuthHandover(client, userAttributes) == Result.ACCEPTED;
+    }
+
+    public Result evaluateClientAcceptsAuthHandover(Client client, UserAttributes userAttributes) {
         Result result = evaluate(client.getMetadata(), userAttributes);
-        return isAccepted(client, userAttributes, result);
+        isAccepted(client, userAttributes, result);
+        return result;
     }
 
     public boolean clientAcceptsAuthHandoverLogin(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {

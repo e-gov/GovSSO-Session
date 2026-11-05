@@ -1804,7 +1804,7 @@ class LoginInitControllerTest extends BaseTest {
 
         @Test
         @SneakyThrows
-        void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsTechnicalGeneralError() {
+        void loginInit_WhenConsentIdTokenExpired10SecondsAgo_ThrowsUserInvalidOidcRequestError() {
 
             SignedJWT jwt = createIdTokenWithAgeInSeconds(3610);
             String responseBody = createConsentsResponseBodyWithIdToken(jwt);
@@ -1827,8 +1827,8 @@ class LoginInitControllerTest extends BaseTest {
                     .get(LOGIN_INIT_REQUEST_MAPPING)
                     .then()
                     .assertThat()
-                    .statusCode(500)
-                    .body("error", equalTo("TECHNICAL_GENERAL"));
+                    .statusCode(400)
+                    .body("error", equalTo("USER_INVALID_OIDC_REQUEST"));
 
             assertErrorIsLogged("SsoException: Hydra session has expired");
         }

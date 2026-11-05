@@ -6,6 +6,7 @@ import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.authhandover.AuthHandoverAcceptancePolicy;
 import ee.ria.govsso.session.service.hydra.AccessTokenStrategy;
+import ee.ria.govsso.session.service.hydra.Client;
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
+import static ee.ria.govsso.session.error.ErrorAttributes.INCLUDE_ERROR_DESCRIPTION;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AUTHENTICATION_REQUEST_TYPE;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.ISSUE_AUTH_HANDOVER_TOKEN;
 import static ee.ria.govsso.session.logging.StatisticsLogger.AuthenticationRequestType.UPDATE_SESSION;
@@ -61,6 +63,7 @@ public class RefreshTokenHookController {
     @PostMapping(TOKEN_REFRESH_REQUEST_MAPPING)
     public ResponseEntity<RefreshTokenHookResponse> tokenRefresh(@RequestBody RefreshTokenHookRequest hookRequest, HttpServletRequest request) {
         log.debug("Token refresh request received: {}", request);
+        request.setAttribute(INCLUDE_ERROR_DESCRIPTION, true);
 
         String generatedTraceId = RandomStringUtils.secure().next(32, "0123456789abcdef");
         RequestUtil.setFlowTraceId(generatedTraceId);
@@ -87,16 +90,15 @@ public class RefreshTokenHookController {
         ConsentRequestInfo consentRequestInfo = getConsentRequestByClientId(consents, hookRequest.getClientId());
 
         if (userAttributes == null || consentRequestInfo == null) {
-            throw new SsoException(ErrorCode.TECHNICAL_GENERAL, "Consent has expired");
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Consent has expired");
         }
 
         request.setAttribute(CONSENT_REQUEST_INFO, consentRequestInfo);
         SessionType sessionType = consentRequestInfo.getContext().getSessionType();
         request.setAttribute(SESSION_TYPE, sessionType);
 
-        if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)
-                && !authHandoverAcceptancePolicy.clientAcceptsAuthHandover(consentRequestInfo.getClient(), userAttributes)) {
-            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST, "Client does not accept an auth handover, therefore the session is not allowed to be refreshed");
+        if (SecureAppUtil.isSecuredAppWebSession(consentRequestInfo)) {
+            validateClientAcceptsAuthHandover(consentRequestInfo, userAttributes);
         }
 
         RefreshTokenHookResponseBuilder responseBuilder = RefreshTokenHookResponse.builder();
@@ -170,6 +172,25 @@ public class RefreshTokenHookController {
                 .build();
         log.debug("Token refresh response: {}", response);
         return ResponseEntity.ok(response);
+    }
+
+    private void validateClientAcceptsAuthHandover(ConsentRequestInfo consentRequestInfo, UserAttributes userAttributes) {
+        Client client = consentRequestInfo.getClient();
+        AuthHandoverAcceptancePolicy.Result result =
+                authHandoverAcceptancePolicy.evaluateClientAcceptsAuthHandover(client, userAttributes);
+        String rejectionReason = switch (result) {
+            case ACCEPTED -> null;
+            case SECURED_APP_WEB_SESSION_NOT_ALLOWED -> "client does not allow secured app web sessions";
+            case AUTH_HANDOVER_EXPIRED -> "handed over session is older than session max duration (%s)"
+                    .formatted(ssoConfigurationProperties.getSessionMaxDuration());
+            case SECURED_APP_SESSION_EXPIRED -> "secured app session is older than client's secured app session max age (%s)"
+                    .formatted(client.getMetadata().getSecuredAppSessionMaxAge());
+            case INSUFFICIENT_ACR -> "session acr is insufficient";
+        };
+        if (rejectionReason != null) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Session refresh is not allowed: %s".formatted(rejectionReason));
+        }
     }
 
     private void validateAuthHandoverTokenRequest(RefreshTokenHookRequest hookRequest) {

@@ -112,6 +112,47 @@ class AuthHandoverAcceptancePolicyTest {
     }
 
     @Test
+    void evaluateClientAcceptsAuthHandover_whenAllChecksPass_returnsAcceptedAndDoesNotLog() {
+        Client client = createClient(true, "1h");
+        UserAttributes userAttributes = createUserAttributes(NOW.minus(Duration.ofHours(1)), NOW.minus(Duration.ofMinutes(30)));
+
+        assertThat(policy.evaluateClientAcceptsAuthHandover(client, userAttributes),
+                is(AuthHandoverAcceptancePolicy.Result.ACCEPTED));
+        assertNothingLogged();
+    }
+
+    @Test
+    void evaluateClientAcceptsAuthHandover_whenClientDoesNotAllowSecuredAppWebSession_returnsResult() {
+        Client client = createClient(false, null);
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW);
+
+        assertThat(policy.evaluateClientAcceptsAuthHandover(client, userAttributes),
+                is(AuthHandoverAcceptancePolicy.Result.SECURED_APP_WEB_SESSION_NOT_ALLOWED));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.SECURED_APP_WEB_SESSION_NOT_ALLOWED);
+    }
+
+    @Test
+    void evaluateClientAcceptsAuthHandover_whenAuthHandoverIsOlderThanSessionMaxDuration_returnsResult() {
+        Client client = createClient(true, null);
+        UserAttributes userAttributes = createUserAttributes(
+                NOW.minus(Duration.ofHours(SESSION_MAX_DURATION_HOURS)).minusSeconds(1), NOW);
+
+        assertThat(policy.evaluateClientAcceptsAuthHandover(client, userAttributes),
+                is(AuthHandoverAcceptancePolicy.Result.AUTH_HANDOVER_EXPIRED));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.AUTH_HANDOVER_EXPIRED);
+    }
+
+    @Test
+    void evaluateClientAcceptsAuthHandover_whenSecuredAppSessionIsOlderThanClientMaxDuration_returnsResult() {
+        Client client = createClient(true, "1h");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW.minus(Duration.ofHours(1)).minusSeconds(1));
+
+        assertThat(policy.evaluateClientAcceptsAuthHandover(client, userAttributes),
+                is(AuthHandoverAcceptancePolicy.Result.SECURED_APP_SESSION_EXPIRED));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.SECURED_APP_SESSION_EXPIRED);
+    }
+
+    @Test
     void clientAcceptsAuthHandover_whenAuthHandoverTimeMissing_throwsException() {
         Client client = createClient(true, null);
         UserAttributes userAttributes = createUserAttributes(null, NOW);

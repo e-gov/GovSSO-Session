@@ -68,7 +68,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
     }
 
     @Test
-    void tokenRefresh_WhenConsentsAreMissing_ThrowsTechnicalGeneralError() {
+    void tokenRefresh_WhenConsentsAreMissing_ThrowsUserInvalidOidcRequestError() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
@@ -85,13 +85,13 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .post(TOKEN_REFRESH_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(400);
 
         assertErrorIsLogged("SsoException: Consent has expired");
     }
 
     @Test
-    void tokenRefresh_WhenConsentsDontHaveValidClientId_ThrowsTechnicalGeneralError() {
+    void tokenRefresh_WhenConsentsDontHaveValidClientId_ThrowsUserInvalidOidcRequestError() {
         RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, "client-x", List.of(SCOPE_OPENID));
         hookRequest.setSubject("testSubject");
 
@@ -108,7 +108,7 @@ class RefreshTokenHookControllerTest extends BaseTest {
                 .post(TOKEN_REFRESH_REQUEST_MAPPING)
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(400);
 
         assertErrorIsLogged("SsoException: Consent has expired");
     }
@@ -802,6 +802,27 @@ class RefreshTokenHookControllerTest extends BaseTest {
 
             assertInfoIsLogged(RefreshTokenHookController.class,
                     "Issuing auth handover token for session: " + SESSION_ID);
+        }
+
+        @Test
+        void tokenRefresh_whenAuthHandoverTokenIsRequestedWithOtherScopes_ReturnsErrorDescription() {
+            RefreshTokenHookRequest hookRequest = createRefreshTokenHookRequest(SESSION_ID, CLIENT_ID, List.of(SCOPE_OPENID, SCOPE_AUTH_HANDOVER));
+            hookRequest.setSubject("testSubject");
+            hookRequest.setRequestedScopes(List.of(SCOPE_OPENID, SCOPE_AUTH_HANDOVER));
+            hookRequest.setGrantedAudience(List.of("https://inproxy.localhost:8000"));
+
+            given()
+                    .request().body(hookRequest)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .when()
+                    .post(TOKEN_REFRESH_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(400)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .body("error_description", equalTo("Auth handover token request requested scopes can contain only auth_handover scope"));
+
+            assertErrorIsLogged("SsoException: Auth handover token request requested scopes can contain only auth_handover scope");
         }
     }
 

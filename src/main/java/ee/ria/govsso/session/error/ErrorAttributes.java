@@ -14,8 +14,10 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static ee.ria.govsso.session.filter.RequestCorrelationFilter.REQUEST_ATTRIBUTE_NAME_REQUEST_ID;
 import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
@@ -28,6 +30,17 @@ public class ErrorAttributes extends DefaultErrorAttributes {
     public static final String ERROR_ATTR_ERROR_CODE = "error";
     public static final String ERROR_ATTR_INCIDENT_NR = "incident_nr";
     public static final String ERROR_ATTR_OFFSET_TIMESTAMP = "offset_timestamp";
+    public static final String ERROR_ATTR_ERROR_DESCRIPTION = "error_description";
+    public static final String INCLUDE_ERROR_DESCRIPTION = "INCLUDE_ERROR_DESCRIPTION";
+
+    private static final Set<ErrorCode> ERROR_DESCRIPTION_ERROR_CODES = EnumSet.of(
+            ErrorCode.USER_INPUT,
+            ErrorCode.USER_INPUT_OR_EXPIRED,
+            ErrorCode.USER_COOKIE_MISSING,
+            ErrorCode.USER_INVALID_OIDC_CLIENT,
+            ErrorCode.USER_INVALID_OIDC_REQUEST,
+            ErrorCode.USER_INVALID_RESOURCE,
+            ErrorCode.USER_OIDC_OTHER_ERROR);
 
     private final MessageSource messageSource;
 
@@ -42,6 +55,9 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         if (error instanceof SsoException ssoException) {
             ErrorCode errorCode = ssoException.getErrorCode();
             setAttributes(attr, errorCode, incidentNumber);
+            if (isErrorDescriptionIncluded(webRequest) && ERROR_DESCRIPTION_ERROR_CODES.contains(errorCode)) {
+                attr.put(ERROR_ATTR_ERROR_DESCRIPTION, ssoException.getMessage());
+            }
         } else {
             if (status != null && status.is4xxClientError())
                 setAttributes(attr, ErrorCode.USER_INPUT, incidentNumber);
@@ -50,6 +66,10 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         }
 
         return attr;
+    }
+
+    private boolean isErrorDescriptionIncluded(WebRequest webRequest) {
+        return Boolean.TRUE.equals(webRequest.getAttribute(INCLUDE_ERROR_DESCRIPTION, SCOPE_REQUEST));
     }
 
     private void setAttributes(Map<String, Object> attr, ErrorCode errorCode, String incidentNumber) {
