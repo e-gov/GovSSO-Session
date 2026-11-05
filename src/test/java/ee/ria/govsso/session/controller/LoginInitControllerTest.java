@@ -56,6 +56,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -1952,6 +1953,29 @@ class LoginInitControllerTest extends BaseTest {
                     .withRequestBody(matchingJsonPath("$.context.session_type", WireMock.equalTo("SECURED_APP_WEB_SESSION"))));
         }
 
+        @Test
+        void loginInit_WhenAuthHandoverTokenSignedWithUnknownKeyIsUsedRepeatedly_ThrowsUserInvalidOidcRequestError() {
+            SignedJWT forgedAuthHandoverToken = createAuthHandoverToken(TaraTestSetup.generateJWK());
+            stubLoginRequestWithAuthHandoverToken(forgedAuthHandoverToken, null);
+
+            for (int i = 0; i < 2; i++) {
+                given()
+                        .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                        .when()
+                        .get(LOGIN_INIT_REQUEST_MAPPING)
+                        .then()
+                        .assertThat()
+                        .statusCode(400)
+                        .body("error", equalTo("USER_INVALID_OIDC_REQUEST"));
+            }
+
+            assertErrorIsLogged(
+                    "SsoException: Auth handover token verification failed",
+                    "SsoException: Auth handover token verification failed: no matching key found and JWK set refresh is rate limited");
+            HYDRA_MOCK_SERVER.verify(0, postRequestedFor(urlEqualTo("/admin/oauth2/auth/handover/consume")));
+            HYDRA_MOCK_SERVER.verify(0, putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL)));
+        }
+
         private void stubLoginRequestWithAuthHandoverToken(SignedJWT authHandoverToken, String clientMinimumAcr) {
             String loginRequestBody = """
                     {
@@ -2007,8 +2031,12 @@ class LoginInitControllerTest extends BaseTest {
                             .withBody(loginSessionBody)));
         }
 
-        @SneakyThrows
         private SignedJWT createAuthHandoverToken() {
+            return createAuthHandoverToken(HYDRA_ACCESS_TOKEN_JWK);
+        }
+
+        @SneakyThrows
+        private SignedJWT createAuthHandoverToken(RSAKey signingKey) {
             Instant now = Instant.now();
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                     .issuer(INPROXY_MOCK_URL)
@@ -2022,8 +2050,8 @@ class LoginInitControllerTest extends BaseTest {
                     .claim("sid", TEST_AUTH_HANDOVER_SID)
                     .claim("initiator", "SECURED_APP")
                     .build();
-            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(HYDRA_ACCESS_TOKEN_JWK.getKeyID()).build(), claimsSet);
-            jwt.sign(new RSASSASigner(HYDRA_ACCESS_TOKEN_JWK));
+            SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(RS256).keyID(signingKey.getKeyID()).build(), claimsSet);
+            jwt.sign(new RSASSASigner(signingKey));
             return jwt;
         }
     }

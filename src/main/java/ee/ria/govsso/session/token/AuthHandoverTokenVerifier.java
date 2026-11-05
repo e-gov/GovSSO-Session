@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
+import com.nimbusds.jose.jwk.source.RateLimitReachedException;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -90,6 +91,9 @@ public class AuthHandoverTokenVerifier {
     public void verify(SignedJWT token) {
         try {
             jwtProcessor.process(token, null);
+        } catch (RateLimitReachedException ex) {
+            throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
+                    "Auth handover token verification failed: no matching key found and JWK set refresh is rate limited", ex);
         } catch (KeySourceException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
                     "Unable to retrieve JSON web key set for auth handover token verification", ex);
