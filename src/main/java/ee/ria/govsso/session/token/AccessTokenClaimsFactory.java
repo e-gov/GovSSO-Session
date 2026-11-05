@@ -2,7 +2,6 @@ package ee.ria.govsso.session.token;
 
 import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Context;
-import ee.ria.govsso.session.util.SecureAppUtil;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -25,13 +24,21 @@ public class AccessTokenClaimsFactory {
                 .familyName(userAttributes.familyName())
                 .birthdate(userAttributes.birthdate())
                 .initiator(initiator)
-                .authTime(SecureAppUtil.hasSecuredAppAsInitiator(context) ? authenticatedAt : null);
+                .authTime(getSecuredAppAuthTime(userAttributes, context, authenticatedAt));
         if (scopes.contains(SCOPE_PHONE)) {
             builder
                     .phoneNumber(userAttributes.phoneNumber())
                     .phoneNumberVerified(userAttributes.phoneNumberVerified());
         }
         return builder.build();
+    }
+
+    private static Instant getSecuredAppAuthTime(UserAttributes userAttributes, Context context, Instant authenticatedAt) {
+        return switch (context.getSessionTypeOrFallback()) {
+            case SECURED_APP_SESSION -> authenticatedAt;
+            case SECURED_APP_WEB_SESSION -> userAttributes.taraAuthTime();
+            case WEB_SESSION -> null;
+        };
     }
 
 }

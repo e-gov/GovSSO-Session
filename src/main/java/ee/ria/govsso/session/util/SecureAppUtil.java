@@ -1,6 +1,5 @@
 package ee.ria.govsso.session.util;
 
-import ee.ria.govsso.session.service.hydra.ClientType;
 import ee.ria.govsso.session.service.hydra.Consent;
 import ee.ria.govsso.session.service.hydra.ConsentRequestInfo;
 import ee.ria.govsso.session.service.hydra.Context;
@@ -34,9 +33,5 @@ public class SecureAppUtil {
 
     public static boolean isSecuredAppWebSession(Context context) {
         return SessionType.SECURED_APP_WEB_SESSION == context.getSessionTypeOrFallback();
-    }
-    
-    public static boolean hasSecuredAppAsInitiator(Context context) {
-        return ClientType.SECURED_APP == context.getInitiator();
     }
 }
