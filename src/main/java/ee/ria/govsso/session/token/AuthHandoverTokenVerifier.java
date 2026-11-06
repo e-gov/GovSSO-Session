@@ -93,7 +93,7 @@ public class AuthHandoverTokenVerifier {
             jwtProcessor.process(token, null);
         } catch (RateLimitReachedException ex) {
             throw new SsoException(ErrorCode.USER_INVALID_OIDC_REQUEST,
-                    "Auth handover token verification failed: no matching key found and JWK set refresh is rate limited", ex);
+                    "Auth handover token verification failed: no matching key found and JWK set refresh rate limit reached", ex);
         } catch (KeySourceException ex) {
             throw new SsoException(ErrorCode.TECHNICAL_GENERAL,
                     "Unable to retrieve JSON web key set for auth handover token verification", ex);

@@ -229,22 +229,14 @@ public class HydraService {
         return consents.get(0).getConsentRequest().getContext().getUserAttributesOrFallback(userAttributesFactory);
     }
 
-    @SneakyThrows
-    public LoginAcceptResponse acceptAuthHandoverLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
-        LoginAcceptRequest request = createSecuredAppWebSessionLoginAcceptRequest(userAttributes, metadata);
-        request.setAuthenticatedAt(userAttributes.taraAuthTime());
-        return getLoginAcceptResponse(request, loginRequestInfo.getChallenge());
-    }
-
-    private LoginAcceptResponse acceptSecuredAppWebSessionLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
-        LoginAcceptRequest request = createSecuredAppWebSessionLoginAcceptRequest(userAttributes, metadata);
-        return getLoginAcceptResponse(request, loginRequestInfo.getChallenge());
-    }
-
-    private LoginAcceptRequest createSecuredAppWebSessionLoginAcceptRequest(UserAttributes userAttributes, ClientRequestMetadata metadata) {
+    public LoginAcceptResponse acceptSecuredAppWebSessionLogin(UserAttributes userAttributes, LoginRequestInfo loginRequestInfo, ClientRequestMetadata metadata) {
         Context context = createContext(metadata, SessionType.SECURED_APP_WEB_SESSION, userAttributes);
         Duration rememberFor = ssoConfigurationProperties.getSessionMaxUpdateInterval();
-        return createLoginAcceptRequest(userAttributes, context, rememberFor);
+        LoginAcceptRequest request = createLoginAcceptRequest(userAttributes, context, rememberFor);
+        if (!loginRequestInfo.isSkip()) {
+            request.setAuthenticatedAt(userAttributes.taraAuthTime());
+        }
+        return getLoginAcceptResponse(request, loginRequestInfo.getChallenge());
     }
 
     @SneakyThrows

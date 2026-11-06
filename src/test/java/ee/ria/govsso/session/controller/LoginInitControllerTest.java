@@ -2020,7 +2020,7 @@ class LoginInitControllerTest extends BaseTest {
 
             assertErrorIsLogged(
                     "SsoException: Auth handover token verification failed",
-                    "SsoException: Auth handover token verification failed: no matching key found and JWK set refresh is rate limited");
+                    "SsoException: Auth handover token verification failed: no matching key found and JWK set refresh rate limit reached");
             HYDRA_MOCK_SERVER.verify(0, postRequestedFor(urlEqualTo("/admin/oauth2/auth/handover/consume")));
             HYDRA_MOCK_SERVER.verify(0, putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL)));
         }

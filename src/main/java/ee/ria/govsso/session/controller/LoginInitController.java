@@ -274,7 +274,7 @@ public class LoginInitController {
 
     private ModelAndView acceptAuthHandoverLogin(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes,
                                                  ClientRequestMetadata metadata) {
-        LoginAcceptResponse response = hydraService.acceptAuthHandoverLogin(userAttributes, loginRequestInfo, metadata);
+        LoginAcceptResponse response = hydraService.acceptSecuredAppWebSessionLogin(userAttributes, loginRequestInfo, metadata);
         statisticsLogger.logAccept(AUTH_HANDOVER, userAttributes, loginRequestInfo);
         return new ModelAndView("redirect:" + response.getRedirectTo());
     }
