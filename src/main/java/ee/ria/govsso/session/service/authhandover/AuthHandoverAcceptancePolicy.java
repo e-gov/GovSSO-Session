@@ -5,6 +5,8 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.Client;
+import ee.ria.govsso.session.service.hydra.LevelOfAssurance;
+import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.Metadata;
 import ee.ria.govsso.session.token.UserAttributes;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +32,33 @@ public class AuthHandoverAcceptancePolicy {
         ACCEPTED,
         SECURED_APP_WEB_SESSION_NOT_ALLOWED,
         AUTH_HANDOVER_EXPIRED,
-        SECURED_APP_SESSION_EXPIRED
+        SECURED_APP_SESSION_EXPIRED,
+        INSUFFICIENT_ACR
     }
 
     public boolean clientAcceptsAuthHandover(Client client, UserAttributes userAttributes) {
         Result result = evaluate(client.getMetadata(), userAttributes);
+        return isAccepted(client, userAttributes, result);
+    }
+
+    public boolean clientAcceptsAuthHandoverLogin(LoginRequestInfo loginRequestInfo, UserAttributes userAttributes) {
+        Client client = loginRequestInfo.getClient();
+        Result result = evaluate(client.getMetadata(), userAttributes);
+        if (result == Result.ACCEPTED && !isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
+            result = Result.INSUFFICIENT_ACR;
+        }
+        return isAccepted(client, userAttributes, result);
+    }
+
+    private static boolean isSessionAcrHigherOrEqualToLoginRequestAcr(LoginRequestInfo loginRequestInfo,
+                                                                      UserAttributes userAttributes) {
+        LevelOfAssurance requestAcr = loginRequestInfo.getAcr();
+        LevelOfAssurance requiredAcr = requestAcr != null ? requestAcr : LevelOfAssurance.DEFAULT;
+        LevelOfAssurance sessionAcr = LevelOfAssurance.findByAcrName(userAttributes.acr());
+        return sessionAcr != null && sessionAcr.getAcrLevel() >= requiredAcr.getAcrLevel();
+    }
+
+    private boolean isAccepted(Client client, UserAttributes userAttributes, Result result) {
         if (result == Result.ACCEPTED) {
             return true;
         }

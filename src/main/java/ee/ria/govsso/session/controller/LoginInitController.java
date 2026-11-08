@@ -111,8 +111,7 @@ public class LoginInitController {
                 request.setAttribute(SESSION_TYPE, SessionType.SECURED_APP_WEB_SESSION);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 String handoverFromClientId = parseClientId(authHandoverToken);
-                if (authHandoverAcceptancePolicy.clientAcceptsAuthHandover(loginRequestInfo.getClient(), userAttributes)
-                        && isSessionAcrHigherOrEqualToLoginRequestAcr(loginRequestInfo, userAttributes)) {
+                if (authHandoverAcceptancePolicy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes)) {
                     return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes, handoverFromClientId);
                 }
                 statisticsLogger.logReject(loginRequestInfo, handoverFromClientId);

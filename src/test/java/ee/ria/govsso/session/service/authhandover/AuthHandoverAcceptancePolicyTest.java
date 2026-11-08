@@ -8,7 +8,9 @@ import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties
 import ee.ria.govsso.session.error.ErrorCode;
 import ee.ria.govsso.session.error.exceptions.SsoException;
 import ee.ria.govsso.session.service.hydra.Client;
+import ee.ria.govsso.session.service.hydra.LoginRequestInfo;
 import ee.ria.govsso.session.service.hydra.Metadata;
+import ee.ria.govsso.session.service.hydra.OidcContext;
 import ee.ria.govsso.session.token.UserAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -130,6 +133,60 @@ class AuthHandoverAcceptancePolicyTest {
         assertThat(exception.getMessage(), containsString("auth_time"));
     }
 
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenSessionAcrEqualsRequestedAcr_returnsTrueAndDoesNotLog() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(true, null), "substantial");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, "substantial");
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(true));
+        assertNothingLogged();
+    }
+
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenSessionAcrHigherThanRequestedAcr_returnsTrue() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(true, null), "low");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, "high");
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(true));
+        assertNothingLogged();
+    }
+
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenSessionAcrLowerThanRequestedAcr_returnsFalse() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(true, null), "high");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, "substantial");
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(false));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.INSUFFICIENT_ACR);
+    }
+
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenAcrNotRequestedAndSessionAcrLowerThanDefault_returnsFalse() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(true, null), null);
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, "substantial");
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(false));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.INSUFFICIENT_ACR);
+    }
+
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenSessionAcrMissing_returnsFalse() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(true, null), "low");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, null);
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(false));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.INSUFFICIENT_ACR);
+    }
+
+    @Test
+    void clientAcceptsAuthHandoverLogin_whenClientDoesNotAllowSecuredAppWebSession_returnsFalseWithoutCheckingAcr() {
+        LoginRequestInfo loginRequestInfo = createLoginRequestInfo(createClient(false, null), "high");
+        UserAttributes userAttributes = createUserAttributes(NOW, NOW, "low");
+
+        assertThat(policy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes), is(false));
+        assertResultLogged(AuthHandoverAcceptancePolicy.Result.SECURED_APP_WEB_SESSION_NOT_ALLOWED);
+    }
+
     private void assertNothingLogged() {
         assertThat(logAppender.list, is(empty()));
     }
@@ -153,10 +210,24 @@ class AuthHandoverAcceptancePolicyTest {
         return client;
     }
 
+    private static LoginRequestInfo createLoginRequestInfo(Client client, String requestedAcr) {
+        OidcContext oidcContext = new OidcContext();
+        oidcContext.setAcrValues(requestedAcr != null ? List.of(requestedAcr) : null);
+        LoginRequestInfo loginRequestInfo = new LoginRequestInfo();
+        loginRequestInfo.setClient(client);
+        loginRequestInfo.setOidcContext(oidcContext);
+        return loginRequestInfo;
+    }
+
     private static UserAttributes createUserAttributes(Instant authHandoverTime, Instant taraAuthTime) {
+        return createUserAttributes(authHandoverTime, taraAuthTime, null);
+    }
+
+    private static UserAttributes createUserAttributes(Instant authHandoverTime, Instant taraAuthTime, String acr) {
         return UserAttributes.builder()
                 .authHandoverTime(authHandoverTime)
                 .taraAuthTime(taraAuthTime)
+                .acr(acr)
                 .build();
     }
 }
