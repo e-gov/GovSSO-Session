@@ -104,11 +104,14 @@ public class LoginInitController {
 
         validateLoginRequestInfo(loginRequestInfo);
 
+        if (loginRequestInfo.getAuthHandoverToken() != null) {
+            request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
+            request.setAttribute(SESSION_TYPE, SessionType.SECURED_APP_WEB_SESSION);
+        }
+
         SignedJWT authHandoverToken = getAuthHandoverToken(loginRequestInfo);
         if (StringUtils.isEmpty(loginRequestInfo.getSubject())) {
             if (authHandoverToken != null) {
-                request.setAttribute(AUTHENTICATION_REQUEST_TYPE, AUTH_HANDOVER);
-                request.setAttribute(SESSION_TYPE, SessionType.SECURED_APP_WEB_SESSION);
                 UserAttributes userAttributes = parseUserAttributes(authHandoverToken);
                 String handoverFromClientId = parseClientId(authHandoverToken);
                 if (authHandoverAcceptancePolicy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes)) {

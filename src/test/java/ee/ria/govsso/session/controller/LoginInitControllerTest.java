@@ -1,5 +1,6 @@
 package ee.ria.govsso.session.controller;
 
+import ch.qos.logback.classic.Level;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
@@ -12,6 +13,7 @@ import com.nimbusds.jwt.SignedJWT;
 import ee.ria.govsso.session.BaseTest;
 import ee.ria.govsso.session.configuration.properties.SecurityConfigurationProperties;
 import ee.ria.govsso.session.configuration.properties.SsoConfigurationProperties;
+import ee.ria.govsso.session.logging.StatisticsLogger;
 import ee.ria.govsso.session.service.tara.TaraMetadataService;
 import ee.ria.govsso.session.service.tara.TaraTestSetup;
 import ee.ria.govsso.session.session.SsoCookie;
@@ -2022,6 +2024,32 @@ class LoginInitControllerTest extends BaseTest {
                     "SsoException: Auth handover token verification failed",
                     "SsoException: Auth handover token verification failed: no matching key found and JWK set refresh rate limit reached");
             HYDRA_MOCK_SERVER.verify(0, postRequestedFor(urlEqualTo("/admin/oauth2/auth/handover/consume")));
+            HYDRA_MOCK_SERVER.verify(0, putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL)));
+        }
+
+        @Test
+        void loginInit_WhenAuthHandoverTokenVerificationFails_LogsErrorStatisticsAsAuthHandover() {
+            stubLoginRequestWithAuthHandoverToken(createAuthHandoverToken(TaraTestSetup.generateJWK()), null);
+
+            given()
+                    .param("login_challenge", TEST_LOGIN_CHALLENGE)
+                    .when()
+                    .get(LOGIN_INIT_REQUEST_MAPPING)
+                    .then()
+                    .assertThat()
+                    .statusCode(400)
+                    .body("error", equalTo("USER_INVALID_OIDC_REQUEST"));
+
+            assertErrorIsLogged("SsoException: Auth handover token verification failed");
+            assertMessage()
+                    .withLoggerClass(StatisticsLogger.class)
+                    .withLevel(Level.ERROR)
+                    .withMessage(StatisticsLogger.LOG_MESSAGE)
+                    .withMarker(marker -> marker.contains("authenticationRequestType=AUTH_HANDOVER"))
+                    .withMarker(marker -> marker.contains("authenticationState=AUTHENTICATION_FAILED"))
+                    .withMarker(marker -> marker.contains("errorCode=USER_INVALID_OIDC_REQUEST"))
+                    .withMarker(marker -> marker.contains("sessionType=SECURED_APP_WEB_SESSION"))
+                    .isLoggedOnce();
             HYDRA_MOCK_SERVER.verify(0, putRequestedFor(urlEqualTo(LOGIN_ACCEPT_URL)));
         }
 
