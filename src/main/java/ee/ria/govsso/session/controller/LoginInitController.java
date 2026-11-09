@@ -114,7 +114,7 @@ public class LoginInitController {
                 if (authHandoverAcceptancePolicy.clientAcceptsAuthHandoverLogin(loginRequestInfo, userAttributes)) {
                     return authenticateWithHandoverToken(loginRequestInfo, request, authHandoverToken, userAttributes, handoverFromClientId);
                 }
-                statisticsLogger.logReject(loginRequestInfo, handoverFromClientId);
+                statisticsLogger.logAuthHandoverFailure(loginRequestInfo, handoverFromClientId);
             }
             request.setAttribute(AUTHENTICATION_REQUEST_TYPE, START_SESSION);
             request.setAttribute(SESSION_TYPE, SecureAppUtil.getNewSessionType(loginRequestInfo.getClient()));

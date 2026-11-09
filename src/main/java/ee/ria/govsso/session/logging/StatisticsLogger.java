@@ -118,16 +118,17 @@ public class StatisticsLogger {
 
     public void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
                           SessionType sessionType) {
-        logReject(loginRequestInfo, requestType, sessionType, null);
+        logUnsuccessful(loginRequestInfo, requestType, AUTHENTICATION_CANCELED, sessionType, null);
     }
 
-    public void logReject(@NonNull LoginRequestInfo loginRequestInfo, String handoverFromClientId) {
-        logReject(loginRequestInfo, AuthenticationRequestType.AUTH_HANDOVER, SessionType.SECURED_APP_WEB_SESSION,
-                handoverFromClientId);
+    public void logAuthHandoverFailure(@NonNull LoginRequestInfo loginRequestInfo, String handoverFromClientId) {
+        logUnsuccessful(loginRequestInfo, AuthenticationRequestType.AUTH_HANDOVER, AUTHENTICATION_FAILED,
+                SessionType.SECURED_APP_WEB_SESSION, handoverFromClientId);
     }
 
-    private void logReject(@NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
-                           SessionType sessionType, String handoverFromClientId) {
+    private void logUnsuccessful(
+            @NonNull LoginRequestInfo loginRequestInfo, AuthenticationRequestType requestType,
+            @NonNull AuthenticationState authenticationState, SessionType sessionType, String handoverFromClientId) {
         var client = loginRequestInfo.getClient();
         var oidcClient = client.getMetadata().getOidcClient();
         var institution = oidcClient.getInstitution();
@@ -141,7 +142,7 @@ public class StatisticsLogger {
                 .sector(institution.getSector())
                 .sessionId(sid)
                 .authenticationRequestType(requestType)
-                .authenticationState(AUTHENTICATION_CANCELED)
+                .authenticationState(authenticationState)
                 .sessionType(sessionType)
                 .handoverFromClientId(handoverFromClientId)
                 .build();

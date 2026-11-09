@@ -71,14 +71,14 @@ class StatisticsLoggerTest extends BaseTestLoggingAssertion {
     }
 
     @Test
-    void logReject_WhenHandoverFromClientIdGiven_ThenAuthHandoverRejectIsLogged() {
-        statisticsLogger.logReject(createLoginRequestInfo(), "client-b");
+    void logAuthHandoverFailure_WhenHandoverFromClientIdGiven_ThenAuthHandoverFailureIsLogged() {
+        statisticsLogger.logAuthHandoverFailure(createLoginRequestInfo(), "client-b");
 
         assertMessage()
                 .withLoggerClass(StatisticsLogger.class)
                 .withMessage(StatisticsLogger.LOG_MESSAGE)
                 .withLevel(INFO)
-                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=AUTH_HANDOVER, authenticationType=null, authenticationState=AUTHENTICATION_CANCELED, requestedAcr=null, grantedAcr=null, errorCode=null, sessionType=SECURED_APP_WEB_SESSION, handoverFromClientId=client-b)")
+                .withMarker("StatisticsLogger.SessionStatistics(clientId=client-a, clientName=Teenusenimi A, clientShortName=Teenus A, registryCode=70000001, sector=public, sessionId=test-session-id, sessionStartTime=null, sessionDuration=null, country=null, idCode=null, authenticationRequestType=AUTH_HANDOVER, authenticationType=null, authenticationState=AUTHENTICATION_FAILED, requestedAcr=null, grantedAcr=null, errorCode=null, sessionType=SECURED_APP_WEB_SESSION, handoverFromClientId=client-b)")
                 .isLoggedOnce();
     }
 
