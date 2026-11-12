@@ -17,9 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -50,8 +49,7 @@ class AdminServiceTest {
         properties.setSessionMaxDurationHours(1);
         properties.setSessionMaxUpdateIntervalMinutes(1);
 
-        Clock clock = Clock.fixed(NOW.toInstant(), ZoneId.of("Europe/Tallinn"));
-        adminService = new AdminService(clock, hydraService, properties, userAgentParserService);
+        adminService = new AdminService(hydraService, properties, userAgentParserService);
     }
 
     @Test
@@ -167,6 +165,57 @@ class AdminServiceTest {
         assertThat(sessions, hasSize(2));
     }
 
+    @Test
+    void getSessions_whenConsentHasExpiry_returnsExpiresAtAndLastUpdatedAtWithoutDependingOnCurrentTime() {
+        String subject = "subject-1";
+        OffsetDateTime requestedAt = NOW.minusHours(5);
+
+        Consent consent = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(requestedAt)
+                .authenticatedAt(requestedAt)
+                .ip("127.0.0.1")
+                .rememberFor(1800)
+                .build();
+
+        when(hydraService.getConsentsIncludingPartiallyExpired(subject))
+                .thenReturn(List.of(consent));
+        when(userAgentParserService.parse(any()))
+                .thenReturn(new ParsedUserAgent(null, null));
+
+        ServiceSession service = adminService.getSessions(subject).get(0).services().get(0);
+
+        assertThat(service.authenticatedAt(), equalTo(requestedAt));
+        assertThat(service.expiresAt(), equalTo(requestedAt.plusMinutes(30)));
+        assertThat(service.lastUpdatedAt(), equalTo(requestedAt.plusMinutes(29)));
+    }
+
+    @Test
+    void getSessions_whenConsentHasNoExpiry_returnsNullExpiresAtAndRequestedAtAsLastUpdatedAt() {
+        String subject = "subject-1";
+        OffsetDateTime requestedAt = NOW.minusDays(2);
+
+        Consent consent = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(requestedAt)
+                .authenticatedAt(requestedAt)
+                .ip("127.0.0.1")
+                .rememberFor(Consent.REMEMBER_FOR_FOREVER)
+                .build();
+
+        when(hydraService.getConsentsIncludingPartiallyExpired(subject))
+                .thenReturn(List.of(consent));
+        when(userAgentParserService.parse(any()))
+                .thenReturn(new ParsedUserAgent(null, null));
+
+        ServiceSession service = adminService.getSessions(subject).get(0).services().get(0);
+
+        assertThat(service.expiresAt(), nullValue());
+        assertThat(service.lastUpdatedAt(), equalTo(requestedAt));
+    }
+
     @Accessors(fluent = true)
     @Setter
     private static class TestConsentBuilder {
@@ -178,6 +227,7 @@ class AdminServiceTest {
         private String ip;
         private String country;
         private String userAgent;
+        private int rememberFor = 600;
 
         public Consent build() {
             Context context = new Context();
@@ -204,7 +254,7 @@ class AdminServiceTest {
 
             Consent consent = new Consent();
             consent.setConsentRequest(info);
-            consent.setRememberFor(600);
+            consent.setRememberFor(rememberFor);
 
             return consent;
         }
