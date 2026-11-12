@@ -14,6 +14,6 @@ import java.util.Map;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record ServiceSession(@NonNull Map<String, String> clientNames,
                              @NonNull OffsetDateTime authenticatedAt,
-                             @NonNull OffsetDateTime expiresAt,
+                             OffsetDateTime expiresAt,
                              @NonNull OffsetDateTime lastUpdatedAt) {
 }

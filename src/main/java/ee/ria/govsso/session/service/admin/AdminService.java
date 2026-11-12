@@ -11,15 +11,11 @@ import ee.ria.govsso.session.service.useragent.UserAgentParserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Clock;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static java.time.OffsetDateTime.now;
 import static java.util.Comparator.comparing;
 import static java.util.function.BinaryOperator.maxBy;
 import static java.util.function.Function.identity;
@@ -32,7 +28,6 @@ import static java.util.stream.Collectors.toMap;
 @RequiredArgsConstructor
 public class AdminService {
 
-    private final Clock clock;
     private final HydraService hydraService;
     private final SsoConfigurationProperties ssoConfigurationProperties;
     private final UserAgentParserService userAgentParserService;
@@ -97,15 +92,11 @@ public class AdminService {
         OffsetDateTime requestedAt = c.getRequestedAt();
         Metadata metadata = client.getMetadata();
         Map<String, String> clientNames = metadata.getOidcClient().getNameTranslations();
-        OffsetDateTime expiresAt = c.getExpiresAt();
-        OffsetDateTime lastUpdatedAt = getLastUpdatedAt(c);
 
         return ServiceSession.builder()
                 .authenticatedAt(requestedAt)
-                .expiresAt(expiresAt != null ?
-                        expiresAt :
-                        OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
-                .lastUpdatedAt(lastUpdatedAt)
+                .expiresAt(c.getExpiresAt())
+                .lastUpdatedAt(getLastUpdatedAt(c))
                 .clientNames(clientNames)
                 .build();
     }
@@ -123,11 +114,7 @@ public class AdminService {
         if (expiresAt == null) {
             return c.getRequestedAt();
         }
-        if (expiresAt.isAfter(now(clock))) {
-            return expiresAt.minus(ssoConfigurationProperties.getSessionMaxUpdateInterval());
-        }
-        // This doesn't make sense, is consent expiration considered an update?
-        return expiresAt;
+        return expiresAt.minus(ssoConfigurationProperties.getSessionMaxUpdateInterval());
     }
 
 }
