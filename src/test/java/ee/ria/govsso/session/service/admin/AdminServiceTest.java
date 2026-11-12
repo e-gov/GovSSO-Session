@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -88,6 +89,66 @@ class AdminServiceTest {
         assertThat(session.os(), equalTo(os));
         assertThat(session.browser(), equalTo(browser));
         assertThat(session.ipInfos(), contains(new SessionIpInfo("127.0.0.1", "EE")));
+        assertThat(session.services(), hasSize(1));
+    }
+
+    @Test
+    void getSessions_whenUserAgentIsUnknown_returnsSessionWithoutOsAndBrowser() {
+        String subject = "subject-1";
+        String userAgent = "TestBrowser/1.0";
+
+        Consent consent = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(NOW.minusMinutes(10))
+                .authenticatedAt(NOW.minusMinutes(100))
+                .ip("127.0.0.1")
+                .userAgent(userAgent)
+                .build();
+
+        when(hydraService.getConsentsIncludingPartiallyExpired(subject))
+                .thenReturn(List.of(consent));
+
+        when(userAgentParserService.parse(userAgent))
+                .thenReturn(new ParsedUserAgent(null, null));
+
+        List<Session> sessions = adminService.getSessions(subject);
+
+        assertThat(sessions, hasSize(1));
+
+        Session session = sessions.get(0);
+        assertThat(session.userAgent(), equalTo(userAgent));
+        assertThat(session.os(), nullValue());
+        assertThat(session.browser(), nullValue());
+        assertThat(session.services(), hasSize(1));
+    }
+
+    @Test
+    void getSessions_whenUserAgentIsMissing_returnsSessionWithoutUserAgentOsAndBrowser() {
+        String subject = "subject-1";
+
+        Consent consent = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(NOW.minusMinutes(10))
+                .authenticatedAt(NOW.minusMinutes(100))
+                .ip("127.0.0.1")
+                .build();
+
+        when(hydraService.getConsentsIncludingPartiallyExpired(subject))
+                .thenReturn(List.of(consent));
+
+        when(userAgentParserService.parse(null))
+                .thenReturn(new ParsedUserAgent(null, null));
+
+        List<Session> sessions = adminService.getSessions(subject);
+
+        assertThat(sessions, hasSize(1));
+
+        Session session = sessions.get(0);
+        assertThat(session.userAgent(), nullValue());
+        assertThat(session.os(), nullValue());
+        assertThat(session.browser(), nullValue());
         assertThat(session.services(), hasSize(1));
     }
 

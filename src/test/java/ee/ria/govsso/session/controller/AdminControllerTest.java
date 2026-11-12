@@ -72,6 +72,27 @@ class AdminControllerTest extends BaseTest {
                 .body(equalTo(expectedMinifiedJson));
     }
 
+    @Test
+    void getBySubject_WhenUserAgentUnknownOrMissing_ReturnsSessionsWithoutOsAndBrowser(@Value("classpath:__files/mock_responses/admin/admin_sessions_subject_unknown_user_agent.json") Resource expectedResult) throws IOException {
+        HYDRA_MOCK_SERVER.stubFor(get(urlEqualTo("/admin/oauth2/auth/sessions/consent?subject=%s&include_expired=partially_expired".formatted(TEST_SUBJECT)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json; charset=UTF-8")
+                        .withBodyFile("mock_responses/mock_sso_oidc_consents_unknown_user_agent.json")));
+        String expectedMinifiedJson = objectMapper.readValue(expectedResult.getFile(), JsonNode.class).toString();
+
+        given()
+                .cookie(COOKIE_NAME_XSRF_TOKEN, MOCK_CSRF_TOKEN)
+                .pathParam("subject", TEST_SUBJECT)
+                .when()
+                .get(ADMIN_SESSIONS_REQUEST_MAPPING)
+                .then()
+                .assertThat()
+                .contentType(APPLICATION_JSON_VALUE)
+                .statusCode(200)
+                .body(equalTo(expectedMinifiedJson));
+    }
+
     @ParameterizedTest(name = "{index} subject={1}")
     @MethodSource("subjectNames")
     void getBySubject_WhenInvalidSubjectParameter_ReturnsHttp400(String subject, String subjectLengthDescription) {

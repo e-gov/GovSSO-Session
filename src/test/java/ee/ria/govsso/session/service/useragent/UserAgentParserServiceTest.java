@@ -70,6 +70,21 @@ class UserAgentParserServiceTest {
                         null
                 ),
                 Arguments.of(
+                        "TestBrowser/1.0",
+                        null,
+                        null
+                ),
+                Arguments.of(
+                        "<script>alert(1)</script>/1.0",
+                        null,
+                        null
+                ),
+                Arguments.of(
+                        "\"><svg onload=alert(1)>",
+                        null,
+                        null
+                ),
+                Arguments.of(
                         "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
                         null,
                         "Googlebot"

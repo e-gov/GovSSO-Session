@@ -16,8 +16,8 @@ public record Session(@NonNull String sessionId,
                       @NonNull OffsetDateTime authenticatedAt,
 
                       @NonNull List<SessionIpInfo> ipInfos,
-                      @NonNull String userAgent,
-                      @NonNull String os,
-                      @NonNull String browser,
+                      String userAgent,
+                      String os,
+                      String browser,
                       @NonNull List<ServiceSession> services) {
 }
