@@ -176,13 +176,14 @@ class AdminServiceTest {
                 .requestedAt(requestedAt)
                 .authenticatedAt(requestedAt)
                 .ip("127.0.0.1")
+                .userAgent("ua")
                 .rememberFor(1800)
                 .build();
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(consent));
         when(userAgentParserService.parse(any()))
-                .thenReturn(new ParsedUserAgent(null, null));
+                .thenReturn(new ParsedUserAgent("Windows", "Chrome"));
 
         ServiceSession service = adminService.getSessions(subject).get(0).services().get(0);
 
@@ -202,13 +203,14 @@ class AdminServiceTest {
                 .requestedAt(requestedAt)
                 .authenticatedAt(requestedAt)
                 .ip("127.0.0.1")
+                .userAgent("ua")
                 .rememberFor(Consent.REMEMBER_FOR_FOREVER)
                 .build();
 
         when(hydraService.getConsentsIncludingPartiallyExpired(subject))
                 .thenReturn(List.of(consent));
         when(userAgentParserService.parse(any()))
-                .thenReturn(new ParsedUserAgent(null, null));
+                .thenReturn(new ParsedUserAgent("Windows", "Chrome"));
 
         ServiceSession service = adminService.getSessions(subject).get(0).services().get(0);
 
