@@ -103,6 +103,13 @@
                     <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZZ</pattern>
                     <timeZone>UTC</timeZone>
                 </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "log.logger": "%logger"
+                        }
+                    </pattern>
+                </pattern>
                 <stackTrace>
                     <fieldName>error.stack_trace</fieldName>
                     <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
@@ -218,6 +225,13 @@
                     <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZZ</pattern>
                     <timeZone>UTC</timeZone>
                 </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "log.logger": "%logger"
+                        }
+                    </pattern>
+                </pattern>
                 <stackTrace>
                     <fieldName>error.stack_trace</fieldName>
                     <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
