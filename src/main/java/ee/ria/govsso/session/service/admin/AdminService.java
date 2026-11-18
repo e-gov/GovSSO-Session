@@ -111,10 +111,12 @@ public class AdminService {
 
     private OffsetDateTime getLastUpdatedAt(Consent c) {
         OffsetDateTime expiresAt = c.getExpiresAt();
+        OffsetDateTime requestedAt = c.getRequestedAt();
         if (expiresAt == null) {
-            return c.getRequestedAt();
+            return requestedAt;
         }
-        return expiresAt.minus(ssoConfigurationProperties.getSessionMaxUpdateInterval());
+        OffsetDateTime lastUpdatedAt = expiresAt.minus(ssoConfigurationProperties.getSessionMaxUpdateInterval());
+        return lastUpdatedAt.isBefore(requestedAt) ? requestedAt : lastUpdatedAt;
     }
 
 }

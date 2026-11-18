@@ -253,6 +253,32 @@ class AdminServiceTest {
     }
 
     @Test
+    void getSessions_whenConsentExpiresBeforeMaxUpdateInterval_returnsRequestedAtAsLastUpdatedAt() {
+        String subject = "subject-1";
+        OffsetDateTime requestedAt = NOW.minusHours(5);
+
+        Consent consent = new TestConsentBuilder()
+                .sessionId("session-1")
+                .clientId("client-1")
+                .requestedAt(requestedAt)
+                .authenticatedAt(requestedAt)
+                .ip("127.0.0.1")
+                .userAgent("ua")
+                .rememberFor(1)
+                .build();
+
+        when(hydraService.getConsentsIncludingPartiallyExpired(subject))
+                .thenReturn(List.of(consent));
+        when(userAgentParserService.parse(any()))
+                .thenReturn(new ParsedUserAgent("Windows", "Chrome"));
+
+        ServiceSession service = adminService.getSessions(subject).get(0).services().get(0);
+
+        assertThat(service.expiresAt(), equalTo(requestedAt.plusSeconds(1)));
+        assertThat(service.lastUpdatedAt(), equalTo(requestedAt));
+    }
+
+    @Test
     void getSessions_whenConsentHasNoExpiry_returnsNullExpiresAtAndRequestedAtAsLastUpdatedAt() {
         String subject = "subject-1";
         OffsetDateTime requestedAt = NOW.minusDays(2);
