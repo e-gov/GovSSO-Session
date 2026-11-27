@@ -12,6 +12,7 @@ services:
       default:
         aliases:
           - dozzle.localhost
+          - dozzle.local
     ports:
       - '9080:8080'
     restart: unless-stopped
@@ -46,6 +47,7 @@ services:
       default:
         aliases:
           - clienta.localhost
+          - clienta.local
     ports:
       - '11000:8000'
       - '11443:11443'
@@ -85,6 +87,7 @@ services:
       default:
         aliases:
           - clientb.localhost
+          - clientb.local
     ports:
       - '12000:8000'
       - '12443:12443'
@@ -109,9 +112,9 @@ services:
       - server.ssl.key-store=file:/var/certs/inproxy.localhost.keystore.p12
       - server.ssl.key-store-password=changeit
       - spring.cloud.gateway.server.webflux.httpclient.ssl.trustedX509Certificates=file:/var/certs/govsso-ca.localhost.crt
-      - spring.cloud.discovery.client.simple.instances.hydra[0].uri=https://hydra.localhost:8443
-      - spring.cloud.discovery.client.simple.instances.session[0].uri=https://session.localhost:15443
-      - tara-govsso-inproxy.admin.base-url=https://admin.localhost:443
+      - spring.cloud.discovery.client.simple.instances.hydra[0].uri=https://hydra.local:8443
+      - spring.cloud.discovery.client.simple.instances.session[0].uri=https://session.local:15443
+      - tara-govsso-inproxy.admin.base-url=https://admin.local:443
       - tara-govsso-inproxy.admin.token-request-allowed-ip-addresses-storage-path=/tmp/ipaddresses
       - tara-govsso-inproxy.admin.tls.trust-store=file:/var/certs/inproxy.localhost.admin.truststore.p12
       - tara-govsso-inproxy.admin.tls.trust-store-password=changeit
@@ -123,6 +126,7 @@ services:
       default:
         aliases:
           - inproxy.localhost
+          - inproxy.local
     ports:
       - '13000:8000'
       - '13443:13443'
@@ -142,7 +146,7 @@ services:
         condition: service_healthy
     environment:
       # TODO: move to govsso-hydra/config.yml
-      - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
+      - DSN=postgres://hydra:changeme@hydra-db.local:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
     volumes:
       - ./local/hydra:/etc/govsso-hydra:ro
 
@@ -161,14 +165,15 @@ services:
           memory: 250M
     environment:
       # TODO: move to govsso-hydra/config.yml
-      - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
+      - DSN=postgres://hydra:changeme@hydra-db.local:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
       - SSL_CERT_FILE=/var/certs/govsso-ca.localhost.crt
-      - HTTPS_PROXY=https://outproxy.localhost:8443
-      - NO_PROXY=session.localhost:15443
+      - HTTPS_PROXY=https://outproxy.local:8443
+      - NO_PROXY=session.local:15443
     networks:
       default:
         aliases:
           - hydra.localhost
+          - hydra.local
     ports:
       - '14443:8443'
       - '14445:4445'
@@ -194,9 +199,10 @@ services:
       - server.port=15443
       - govsso.base-url=https://inproxy.localhost:13443/
       # Has to point to hydra ADMIN port and should ignore reverse proxy (inproxy).
-      - govsso.hydra.admin-url=https://hydra.localhost:4445/
+      - govsso.hydra.admin-url=https://hydra.local:4445/
       - govsso.tara.issuer-url=https://tara.localhost:16443
-      - govsso.admin.host-url=https://admin.localhost:443/
+      - govsso.admin.host-url=https://admin.local:443/
+      - govsso.paasuke.host-url=https://paasuke.local:26443/volitused/oraakel
       - govsso.security.cookie-signing-secret=exampleCookieSigningSecret123456
       - server.ssl.key-store-type=PKCS12
       - server.ssl.key-store=file:/var/certs/session.localhost.keystore.p12
@@ -226,6 +232,7 @@ services:
       default:
         aliases:
           - session.localhost
+          - session.local
     ports:
       - '15000:8000'
       - '15443:15443'
@@ -259,6 +266,7 @@ services:
       default:
         aliases:
           - tara.localhost
+          - tara.local
     ports:
       - '16443:16443'
     restart: unless-stopped
@@ -290,11 +298,11 @@ services:
       - spring.security.oauth2.client.provider.oidc.issuer-uri=https://admin-oidc-provider.localhost:27443/oidc
       - spring.security.oauth2.client.registration.oidc.client-id=govsso-admin-local
       - spring.security.oauth2.client.registration.oidc.client-secret=local-secret
-      - tara-oidc.url=https://hydra.localhost:4445/
+      - tara-oidc.url=https://hydra.local:4445/
       - auth.tls-truststore-path=/var/certs/admin.localhost.truststore.p12
       - auth.tls-truststore-password=changeit
-      - spring.datasource.url=jdbc:postgresql://admin-db.localhost:5432/admin-db?sslmode=require
-      - spring.mail.host=smtp.localhost
+      - spring.datasource.url=jdbc:postgresql://admin-db.local:5432/admin-db?sslmode=require
+      - spring.mail.host=smtp.local
       - spring.mail.port=1025
       - spring.mail.username=
       - spring.mail.password=
@@ -317,6 +325,7 @@ services:
       default:
         aliases:
           - admin.localhost
+          - admin.local
     ports:
       - '17000:8000'
       - '17443:443'
@@ -343,6 +352,7 @@ services:
       default:
         aliases:
           - admin-oidc-provider.localhost
+          - admin-oidc-provider.local
     ports:
       - '27443:27443'
     volumes:
@@ -356,6 +366,7 @@ services:
       default:
         aliases:
           - smtp.localhost
+          - smtp.local
     ports:
       - '18025:1025'
       - '18080:8025'
@@ -383,6 +394,7 @@ services:
       default:
         aliases:
           - hydra-db.localhost
+          - hydra-db.local
     ports:
       - '19432:5432'
     restart: unless-stopped
@@ -407,6 +419,7 @@ services:
       default:
         aliases:
           - admin-db.localhost
+          - admin-db.local
     ports:
       - '20432:5432'
     restart: unless-stopped
@@ -424,6 +437,7 @@ services:
       default:
         aliases:
           - outproxy.localhost
+          - outproxy.local
     ports:
       - '21443:8443'
     restart: unless-stopped
@@ -441,12 +455,12 @@ services:
         limits:
           memory: 250M
     environment:
-      - PGHOST=hydra-db.localhost
+      - PGHOST=hydra-db.local
       - PGPORT=5432
       - PGUSER=hydra
       - PGPASSWORD=changeme
       - PGDATABASE=hydra-db
-      - DSN=postgres://hydra:changeme@hydra-db.localhost:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
+      - DSN=postgres://hydra:changeme@hydra-db.local:5432/hydra-db?sslmode=require&max_conns=20&max_idle_conns=4
     volumes:
       - ./local/hydra-janitor:/etc/hydra-janitor:ro
       - ./local/hydra:/etc/govsso-hydra:ro
@@ -472,7 +486,7 @@ services:
       - ignite.ssl-context-factory.trust-store-file-path=/var/certs/enduserselfservice.localhost.ignite.truststore.p12
       - ignite.ssl-context-factory.trust-store-password=changeit
       - govsso-enduserselfservice.time.local-zone=Europe/Tallinn
-      - govsso-enduserselfservice.govsso-session.base-url=https://session.localhost:15443/
+      - govsso-enduserselfservice.govsso-session.base-url=https://session.local:15443/
       - govsso-enduserselfservice.govsso-session.tls.trust-store=file:/var/certs/enduserselfservice.localhost.session.truststore.p12
       - govsso-enduserselfservice.govsso-session.tls.trust-store-password=changeit
       - tara.client-id=govsso-enduserselfservice
@@ -489,6 +503,7 @@ services:
       default:
         aliases:
           - enduserselfservice.localhost
+          - enduserselfservice.local
     ports:
       - '25000:8000'
       - '25443:25443'
@@ -513,6 +528,7 @@ services:
       default:
         aliases:
           - paasuke.localhost
+          - paasuke.local
     ports:
       - "26443:26443"
     volumes:

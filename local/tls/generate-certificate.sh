@@ -39,7 +39,7 @@ MSYS_NO_PATHCONV=1 \
   -out "$applicationName/$host.csr"
 
 # Configure subject alternate names. Passed to openssl.cnf
-export SAN="DNS:$host"
+export SAN="DNS:$host,DNS:$applicationName.local"
 
 # Generate CA signed certificate
 openssl x509 \
